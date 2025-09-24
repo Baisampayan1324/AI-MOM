@@ -35,6 +35,10 @@ userprofile.json
 user_profile.json
 *.profile
 
+# Environment variables
+.env
+backend/.env
+
 # Virtual environments
 venv/
 env/
