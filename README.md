@@ -1,4 +1,4 @@
-# 🎙️ AI Meeting Minutes
+# 🎙️ AI-MOM
 
 > **A comprehensive real-time meeting transcription, analysis, and summarization system with multi-platform support.**
 
@@ -26,7 +26,7 @@
 
 ## 🌟 Overview
 
-AI Meeting Minutes is an intelligent meeting transcription system that automatically converts speech to text, identifies speakers, and generates AI-powered summaries with actionable insights. Built with modern web technologies and advanced AI models.
+AI-MOM is an intelligent meeting transcription system that automatically converts speech to text, identifies speakers, and generates AI-powered summaries with actionable insights. Built with modern web technologies and advanced AI models.
 
 ### 🎯 Perfect For
 - **Business Meetings**: Team standups, project reviews, client calls
@@ -71,28 +71,33 @@ AI Meeting Minutes is an intelligent meeting transcription system that automatic
 
 ## 🏗️ System Architecture
 
-```mermaid
-graph TB
-    A[Browser Extension] --> D[Backend API]
-    B[Web Frontend] --> D
-
-    D --> E[Audio Processing]
-    D --> F[AI Analysis]
-    D --> G[WebSocket Hub]
-
-    E --> H[OpenAI Whisper]
-    E --> I[Speaker Diarization]
-
-    F --> J[Groq LLM]
-    F --> K[Sentiment Analysis]
-
-    G --> L[Real-time Updates]
-    G --> M[Session Management]
-
-    style D fill:#e1f5fe
-    style E fill:#f3e5f5
-    style F fill:#e8f5e8
-    style G fill:#fff3e0
+```
+┌─────────────────┐    ┌─────────────────┐
+│  Browser Ext.   │    │   Web Frontend  │
+│                 │    │                 │
+│ • Real-time UI  │    │ • Audio Upload  │
+│ • WebSocket     │◄──►│ • Live Capture  │
+│ • Audio Capture │    │ • Profile Mgmt  │
+└─────────────────┘    └─────────────────┘
+          │                      │
+          └──────────┬───────────┘
+                     │
+              ┌─────────────────┐
+              │   Backend API   │
+              │                 │
+              │ • FastAPI       │
+              │ • WebSocket     │
+              │ • Audio Proc.   │
+              └─────────────────┘
+                     │
+   ┌─────────────────┼─────────────────┐
+   │                 │                 │
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│  Audio Process  │ │  AI Analysis    │ │  WebSocket Hub  │
+│                 │ │                 │ │                 │
+│ • OpenAI Whisper│ │ • Groq LLM      │ │ • Real-time Upd │
+│ • Speaker ID    │ │ • Summarization │ │ • Session Mgmt  │
+└─────────────────┘ └─────────────────┘ └─────────────────┘
 ```
 
 ### 🔧 Component Overview
@@ -391,19 +396,7 @@ python tests/test_realtime_capture.py
 python tests/test_realtime_chunk.py
 ```
 
-### ✅ Manual Testing Checklist
 
-- [ ] Microphone permissions granted in browser
-- [ ] Real-time transcription working with live audio
-- [ ] Speaker diarization showing different speakers
-- [ ] Personal alerts triggering for name mentions
-- [ ] File upload and processing functional
-- [ ] WebSocket connection stable during sessions
-- [ ] AI summaries generated (requires Groq API key)
-- [ ] Browser extension loads and functions
-- [ ] Mobile responsive design working
-- [ ] Data persistence across browser sessions
-- [ ] Profile settings save and load correctly
 
 ---
 
@@ -618,6 +611,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **[Groq](https://groq.com)** - High-speed LLM inference
 - **[FastAPI](https://fastapi.tiangolo.com)** - Modern Python web framework
 
+**Development Team**:
+- **Baisampayan Dey** - Lead Developer & Project Manager
+- **Pandey Sanjit Vinod** - Backend Developer
+- **Dhruv Motaval** - Frontend Developer
+- **Aryan Patil** - AI Integration & Testing
+
 **Community**:
 - Contributors and beta testers
 - Open source community for inspiration
@@ -675,7 +674,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-*Made with ❤️ by the AI Meeting Minutes team*
+*Made with ❤️ by the AI-MOM development team*
 
 ⭐ **Star this repo if it helped you!** ⭐
 
