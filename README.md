@@ -612,10 +612,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **[FastAPI](https://fastapi.tiangolo.com)** - Modern Python web framework
 
 **Development Team**:
-- **Baisampayan Dey** - Lead Developer & Project Manager
-- **Pandey Sanjit Vinod** - Backend Developer
-- **Dhruv Motaval** - Frontend Developer
-- **Aryan Patil** - AI Integration & Testing
+- **Baisampayan Dey** - Lead Developer & Project Architect
+- **Pandey Sanjit Vinod** - Frontend Developer & Project Manager
+- **Dhruv Motaval** - Backend Developer & AI Integration Specialist
+- **Aryan Patil** - Quality Assurance & Testing
 
 **Community**:
 - Contributors and beta testers
