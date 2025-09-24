@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Minutes - Profile Settings</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        input[type="text"], input[type="email"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+        }
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        .btn-success {
+            background-color: #2ecc71;
+        }
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .status.processing {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .hidden {
+            display: none;
+        }
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .tag {
+            background-color: #3498db;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        .tag .remove {
+            margin-left: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .add-tag {
+            display: flex;
+            gap: 10px;
+        }
+        .add-tag input {
+            flex: 1;
+        }
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            display: inline-block;
+            padding: 12px 20px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-links a:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .nav-links a.active {
+            background-color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Meeting Minutes - Profile Settings</h1>
+        <p>Set up your personal information for better speaker alerts</p>
+    </header>
+
+    <div class="nav-links">
+        <a href="index.html">🏠 Home</a>
+        <a href="audio_processing.html">📁 Audio Processing</a>
+        <a href="realtime_capture.html">🎤 Real-time Capture</a>
+        <a href="profile_settings.html" class="active">⚙️ Profile Settings</a>
+    </div>
+
+    <div class="container">
+        <h2>Your Profile</h2>
+        <form id="profileForm">
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input type="text" id="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email">
+            </div>
+            
+            <div class="form-group">
+                <label for="role">Role</label>
+                <input type="text" id="role" placeholder="e.g., Software Engineer">
+            </div>
+            
+            <div class="form-group">
+                <label for="team">Team</label>
+                <input type="text" id="team" placeholder="e.g., Backend Development">
+            </div>
+            
+            <div class="form-group">
+                <label>Projects</label>
+                <div class="tag-container" id="projectsTags"></div>
+                <div class="add-tag">
+                    <input type="text" id="newProject" placeholder="Add a project">
+                    <button type="button" id="addProjectBtn" class="btn-secondary">Add</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Skills</label>
+                <div class="tag-container" id="skillsTags"></div>
+                <div class="add-tag">
+                    <input type="text" id="newSkill" placeholder="Add a skill">
+                    <button type="button" id="addSkillBtn" class="btn-secondary">Add</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Custom Keywords (for alerts)</label>
+                <div class="tag-container" id="keywordsTags"></div>
+                <div class="add-tag">
+                    <input type="text" id="newKeyword" placeholder="Add a keyword">
+                    <button type="button" id="addKeywordBtn" class="btn-secondary">Add</button>
+                </div>
+                <small>These keywords will trigger alerts when mentioned in meetings</small>
+            </div>
+            
+            <button type="submit" id="saveBtn">Save Profile</button>
+            <button type="button" id="loadBtn" class="btn-secondary">Load Current Profile</button>
+        </form>
+        
+        <div id="status" class="status hidden"></div>
+    </div>
+
+    <script>
+        // Arrays to store tags
+        let projects = [];
+        let skills = [];
+        let keywords = [];
+        
+        // DOM elements
+        const projectsTagsEl = document.getElementById('projectsTags');
+        const skillsTagsEl = document.getElementById('skillsTags');
+        const keywordsTagsEl = document.getElementById('keywordsTags');
+        
+        // Add event listeners
+        document.getElementById('addProjectBtn').addEventListener('click', () => addTag('project'));
+        document.getElementById('addSkillBtn').addEventListener('click', () => addTag('skill'));
+        document.getElementById('addKeywordBtn').addEventListener('click', () => addTag('keyword'));
+        document.getElementById('profileForm').addEventListener('submit', saveProfile);
+        document.getElementById('loadBtn').addEventListener('click', loadProfile);
+        
+        // Add tag function
+        function addTag(type) {
+            const inputId = `new${type.charAt(0).toUpperCase() + type.slice(1)}`;
+            const inputValue = document.getElementById(inputId).value.trim();
+            
+            if (inputValue) {
+                switch(type) {
+                    case 'project':
+                        if (!projects.includes(inputValue)) {
+                            projects.push(inputValue);
+                            renderTags();
+                        }
+                        break;
+                    case 'skill':
+                        if (!skills.includes(inputValue)) {
+                            skills.push(inputValue);
+                            renderTags();
+                        }
+                        break;
+                    case 'keyword':
+                        if (!keywords.includes(inputValue)) {
+                            keywords.push(inputValue);
+                            renderTags();
+                        }
+                        break;
+                }
+                document.getElementById(inputId).value = '';
+            }
+        }
+        
+        // Remove tag function
+        function removeTag(type, value) {
+            switch(type) {
+                case 'project':
+                    projects = projects.filter(item => item !== value);
+                    break;
+                case 'skill':
+                    skills = skills.filter(item => item !== value);
+                    break;
+                case 'keyword':
+                    keywords = keywords.filter(item => item !== value);
+                    break;
+            }
+            renderTags();
+        }
+        
+        // Render tags
+        function renderTags() {
+            // Clear containers
+            projectsTagsEl.innerHTML = '';
+            skillsTagsEl.innerHTML = '';
+            keywordsTagsEl.innerHTML = '';
+            
+            // Render projects
+            projects.forEach(project => {
+                const tagEl = document.createElement('div');
+                tagEl.className = 'tag';
+                tagEl.innerHTML = `${project} <span class="remove" onclick="removeTag('project', '${project}')">×</span>`;
+                projectsTagsEl.appendChild(tagEl);
+            });
+            
+            // Render skills
+            skills.forEach(skill => {
+                const tagEl = document.createElement('div');
+                tagEl.className = 'tag';
+                tagEl.innerHTML = `${skill} <span class="remove" onclick="removeTag('skill', '${skill}')">×</span>`;
+                skillsTagsEl.appendChild(tagEl);
+            });
+            
+            // Render keywords
+            keywords.forEach(keyword => {
+                const tagEl = document.createElement('div');
+                tagEl.className = 'tag';
+                tagEl.innerHTML = `${keyword} <span class="remove" onclick="removeTag('keyword', '${keyword}')">×</span>`;
+                keywordsTagsEl.appendChild(tagEl);
+            });
+        }
+        
+        // Save profile
+        async function saveProfile(e) {
+            e.preventDefault();
+            
+            const profile = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                role: document.getElementById('role').value,
+                team: document.getElementById('team').value,
+                projects: projects,
+                skills: skills,
+                keywords: keywords
+            };
+            
+            // Validate required fields
+            if (!profile.name) {
+                showStatus('Please enter your full name', 'error');
+                return;
+            }
+            
+            // Disable save button during processing
+            document.getElementById('saveBtn').disabled = true;
+            showStatus('Saving profile...', 'processing');
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/user-profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(profile)
+                });
+                
+                if (response.ok) {
+                    showStatus('Profile saved successfully!', 'success');
+                } else {
+                    const error = await response.text();
+                    throw new Error(error);
+                }
+            } catch (error) {
+                console.error('Error saving profile:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('saveBtn').disabled = false;
+            }
+        }
+        
+        // Load profile
+        async function loadProfile() {
+            try {
+                const response = await fetch('http://localhost:8000/api/user-profile');
+                
+                if (response.ok) {
+                    const profile = await response.json();
+                    
+                    // Populate form fields
+                    document.getElementById('name').value = profile.name || '';
+                    document.getElementById('email').value = profile.email || '';
+                    document.getElementById('role').value = profile.role || '';
+                    document.getElementById('team').value = profile.team || '';
+                    
+                    // Populate arrays
+                    projects = profile.projects || [];
+                    skills = profile.skills || [];
+                    keywords = profile.keywords || [];
+                    
+                    // Render tags
+                    renderTags();
+                    
+                    showStatus('Profile loaded successfully!', 'success');
+                } else if (response.status === 404) {
+                    showStatus('No profile found. Create a new one.', 'processing');
+                } else {
+                    const error = await response.text();
+                    throw new Error(error);
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + type;
+            statusEl.classList.remove('hidden');
+        }
+        
+        // Make functions available globally for onclick handlers
+        window.removeTag = removeTag;
+        
+        // Load profile on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadProfile();
+        });
+    </script>
+</body>
+</html>

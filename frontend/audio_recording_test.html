@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio Recording Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #recordButton.recording {
+            background-color: #f44336;
+        }
+        .audio-level {
+            height: 30px;
+            background-color: #f0f0f0;
+            border-radius: 15px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .audio-level-bar {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.1s;
+        }
+        .recordings-list {
+            margin-top: 20px;
+        }
+        .recording-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Audio Recording Test</h1>
+    <p>This test will help you verify that your microphone is working correctly and capturing audio.</p>
+    
+    <button id="startButton">Start Recording</button>
+    <button id="stopButton" disabled>Stop Recording</button>
+    
+    <div class="audio-level">
+        <div class="audio-level-bar" id="audioLevelBar"></div>
+    </div>
+    
+    <div>
+        <h3>Recording Status:</h3>
+        <p id="status">Ready to record</p>
+    </div>
+    
+    <div class="recordings-list">
+        <h3>Recorded Audio:</h3>
+        <div id="recordingsContainer"></div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let audioContext;
+        let audioStream;
+        let recordings = [];
+        
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const statusElement = document.getElementById('status');
+        const audioLevelBar = document.getElementById('audioLevelBar');
+        const recordingsContainer = document.getElementById('recordingsContainer');
+        
+        startButton.addEventListener('click', startRecording);
+        stopButton.addEventListener('click', stopRecording);
+        
+        async function startRecording() {
+            try {
+                // Request microphone access
+                audioStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false,
+                        sampleRate: 16000
+                    } 
+                });
+                
+                statusElement.textContent = 'Recording... Speak now!';
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                startButton.classList.add('recording');
+                
+                // Set up audio level monitoring
+                setupAudioLevelMonitoring();
+                
+                // Create media recorder
+                mediaRecorder = new MediaRecorder(audioStream);
+                
+                const audioChunks = [];
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const timestamp = new Date().toLocaleTimeString();
+                    
+                    // Store recording
+                    const recording = {
+                        blob: audioBlob,
+                        url: audioUrl,
+                        timestamp: timestamp,
+                        size: audioBlob.size
+                    };
+                    recordings.push(recording);
+                    
+                    // Display recording
+                    displayRecording(recording);
+                    
+                    statusElement.textContent = `Recording stopped. Size: ${Math.round(audioBlob.size/1024)} KB`;
+                };
+                
+                // Start recording with 5 second chunks
+                mediaRecorder.start(5000);
+                
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                statusElement.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                
+                // Stop all audio tracks
+                if (audioStream) {
+                    audioStream.getTracks().forEach(track => track.stop());
+                }
+                
+                startButton.disabled = false;
+                stopButton.disabled = true;
+                startButton.classList.remove('recording');
+                audioLevelBar.style.width = '0%';
+            }
+        }
+        
+        function setupAudioLevelMonitoring() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioContext.createMediaStreamSource(audioStream);
+                const analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                source.connect(analyser);
+                
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                function updateAudioLevel() {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        analyser.getByteFrequencyData(dataArray);
+                        let sum = 0;
+                        for (let i = 0; i < bufferLength; i++) {
+                            sum += dataArray[i];
+                        }
+                        const average = sum / bufferLength;
+                        const level = Math.min(100, Math.max(0, average));
+                        
+                        audioLevelBar.style.width = level + '%';
+                        
+                        requestAnimationFrame(updateAudioLevel);
+                    }
+                }
+                
+                updateAudioLevel();
+            } catch (e) {
+                console.log('Audio level monitoring not supported');
+            }
+        }
+        
+        function displayRecording(recording) {
+            const recordingElement = document.createElement('div');
+            recordingElement.className = 'recording-item';
+            
+            recordingElement.innerHTML = `
+                <p><strong>Recording ${recordings.length}</strong> - ${recording.timestamp}</p>
+                <p>Size: ${Math.round(recording.size/1024)} KB</p>
+                <audio controls>
+                    <source src="${recording.url}" type="audio/webm">
+                    Your browser does not support the audio element.
+                </audio>
+                <br><br>
+                <button onclick="downloadRecording(${recordings.length-1})">Download</button>
+            `;
+            
+            recordingsContainer.prepend(recordingElement);
+        }
+        
+        function downloadRecording(index) {
+            const recording = recordings[index];
+            const a = document.createElement('a');
+            a.href = recording.url;
+            a.download = `recording-${index+1}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        
+        // Handle page unload
+        window.addEventListener('beforeunload', function() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>

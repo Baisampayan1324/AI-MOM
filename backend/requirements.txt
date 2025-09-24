@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+python-dotenv
+openai-whisper
+groq
+python-multipart
+websockets
+pyaudio
+torch
+numpy
+librosa
+soundfile
+pytest
+black
+flake8

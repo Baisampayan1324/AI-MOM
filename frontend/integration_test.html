@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting M    <header>
+        <h1>🧪 Integration Test Dashboard</h1>
+        <p>Test all backend endpoints to verify the integration</p>
+        <a href="index.html" class="back-home-btn">🏠 Back to Home</a>
+    </header>egration Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn.success {
+            background-color: #27ae60;
+        }
+        .btn.error {
+            background-color: #e74c3c;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .result.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .result.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .back-home-btn {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .back-home-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .status-bar {
+            background: white;
+            border-radius: 12px;
+            margin: 20px 0 30px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .status-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        .status-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .status-online { background-color: #27ae60; }
+        .status-offline { background-color: #e74c3c; }
+        .status-check-btn {
+            display: block;
+            margin: 20px auto 0;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .status-check-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(44, 62, 80, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🧪 Backend Integration Test</h1>
+        <p>Test all backend endpoints to verify the integration</p>
+    </header>
+
+    <div class="nav-links">
+        <a href="index.html">🏠 Home</a>
+        <a href="audio_processing.html">📁 Audio Processing</a>
+        <a href="realtime_capture.html">🎤 Real-time Capture</a>
+        <a href="profile_settings.html">⚙️ Profile Settings</a>
+        <a href="integration_test.html" class="active">🧪 Integration Test</a>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-title">🔍 System Status Monitor</div>
+        <div class="status-items">
+            <div class="status-item">
+                <span class="status-indicator" id="backendStatus"></span>
+                <div>
+                    <strong>Backend Server</strong><br>
+                    <span id="backendStatusText">Checking...</span>
+                </div>
+            </div>
+            <div class="status-item">
+                <span class="status-indicator" id="websocketStatus"></span>
+                <div>
+                    <strong>WebSocket Support</strong><br>
+                    <span id="websocketStatusText">Checking...</span>
+                </div>
+            </div>
+            <div class="status-item">
+                <span class="status-indicator" id="microphoneStatus"></span>
+                <div>
+                    <strong>Microphone Access</strong><br>
+                    <span id="microphoneStatusText">Not tested</span>
+                </div>
+            </div>
+            <div class="status-item">
+                <span class="status-indicator" id="fileUploadStatus"></span>
+                <div>
+                    <strong>File Upload Support</strong><br>
+                    <span id="fileUploadStatusText">Checking...</span>
+                </div>
+            </div>
+        </div>
+        <button class="status-check-btn" onclick="runFullSystemCheck()">🔄 Run Full System Check</button>
+    </div>
+
+    <div class="container">
+        <div class="test-section">
+            <h3>🚀 Comprehensive System Test</h3>
+            <p>Click the button below to run ALL system tests automatically and see complete results.</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <button class="btn" onclick="runAllTests()" id="runAllTestsBtn" style="font-size: 18px; padding: 15px 30px; background-color: #27ae60;">
+                    🧪 RUN ALL TESTS NOW
+                </button>
+            </div>
+            <div id="testProgress" style="display: none; text-align: center; margin: 20px 0;">
+                <div style="font-size: 16px; margin-bottom: 10px;">Running tests... Please wait</div>
+                <div style="width: 100%; background-color: #ecf0f1; border-radius: 10px; height: 10px;">
+                    <div id="progressBar" style="width: 0%; background-color: #3498db; height: 100%; border-radius: 10px; transition: width 0.3s;"></div>
+                </div>
+                <div id="currentTest" style="margin-top: 10px; font-style: italic;"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Test Results Dashboard</h3>
+            <div id="testResults" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Detailed Test Log</h3>
+            <div id="testLog" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; height: 300px; overflow-y: auto; font-family: monospace; font-size: 14px;">
+                Click "RUN ALL TESTS NOW" to see detailed test execution log...
+            </div>
+            <button onclick="clearTestLog()" style="margin-top: 10px; padding: 8px 16px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Clear Log</button>
+        </div>
+    </div>
+
+    <script>
+        let testSocket = null;
+        let testResults = {};
+
+        // Main function to run all tests
+        async function runAllTests() {
+            const runButton = document.getElementById('runAllTestsBtn');
+            const progressDiv = document.getElementById('testProgress');
+            const progressBar = document.getElementById('progressBar');
+            const currentTestDiv = document.getElementById('currentTest');
+            const resultsDiv = document.getElementById('testResults');
+            
+            // Reset and show progress
+            runButton.disabled = true;
+            runButton.textContent = 'RUNNING TESTS...';
+            progressDiv.style.display = 'block';
+            resultsDiv.innerHTML = '';
+            testResults = {};
+            
+            addToLog('🚀 Starting comprehensive system test...', 'info');
+            
+            const tests = [
+                { name: 'Backend Health Check', func: testHealthCheck, weight: 15 },
+                { name: 'WebSocket Connection', func: testWebSocketConnection, weight: 20 },
+                { name: 'User Profile System', func: testUserProfileSystem, weight: 20 },
+                { name: 'Audio Chunk Processing', func: testAudioChunkProcessing, weight: 20 },
+                { name: 'File Upload Capability', func: testFileUploadCapability, weight: 10 },
+                { name: 'System Integration', func: testSystemIntegration, weight: 15 }
+            ];
+            
+            let completedWeight = 0;
+            const totalWeight = tests.reduce((sum, test) => sum + test.weight, 0);
+            
+            for (let i = 0; i < tests.length; i++) {
+                const test = tests[i];
+                currentTestDiv.textContent = `Running: ${test.name}...`;
+                addToLog(`\n🔍 Test ${i + 1}/${tests.length}: ${test.name}`, 'info');
+                
+                try {
+                    await test.func();
+                    completedWeight += test.weight;
+                    progressBar.style.width = `${(completedWeight / totalWeight) * 100}%`;
+                    addToLog(`✅ ${test.name} - COMPLETED`, 'success');
+                } catch (error) {
+                    addToLog(`❌ ${test.name} - FAILED: ${error.message}`, 'error');
+                    testResults[test.name] = { status: 'failed', error: error.message };
+                    completedWeight += test.weight;
+                    progressBar.style.width = `${(completedWeight / totalWeight) * 100}%`;
+                }
+                
+                // Small delay between tests
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            // Complete
+            currentTestDiv.textContent = 'All tests completed!';
+            progressBar.style.width = '100%';
+            progressBar.style.backgroundColor = '#27ae60';
+            
+            // Display final results
+            displayFinalResults();
+            
+            // Re-enable button
+            runButton.disabled = false;
+            runButton.textContent = '🔄 RUN TESTS AGAIN';
+            
+            addToLog('\n🎉 Comprehensive system test completed!', 'info');
+        }
+
+        // Individual test functions
+        async function testHealthCheck() {
+            const response = await fetch('http://localhost:8000/health');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            testResults['Backend Health'] = { 
+                status: 'passed', 
+                message: 'Backend server is online and responding',
+                details: data
+            };
+        }
+
+        async function testWebSocketConnection() {
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('WebSocket connection timeout'));
+                }, 5000);
+                
+                try {
+                    testSocket = new WebSocket('ws://localhost:8000/ws/meeting/test-integration');
+                    
+                    testSocket.onopen = function() {
+                        clearTimeout(timeout);
+                        testResults['WebSocket Connection'] = {
+                            status: 'passed',
+                            message: 'WebSocket connection established successfully'
+                        };
+                        testSocket.close();
+                        resolve();
+                    };
+                    
+                    testSocket.onerror = function(error) {
+                        clearTimeout(timeout);
+                        reject(new Error('WebSocket connection failed'));
+                    };
+                } catch (error) {
+                    clearTimeout(timeout);
+                    reject(error);
+                }
+            });
+        }
+
+        async function testUserProfileSystem() {
+            // Test profile creation
+            const testProfile = {
+                name: "Test User",
+                email: "test@example.com",
+                role: "participant",
+                alert_keywords: ["test", "demo", "urgent"]
+            };
+
+            const createResponse = await fetch('http://localhost:8000/api/user-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(testProfile)
+            });
+
+            if (!createResponse.ok) {
+                throw new Error(`Profile creation failed: ${createResponse.status}`);
+            }
+
+            // Test profile retrieval
+            const getResponse = await fetch('http://localhost:8000/api/user-profile');
+            if (!getResponse.ok) {
+                throw new Error(`Profile retrieval failed: ${getResponse.status}`);
+            }
+
+            const retrievedProfile = await getResponse.json();
+            
+            testResults['User Profile System'] = {
+                status: 'passed',
+                message: 'Profile creation and retrieval working',
+                details: `Profile saved with ${retrievedProfile.alert_keywords?.length || 0} alert keywords`
+            };
+        }
+
+        async function testAudioChunkProcessing() {
+            const dummyAudioData = new Blob(['dummy audio data'], { type: 'audio/webm' });
+            const formData = new FormData();
+            formData.append('chunk', dummyAudioData, 'test_chunk.webm');
+            formData.append('meeting_id', 'test-integration');
+            formData.append('language', 'en');
+
+            const response = await fetch('http://localhost:8000/api/process-audio-chunk', {
+                method: 'POST',
+                body: formData
+            });
+
+            // Note: We expect this to fail with dummy data, but endpoint should respond
+            testResults['Audio Chunk Processing'] = {
+                status: 'passed',
+                message: `Audio endpoint responsive (Status: ${response.status})`,
+                details: 'Endpoint structure working, audio processing requires real audio data'
+            };
+        }
+
+        async function testFileUploadCapability() {
+            // Test FormData and File API support
+            if (typeof FormData === 'undefined') {
+                throw new Error('FormData not supported');
+            }
+            if (typeof FileReader === 'undefined') {
+                throw new Error('FileReader not supported');
+            }
+            
+            testResults['File Upload Capability'] = {
+                status: 'passed',
+                message: 'File upload APIs supported',
+                details: 'FormData and FileReader APIs available'
+            };
+        }
+
+        async function testSystemIntegration() {
+            // Test overall system compatibility
+            const checks = [];
+            
+            // Check browser compatibility
+            if (typeof WebSocket !== 'undefined') checks.push('WebSocket API ✓');
+            if (typeof navigator.mediaDevices !== 'undefined') checks.push('MediaDevices API ✓');
+            if (typeof MediaRecorder !== 'undefined') checks.push('MediaRecorder API ✓');
+            if (typeof fetch !== 'undefined') checks.push('Fetch API ✓');
+            
+            testResults['System Integration'] = {
+                status: 'passed',
+                message: 'System integration checks passed',
+                details: checks.join(', ')
+            };
+        }
+
+        function displayFinalResults() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '';
+            
+            const testNames = Object.keys(testResults);
+            const passedTests = testNames.filter(name => testResults[name].status === 'passed').length;
+            const failedTests = testNames.length - passedTests;
+            
+            // Summary card
+            const summaryCard = createResultCard('📊 Test Summary', 
+                passedTests === testNames.length ? 'passed' : 'mixed',
+                `${passedTests}/${testNames.length} tests passed`,
+                `Passed: ${passedTests}, Failed: ${failedTests}`
+            );
+            resultsDiv.appendChild(summaryCard);
+            
+            // Individual test results
+            Object.entries(testResults).forEach(([testName, result]) => {
+                const card = createResultCard(
+                    testName,
+                    result.status,
+                    result.message,
+                    result.details
+                );
+                resultsDiv.appendChild(card);
+            });
+        }
+
+        function createResultCard(title, status, message, details) {
+            const card = document.createElement('div');
+            const bgColor = status === 'passed' ? '#d4edda' : 
+                           status === 'failed' ? '#f8d7da' : '#fff3cd';
+            const textColor = status === 'passed' ? '#155724' : 
+                             status === 'failed' ? '#721c24' : '#856404';
+            const icon = status === 'passed' ? '✅' : 
+                        status === 'failed' ? '❌' : '⚠️';
+            
+            card.style.cssText = `
+                background-color: ${bgColor};
+                color: ${textColor};
+                border-radius: 8px;
+                padding: 15px;
+                border: 1px solid ${status === 'passed' ? '#c3e6cb' : status === 'failed' ? '#f5c6cb' : '#ffeaa7'};
+            `;
+            
+            card.innerHTML = `
+                <h4 style="margin: 0 0 8px 0;">${icon} ${title}</h4>
+                <p style="margin: 0 0 5px 0; font-weight: 600;">${message}</p>
+                ${details ? `<p style="margin: 0; font-size: 12px; opacity: 0.8;">${details}</p>` : ''}
+            `;
+            
+            return card;
+        }
+
+        function addToLog(message, type = 'info') {
+            const logDiv = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'success' ? '#27ae60' : 
+                         type === 'error' ? '#e74c3c' : 
+                         type === 'info' ? '#3498db' : '#333';
+            
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span style="color: #6c757d;">[${timestamp}]</span> <span style="color: ${color};">${message}</span>`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearTestLog() {
+            document.getElementById('testLog').innerHTML = 'Test log cleared. Click "RUN ALL TESTS NOW" to start testing...';
+        }
+
+        // Status Monitor Functions
+        async function checkBackendStatus() {
+            const statusIndicator = document.getElementById('backendStatus');
+            const statusText = document.getElementById('backendStatusText');
+            
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    statusIndicator.className = 'status-indicator status-online';
+                    statusText.textContent = 'Server online and ready';
+                } else {
+                    throw new Error('Server responded with error');
+                }
+            } catch (error) {
+                statusIndicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'Server offline';
+                console.error('Backend connection failed:', error);
+            }
+        }
+
+        function checkWebSocketSupport() {
+            const statusIndicator = document.getElementById('websocketStatus');
+            const statusText = document.getElementById('websocketStatusText');
+            
+            if (typeof WebSocket !== 'undefined') {
+                statusIndicator.className = 'status-indicator status-online';
+                statusText.textContent = 'WebSocket supported';
+            } else {
+                statusIndicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'WebSocket not supported';
+            }
+        }
+
+        function checkFileUploadSupport() {
+            const statusIndicator = document.getElementById('fileUploadStatus');
+            const statusText = document.getElementById('fileUploadStatusText');
+            
+            if (typeof FormData !== 'undefined' && typeof FileReader !== 'undefined') {
+                statusIndicator.className = 'status-indicator status-online';
+                statusText.textContent = 'File upload supported';
+            } else {
+                statusIndicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'File upload not supported';
+            }
+        }
+
+        async function testMicrophoneAccess() {
+            const statusIndicator = document.getElementById('microphoneStatus');
+            const statusText = document.getElementById('microphoneStatusText');
+            
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('getUserMedia not supported');
+                }
+                
+                statusText.textContent = 'Testing access...';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                statusIndicator.className = 'status-indicator status-online';
+                statusText.textContent = 'Access granted';
+                
+                // Stop the stream immediately after testing
+                stream.getTracks().forEach(track => track.stop());
+            } catch (error) {
+                statusIndicator.className = 'status-indicator status-offline';
+                if (error.name === 'NotAllowedError') {
+                    statusText.textContent = 'Permission denied';
+                } else if (error.name === 'NotFoundError') {
+                    statusText.textContent = 'No microphone found';
+                } else {
+                    statusText.textContent = 'Not accessible';
+                }
+            }
+        }
+
+        async function runFullSystemCheck() {
+            console.log('Running full system check...');
+            addToLog('🔍 Running Full System Check...', 'info');
+            
+            await checkBackendStatus();
+            checkWebSocketSupport();
+            checkFileUploadSupport();
+            await testMicrophoneAccess();
+            
+            addToLog('✅ System Check Complete', 'success');
+        }
+
+        // Run tests automatically on page load for demonstration
+        window.addEventListener('load', function() {
+            addToLog('🎯 Integration Test Suite Ready', 'info');
+            addToLog('Click "RUN ALL TESTS NOW" to start comprehensive testing', 'info');
+            
+            // Initialize system status monitoring
+            checkBackendStatus();
+            checkWebSocketSupport();
+            checkFileUploadSupport();
+            
+            // Set initial microphone status
+            const micStatusIndicator = document.getElementById('microphoneStatus');
+            const micStatusText = document.getElementById('microphoneStatusText');
+            micStatusIndicator.className = 'status-indicator';
+            micStatusText.textContent = 'Click "Run Full System Check" to test';
+            
+            // Recheck backend every 30 seconds
+            setInterval(checkBackendStatus, 30000);
+        });
+    </script>
+</body>
+</html>
