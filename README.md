@@ -1,10 +1,20 @@
+<div align="center">
+
 # 🎙️ AI-MOM
 
-> **A comprehensive real-time meeting transcription, analysis, and summarization system with multi-platform support.**
+### *Intelligent Meeting Transcription & AI-Powered Analysis*
+
+**A comprehensive real-time meeting transcription, analysis, and summarization system with multi-platform support.**
 
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.68+-green.svg)](https://fastapi.tiangolo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![AI Powered](https://img.shields.io/badge/AI-Powered-brightgreen.svg)]()
+[![Real-time](https://img.shields.io/badge/Real--time-Processing-orange.svg)]()
+
+*Transform your meetings with cutting-edge AI transcription technology*
+
+</div>
 
 ---
 
