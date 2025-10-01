@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI MOM Sidebar</title>
+  <meta http-equiv="Permissions-Policy" content="microphone=*">
+  <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+  <div class="sidebar-container">
+    <!-- Header -->
+    <div class="sidebar-header">
+      <div class="logo-section">
+        <div class="logo">🎙️</div>
+        <div>
+          <h1>AI Meeting Minutes</h1>
+          <p class="subtitle">Real-time transcription</p>
+        </div>
+      </div>
+      <button class="close-btn" id="closeBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mode Toggle -->
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="online">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        Online Mode
+      </button>
+      <button class="mode-btn" data-mode="offline">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M13 2L3 14h8l-1 8 10-12h-8z"/>
+        </svg>
+        Offline Mode
+      </button>
+    </div>
+
+    <!-- Online Mode Content -->
+    <div class="mode-content" id="onlineMode">
+      <!-- Connection Status -->
+      <div class="status-card">
+        <div class="status-indicator" id="connectionStatus">
+          <span class="status-dot"></span>
+          <span class="status-text">Not connected</span>
+        </div>
+      </div>
+
+      <!-- Recording Controls -->
+      <div class="controls-card">
+        <button class="control-btn start-btn" id="startRecording">
+          <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
+          Start Recording
+        </button>
+        
+        <button class="control-btn stop-btn hidden" id="stopRecording">
+          <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <rect x="6" y="6" width="12" height="12" rx="2"/>
+          </svg>
+          Stop Recording
+        </button>
+      </div>
+
+      <!-- Audio Visualizer -->
+      <div class="visualizer-card hidden" id="visualizer">
+        <div class="audio-bars">
+          <div class="audio-bar"></div>
+          <div class="audio-bar"></div>
+          <div class="audio-bar"></div>
+          <div class="audio-bar"></div>
+          <div class="audio-bar"></div>
+        </div>
+      </div>
+
+      <!-- Transcript -->
+      <div class="transcript-card">
+        <h3>Live Transcript</h3>
+        <div class="transcript-content" id="transcript">
+          <div class="empty-state">
+            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M8 10h8M8 14h8M8 18h4" stroke-width="2" stroke-linecap="round"/>
+              <rect x="4" y="4" width="16" height="16" rx="2" stroke-width="2"/>
+            </svg>
+            <p>Start recording to see transcript</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary-card hidden" id="summary">
+        <h3>AI Summary</h3>
+        <div class="summary-content"></div>
+      </div>
+    </div>
+
+    <!-- Offline Mode Content -->
+    <div class="mode-content hidden" id="offlineMode">
+      <!-- File Upload -->
+      <div class="upload-card">
+        <div class="upload-zone" id="uploadZone">
+          <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M7 18a4.6 4.4 0 0 1 0 -9h0a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1" stroke-width="2" stroke-linecap="round"/>
+            <polyline points="9 15 12 12 15 15" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 12v9" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <p class="upload-text">Drag & drop audio file</p>
+          <p class="upload-subtext">or click to browse</p>
+          <p class="upload-formats">MP3, WAV, M4A</p>
+          <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,audio/*" hidden>
+        </div>
+
+        <div class="file-info hidden" id="fileInfo">
+          <div class="file-icon">🎵</div>
+          <div class="file-details">
+            <p class="file-name" id="fileName"></p>
+            <p class="file-size" id="fileSize"></p>
+          </div>
+        </div>
+
+        <button class="process-btn hidden" id="processBtn">Process Audio</button>
+        
+        <div class="progress-bar hidden" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+          <p class="progress-text" id="progressText">0%</p>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="transcript-card hidden" id="offlineTranscript">
+        <h3>Transcript</h3>
+        <div class="transcript-content" id="offlineTranscriptContent"></div>
+      </div>
+
+      <div class="summary-card hidden" id="offlineSummary">
+        <h3>Analysis</h3>
+        <div class="summary-content" id="offlineSummaryContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="sidebar.js"></script>
+</body>
+</html>

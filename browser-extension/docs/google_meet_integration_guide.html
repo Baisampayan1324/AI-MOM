@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Meeting Extension - Google Meet Integration Guide</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            line-height: 1.6;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            text-align: center;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            font-size: 1.2em;
+        }
+        .step {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #fbbf24;
+        }
+        .step h3 {
+            color: #fbbf24;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .step-number {
+            background: #fbbf24;
+            color: #1e293b;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+        .warning {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 3px solid #10b981;
+        }
+        .feature-list li::before {
+            content: "✅ ";
+            margin-right: 10px;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px 10px 10px 0;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background: rgba(16, 185, 129, 0.3);
+            border: 1px solid #10b981;
+        }
+        .status.error {
+            background: rgba(239, 68, 68, 0.3);
+            border: 1px solid #ef4444;
+        }
+        .status.pending {
+            background: rgba(251, 191, 36, 0.3);
+            border: 1px solid #fbbf24;
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 AI Meeting Extension</h1>
+        <div class="subtitle">Google Meet Integration Guide</div>
+
+        <div class="success">
+            <h4>🎉 Enhanced Permission System</h4>
+            <p>The extension now automatically detects and inherits microphone permissions from Google Meet!</p>
+        </div>
+
+        <div class="step">
+            <h3><span class="step-number">1</span>Install the Extension</h3>
+            <ol>
+                <li>Open Chrome and go to <span class="code">chrome://extensions/</span></li>
+                <li>Enable "Developer mode" (top right toggle)</li>
+                <li>Click "Load unpacked"</li>
+                <li>Select the <span class="code">p:\\AI_MOM\\browser-extension</span> folder</li>
+                <li>Verify the extension appears in your toolbar</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3><span class="step-number">2</span>Start the Backend</h3>
+            <div class="code">
+                cd backend<br>
+                python main.py
+            </div>
+            <p>Ensure the backend is running on <strong>localhost:8000</strong></p>
+        </div>
+
+        <div class="step">
+            <h3><span class="step-number">3</span>Open Google Meet</h3>
+            <ol>
+                <li>Go to <a href="https://meet.google.com" target="_blank" style="color: #fbbf24;">meet.google.com</a></li>
+                <li>Join or start a meeting</li>
+                <li><strong>Allow microphone access</strong> when prompted by Google Meet</li>
+                <li>This is crucial - the extension will inherit this permission!</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3><span class="step-number">4</span>Use the Extension</h3>
+            <ol>
+                <li>Click the AI Meeting Extension icon in your browser toolbar</li>
+                <li>The extension will <strong>automatically check permissions</strong></li>
+                <li>If Google Meet has microphone access, the extension inherits it</li>
+                <li>Click "Open Transcription Panel"</li>
+                <li>Click "Start Recording" in Online Mode</li>
+                <li>Speak and watch real-time transcription!</li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <h4>⚠️ Important Notes</h4>
+            <ul>
+                <li>The extension must be used <strong>on the same Google Meet tab</strong> where microphone permission was granted</li>
+                <li>If you get permission errors, click "Check Permissions" in the extension popup</li>
+                <li>Refresh the Google Meet page if the extension doesn't work initially</li>
+                <li>Ensure the backend is running before starting recording</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test Integration</h3>
+            <p>Test the extension components individually:</p>
+            
+            <div id="backendStatus" class="status pending">Backend: Checking...</div>
+            <button onclick="testBackend()">Test Backend</button>
+            
+            <div id="extensionStatus" class="status pending">Extension: Not tested</div>
+            <button onclick="testExtension()">Test Extension API</button>
+            
+            <div id="permissionStatus" class="status pending">Permissions: Not checked</div>
+            <button onclick="testPermissions()">Test Microphone</button>
+        </div>
+
+        <div class="success">
+            <h4>✨ New Features</h4>
+            <ul class="feature-list">
+                <li>Automatic permission inheritance from Google Meet</li>
+                <li>Smart permission detection and validation</li>
+                <li>Enhanced error handling and user feedback</li>
+                <li>Auto-connection to backend with retry logic</li>
+                <li>Real-time status indicators with visual feedback</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function testBackend() {
+            const statusDiv = document.getElementById('backendStatus');
+            statusDiv.textContent = 'Backend: Testing...';
+            statusDiv.className = 'status pending';
+
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                const data = await response.json();
+
+                if (data.status === 'healthy') {
+                    statusDiv.textContent = 'Backend: ✅ Running and healthy';
+                    statusDiv.className = 'status success';
+                } else {
+                    throw new Error('Unhealthy response');
+                }
+            } catch (error) {
+                statusDiv.textContent = 'Backend: ❌ Not running or unreachable';
+                statusDiv.className = 'status error';
+            }
+        }
+
+        async function testExtension() {
+            const statusDiv = document.getElementById('extensionStatus');
+            statusDiv.textContent = 'Extension: Testing...';
+            statusDiv.className = 'status pending';
+
+            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                statusDiv.textContent = 'Extension: ✅ Chrome API available';
+                statusDiv.className = 'status success';
+            } else {
+                statusDiv.textContent = 'Extension: ❌ Chrome API not available';
+                statusDiv.className = 'status error';
+            }
+        }
+
+        async function testPermissions() {
+            const statusDiv = document.getElementById('permissionStatus');
+            statusDiv.textContent = 'Permissions: Testing...';
+            statusDiv.className = 'status pending';
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop());
+                
+                statusDiv.textContent = 'Permissions: ✅ Microphone access granted';
+                statusDiv.className = 'status success';
+            } catch (error) {
+                if (error.name === 'NotAllowedError') {
+                    statusDiv.textContent = 'Permissions: ❌ Microphone access denied';
+                } else {
+                    statusDiv.textContent = 'Permissions: ❌ Error: ' + error.message;
+                }
+                statusDiv.className = 'status error';
+            }
+        }
+
+        // Auto-test backend on load
+        window.addEventListener('load', () => {
+            testBackend();
+            testExtension();
+        });
+    </script>
+</body>
+</html>

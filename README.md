@@ -115,7 +115,7 @@ AI-MOM is an intelligent meeting transcription system that automatically convert
 | Component | Technology | Purpose |
 |-----------|------------|---------|
 | **Backend** | FastAPI + Python | Core API and processing |
-| **Frontend** | HTML5 + JavaScript | Web interface |
+| **Frontend** | React 18 + TypeScript + Vite | Modern web interface |
 | **Extension** | Chrome Manifest V3 | Browser integration |
 | **AI Engine** | Whisper + Groq | Transcription and analysis |
 | **WebSocket** | FastAPI WebSocket | Real-time communication |
@@ -159,22 +159,38 @@ cp .env.example .env
 # Edit .env file with your Groq API key
 ```
 
-#### 3️⃣ Start Server
+#### 3️⃣ Frontend Setup
 ```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+✅ Frontend running at `http://localhost:8080`
+
+#### 4️⃣ Start Backend Server
+```bash
+# In a separate terminal
+cd backend
 python main.py
 ```
-✅ Server running at `http://localhost:8000`
+✅ Backend running at `http://localhost:8000`
 
-#### 4️⃣ Access Web Interface
+#### 5️⃣ Access Application
 Open your browser and navigate to:
-- **Real-time Transcription**: `http://localhost:8000/frontend/realtime_capture.html`
-- **File Processing**: `http://localhost:8000/frontend/audio_processing.html`
-- **Profile Settings**: `http://localhost:8000/frontend/profile_settings.html`
+- **Main Application**: `http://localhost:8080`
+- **Real-time Transcription**: Navigate from the main interface
+- **File Processing**: Navigate from the main interface
+- **Profile Settings**: Navigate from the main interface
 
 #### 5️⃣ Install Browser Extension (Optional)
 1. Open Chrome → Settings → Extensions
 2. Enable "Developer mode"
-3. Click "Load unpacked" → Select `/extension` folder
+3. Click "Load unpacked" → Select `browser-extension` folder
 4. Pin extension to toolbar
 
 ---
@@ -185,7 +201,7 @@ Open your browser and navigate to:
 
 **Step 1: Setup Profile**
 ```javascript
-// Navigate to profile_settings.html
+// Navigate to profile settings page
 {
   "name": "John Doe",
   "role": "Product Manager",
@@ -196,7 +212,7 @@ Open your browser and navigate to:
 
 **Step 2: Start Session**
 ```javascript
-// In realtime_capture.html
+// In the real-time capture interface
 1. Enter Meeting ID: "team-standup-2024-01-15"
 2. Select Language: "English"
 3. Click "Connect to Meeting"
@@ -622,10 +638,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **[FastAPI](https://fastapi.tiangolo.com)** - Modern Python web framework
 
 **Development Team**:
-- **Pandey Sanjit Vinod** - Frontend Developer & Project Manager
-- **Baisampayan Dey** - Lead Developer & Project Architect
-- **Dhruv Motaval** - Backend Developer & AI Integration Specialist
-- **Aryan Patil** - Quality Assurance & Testing
+- **Pandey Sanjit Vinod**
+- **Baisampayan Dey**
+- **Dhruv Motaval**
+- **Aryan Patil**
 
 **Community**:
 - Contributors and beta testers
@@ -642,9 +658,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### 🎯 Current Development Focus
 
+- [x] **Modern React Frontend**: Upgraded to React 18 + TypeScript + Vite with Shadcn UI
 - [ ] **Enhanced Speaker Diarization**: Improved voice identification accuracy
 - [ ] **Advanced Alert System**: More sophisticated notification rules
-- [ ] **Better UI/UX**: Enhanced user interfaces and workflows
 - [ ] **Performance Optimization**: Faster processing and lower latency
 - [ ] **Additional Language Support**: Expand beyond current capabilities
 
@@ -671,7 +687,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Backend Guide**: [backend/README.md](backend/README.md)
 - **Frontend Guide**: [frontend/README.md](frontend/README.md)
-- **Extension Guide**: [extension/README.md](extension/README.md)
+- **Extension Guide**: [browser-extension/README.md](browser-extension/README.md)
 - **Testing Guide**: [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
 
 ---
@@ -706,25 +722,35 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Tech Stack**: FastAPI, Python 3.9+, OpenAI Whisper, Groq API, WebSocket
 
 ### 🌐 Web Frontend (`/frontend`)
-**Modern web interface with enhanced UI for complete meeting management**
+**Modern React application with TypeScript for complete meeting management**
 
-**Applications**:
-- `index.html`: Modern home page with tool navigation and feature overview
-- `realtime_capture.html`: Live meeting transcription with enhanced UI and speaker alerts
-- `audio_processing.html`: Improved file upload interface with drag-and-drop functionality
-- `profile_settings.html`: Local profile management for personalized alerts (no sign-in required)
+**Key Features**:
+- **React 18.3.1**: Modern component-based architecture
+- **TypeScript 5.8.3**: Type-safe development with excellent IDE support
+- **Vite 5.4.19**: Lightning-fast HMR and optimized builds
+- **Shadcn UI**: 40+ accessible, customizable UI components
+- **Tailwind CSS**: Utility-first styling with responsive design
+- **React Router**: Client-side routing for seamless navigation
+- **TanStack Query**: Powerful server state management
+
+**Application Pages**:
+- **Index**: Modern landing page with navigation
+- **Real-time Capture**: Live transcription with speaker alerts
+- **File Processing**: Drag-and-drop audio file upload
+- **Profile Settings**: User preferences and alert configuration
+- **Not Found**: Custom 404 error page
 
 **Enhanced Features**:
-- **Modern UI Design**: Completely redesigned interface with professional styling
-- **Improved User Experience**: Streamlined workflows and intuitive controls
-- **Responsive Design**: Optimized for all device sizes
-- **Real-time WebSocket Communication**: Live updates and notifications
-- **Enhanced Audio Processing**: Better file handling and progress tracking
-- **Local Profile System**: Personalized alerts without authentication complexity
+- **Modern UI Design**: Professional interface with gradient themes
+- **Component Library**: 40+ reusable Shadcn UI components
+- **Type Safety**: Full TypeScript coverage for reliability
+- **Hot Module Replacement**: Instant updates during development
+- **Optimized Builds**: Production-ready with code splitting
+- **Backend Integration**: Proxy configuration for seamless API calls
 
-**Tech Stack**: HTML5, CSS3, JavaScript ES6+, Web Audio API, WebSocket API
+**Tech Stack**: React, TypeScript, Vite, Tailwind CSS, Shadcn UI, React Router, TanStack Query
 
-### 🔌 Browser Extension (`/extension`)
+### 🔌 Browser Extension (`/browser-extension`)
 **Enhanced Chrome extension with professional UI bringing real-time transcription to any webpage**
 
 **Enhanced Capabilities**:
@@ -963,15 +989,20 @@ Open any of these interfaces in your browser:
 - **JSON Schema**: Data structure validation and documentation
 
 ### Frontend Technologies
-- **HTML5**: Semantic markup with modern features
-- **CSS3**: Advanced styling with animations and transitions
-- **JavaScript (ES6+)**: Client-side programming language
+- **React 18.3.1**: Modern UI framework with hooks and concurrent features
+- **TypeScript 5.8.3**: Type-safe JavaScript with enhanced IDE support
+- **Vite 5.4.19**: Next-generation build tool with HMR
+- **Tailwind CSS 3.4.17**: Utility-first CSS framework
+- **Shadcn UI**: 40+ accessible UI components built on Radix UI
+- **React Router 6.30.1**: Client-side routing and navigation
+- **TanStack Query 5.83.0**: Powerful server state management
+- **React Hook Form 7.61.1**: Performant form validation
+- **Zod 3.25.76**: TypeScript-first schema validation
+- **Sonner 1.7.4**: Toast notifications component
+- **Lucide React**: Modern icon library
 - **Web Audio API**: Real-time audio capture and visualization
 - **WebSocket API**: Client-side real-time communication
 - **LocalStorage API**: Client-side data persistence
-- **Fetch API**: Modern AJAX requests for HTTP communication
-- **CSS Grid/Flexbox**: Responsive layout design
-- **Web Notifications API**: Browser notifications for alerts
 - **MediaDevices API**: Access to audio input devices
 
 ### Chrome Extension
@@ -987,9 +1018,14 @@ Open any of these interfaces in your browser:
 ### Development Tools
 - **Git**: Version control system
 - **VSCode**: Development environment
-- **npm/pip**: Package management
-- **ESLint/Pylint**: Code quality assurance
+- **npm**: JavaScript package management
+- **pip**: Python package management
+- **TypeScript**: Static type checking
+- **ESLint**: JavaScript/TypeScript code linting
+- **Pylint**: Python code quality assurance
+- **Prettier**: Code formatting
 - **Chrome DevTools**: Browser-based debugging
+- **React DevTools**: React component debugging
 - **Postman**: API testing and documentation
 - **WebSocket testing tools**: Real-time communication testing
 
@@ -1017,15 +1053,17 @@ Open any of these interfaces in your browser:
 ### Web Frontend (`/frontend`)
 **[📖 Complete Frontend Documentation](frontend/README.md)**
 
-- Three specialized interfaces for different use cases
+- Modern React 18 application with TypeScript
 - Real-time transcription with speaker alerts
-- Audio file processing with batch capabilities
+- Audio file processing with drag-and-drop
 - Profile management for personalized experiences
-- Responsive design for all devices
-- Session persistence and data recovery
+- 40+ Shadcn UI components for consistent UX
+- Responsive design optimized for all devices
+- Vite-powered development with HMR
+- Production-ready optimized builds
 
-### Browser Extension (`/extension`)
-**[📖 Complete Extension Documentation](extension/README.md)**
+### Browser Extension (`/browser-extension`)
+**[📖 Complete Extension Documentation](browser-extension/README.md)**
 
 - Chrome Manifest V3 compatible extension
 - Real-time transcription on any webpage
@@ -1053,7 +1091,9 @@ python tests/test_chunk_endpoint.py       # Real-time chunk processing
 ```
 
 **Frontend Tests**:
-- Manual testing procedures in each component README
+- Component unit tests (React Testing Library)
+- TypeScript type checking
+- Build validation and optimization checks
 - Browser compatibility validation
 - Microphone access and permissions testing
 - WebSocket connection reliability testing

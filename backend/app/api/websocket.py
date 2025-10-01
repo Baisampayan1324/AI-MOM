@@ -36,6 +36,9 @@ class ConnectionManager:
 # Initialize connection manager
 manager = ConnectionManager()
 
+# Store browser extension connections separately
+browser_extension_connections: List[WebSocket] = []
+
 # Create router
 router = APIRouter()
 
@@ -50,3 +53,26 @@ async def websocket_endpoint(websocket: WebSocket, meeting_id: str):
             await manager.send_personal_message(f"Echo: {data}", websocket)
     except WebSocketDisconnect:
         manager.disconnect(websocket, meeting_id)
+
+@router.websocket("/ws/browser-extension")
+async def browser_extension_websocket(websocket: WebSocket):
+    await websocket.accept()
+    browser_extension_connections.append(websocket)
+    try:
+        while True:
+            # Keep the connection alive
+            data = await websocket.receive_text()
+            # Echo back for testing
+            await websocket.send_text(f"Echo: {data}")
+    except WebSocketDisconnect:
+        if websocket in browser_extension_connections:
+            browser_extension_connections.remove(websocket)
+
+async def broadcast_to_browser_extensions(message: dict):
+    """Broadcast message to all connected browser extensions"""
+    for connection in browser_extension_connections:
+        try:
+            await connection.send_text(json.dumps(message))
+        except:
+            # Remove dead connections
+            browser_extension_connections.remove(connection)

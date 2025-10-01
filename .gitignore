@@ -1,90 +1,180 @@
-# AI MOM .gitignore
+# ============================================
+# AI-MOM Project .gitignore
+# Updated: October 2, 2025
+# ============================================
 
-# Audio files and folders
-audio/
-*.mp3
-*.mp4
-*.wav
-*.m4a
-*.flac
-*.ogg
-
-# Test folders and files
-tests/
-test_*.py
-*_test.py
-test_*.txt
-test_*.json
-
-# Demo UI folder
-DemoUI/
-demo_ui/
-
-# Documentation folders
-docs/
-doc/
-documentation/
-
-# Report folders
-report/
-reports/
-*.report
-
-# User profile files
-userprofile.json
-user_profile.json
-*.profile
-
-# Environment variables
+# ============================================
+# ENVIRONMENT & SECRETS
+# ============================================
 .env
+.env.local
+.env.*.local
 backend/.env
+*.key
+*.pem
 
-# Virtual environments
+# ============================================
+# PYTHON
+# ============================================
+# Virtual Environments
 venv/
 env/
 .venv/
-.env/
-virtualenv/
 ENV/
 env.bak/
 venv.bak/
+virtualenv/
 
-# Python cache
+# Python Cache
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.egg
+*.egg-info/
+dist/
+build/
+.Python
 
-# IDE files
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ============================================
+# NODE.JS / FRONTEND
+# ============================================
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ============================================
+# AUDIO FILES (Too large for git)
+# ============================================
+audio/*.mp3
+audio/*.mp4
+audio/*.wav
+audio/*.m4a
+audio/*.flac
+audio/*.ogg
+audio/*.aac
+
+# Keep README in audio folder
+!audio/README.md
+
+# ============================================
+# USER DATA & GENERATED CONTENT
+# ============================================
+user_profile.json
+userprofile.json
+*.profile
+transcriptions/
+summaries/
+meeting_data/
+
+# ============================================
+# IDE & EDITORS
+# ============================================
+# VSCode
 .vscode/
+!.vscode/extensions.json
+
+# JetBrains
 .idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
 *.swp
 *.swo
 *~
 
-# OS files
+# ============================================
+# OPERATING SYSTEM FILES
+# ============================================
+# macOS
 .DS_Store
 .DS_Store?
+.AppleDouble
+.LSOverride
 ._*
 .Spotlight-V100
 .Trashes
-ehthumbs.db
+
+# Windows
 Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
 
-# Logs
-*.log
-logs/
+# Linux
+*~
+.directory
+.Trash-*
 
-# Temporary files
+# ============================================
+# TEMPORARY FILES
+# ============================================
 *.tmp
 *.temp
+*.bak
 .tmp/
 temp/
+tmp/
 
-# Node modules (if any)
-node_modules/
+# ============================================
+# DOCUMENTATION - TEMPORARY ANALYSIS FILES
+# (Keep only permanent documentation)
+# ============================================
+*_ANALYSIS.md
+*_ANALYSIS_REPORT.md
+*_SUMMARY.md
+QUICK_DECISION_GUIDE.md
+*_COMPLETE.md
+*_FIX.md
 
-# Build artifacts
-build/
-dist/
-*.egg-info/
+# ============================================
+# BUILD ARTIFACTS & CACHE
+# ============================================
+*.pyc
+.cache/
+.sass-cache/
+
+# ============================================
+# TESTING
+# ============================================
+.pytest_cache/
+coverage/
+.nyc_output/
+
+# ============================================
+# MISC
+# ============================================
+*.lock
+.pnpm-store/
+bun.lockb

@@ -384,3 +384,54 @@ async def get_processing_status(meeting_id: str):
         "progress": 0,
         "last_updated": time.time()
     })
+
+@router.post("/process-browser-extension-chunk")
+async def process_browser_extension_chunk(
+    chunk: UploadFile = File(...),
+    language: str = Form(None)
+):
+    """
+    Process a real-time audio chunk from browser extension.
+    Optimized for browser extension real-time transcription.
+
+    Args:
+        chunk: Audio chunk to process
+        language: Language of the audio (optional)
+
+    Returns:
+        Transcription result for the chunk
+    """
+    try:
+        print(f"[DEBUG] Processing browser extension audio chunk")
+        print(f"[DEBUG] Chunk filename: {chunk.filename}")
+        print(f"[DEBUG] Chunk content-type: {chunk.content_type}")
+
+        # Read the audio chunk
+        audio_data = await chunk.read()
+        print(f"[DEBUG] Audio chunk size: {len(audio_data)} bytes")
+
+        # Use local CPU Whisper small model only
+        print(f"[DEBUG] Calling audio_processor.transcribe_chunk...")
+        result = audio_processor.transcribe_chunk(audio_data, language, chunk.content_type)
+
+        print(f"[DEBUG] Transcription result: {result}")
+
+        # If we have meaningful transcription, broadcast it to browser extensions
+        if result["text"].strip():
+            print(f"[DEBUG] Broadcasting transcription to browser extensions: {result['text']}")
+            from app.api.websocket import broadcast_to_browser_extensions
+            await broadcast_to_browser_extensions({
+                "type": "transcript",
+                "speaker": "Speaker",  # Default speaker for browser extension
+                "text": result["text"],
+                "timestamp": result["timestamp"]
+            })
+        else:
+            print("[DEBUG] No meaningful transcription found - empty or whitespace only")
+
+        return JSONResponse(content=result)
+    except Exception as e:
+        print(f"[ERROR] Error processing browser extension chunk: {e}")
+        import traceback
+        print(f"[ERROR] Full traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Browser extension chunk processing failed: {str(e)}")

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        .test-section {
+            background: #16213e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #0f3460;
+        }
+        .test-section h3 {
+            color: #4facfe;
+            margin-top: 0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #1e7e34;
+            color: white;
+        }
+        .error {
+            background: #dc3545;
+            color: white;
+        }
+        .pending {
+            background: #ffc107;
+            color: black;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        #log {
+            background: #0a0e27;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #667eea;
+            padding-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔌 Frontend-Backend Integration Test</h1>
+    
+    <div class="test-section">
+        <h3>1. Backend API Health Check</h3>
+        <div id="apiStatus" class="status pending">Checking...</div>
+        <button onclick="testAPI()">Test API</button>
+    </div>
+
+    <div class="test-section">
+        <h3>2. WebSocket Connection Test</h3>
+        <div id="wsStatus" class="status pending">Not connected</div>
+        <button onclick="testWebSocket()">Test WebSocket</button>
+        <button onclick="disconnectWebSocket()">Disconnect</button>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Audio Chunk Upload Test</h3>
+        <div id="uploadStatus" class="status pending">Ready to test</div>
+        <button onclick="testAudioUpload()">Test Audio Upload</button>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Microphone Access Test</h3>
+        <div id="micStatus" class="status pending">Not tested</div>
+        <button onclick="testMicrophone()">Test Microphone</button>
+    </div>
+
+    <div id="log"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const WS_BASE = 'ws://localhost:8000';
+        let testSocket = null;
+        let testMeetingId = 'test_' + Math.random().toString(36).substring(2, 15);
+
+        function log(message, isError = false) {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.style.color = isError ? '#ff6b6b' : '#4facfe';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        async function testAPI() {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.className = 'status pending';
+            statusDiv.textContent = 'Testing...';
+            log('Testing API health endpoint...');
+
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    statusDiv.className = 'status success';
+                    statusDiv.textContent = '✅ API is healthy and responding';
+                    log('✅ API health check passed');
+                } else {
+                    throw new Error('Unexpected response');
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ API connection failed: ' + error.message;
+                log('❌ API health check failed: ' + error.message, true);
+            }
+        }
+
+        async function testWebSocket() {
+            const statusDiv = document.getElementById('wsStatus');
+            statusDiv.className = 'status pending';
+            statusDiv.textContent = 'Connecting...';
+            log(`Connecting to WebSocket: ${WS_BASE}/ws/meeting/${testMeetingId}`);
+
+            try {
+                testSocket = new WebSocket(`${WS_BASE}/ws/meeting/${testMeetingId}`);
+
+                testSocket.onopen = () => {
+                    statusDiv.className = 'status success';
+                    statusDiv.textContent = '✅ WebSocket connected successfully';
+                    log('✅ WebSocket connection established');
+                    
+                    // Send a test message
+                    testSocket.send(JSON.stringify({ type: 'test', message: 'Hello from test' }));
+                    log('Sent test message to server');
+                };
+
+                testSocket.onmessage = (event) => {
+                    log(`📨 Received from server: ${event.data}`);
+                };
+
+                testSocket.onerror = (error) => {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = '❌ WebSocket error';
+                    log('❌ WebSocket error occurred', true);
+                };
+
+                testSocket.onclose = () => {
+                    statusDiv.className = 'status pending';
+                    statusDiv.textContent = 'Disconnected';
+                    log('WebSocket connection closed');
+                };
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ WebSocket connection failed: ' + error.message;
+                log('❌ WebSocket connection failed: ' + error.message, true);
+            }
+        }
+
+        function disconnectWebSocket() {
+            if (testSocket) {
+                testSocket.close();
+                log('Manually closed WebSocket connection');
+            }
+        }
+
+        async function testAudioUpload() {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.className = 'status pending';
+            statusDiv.textContent = 'Creating test audio...';
+            log('Creating test audio chunk...');
+
+            try {
+                // Create a silent audio blob for testing
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const destination = audioContext.createMediaStreamDestination();
+                oscillator.connect(destination);
+                oscillator.start();
+
+                const mediaRecorder = new MediaRecorder(destination.stream, {
+                    mimeType: 'audio/webm;codecs=opus'
+                });
+
+                const chunks = [];
+                mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+
+                mediaRecorder.start();
+                log('Recording test audio...');
+
+                setTimeout(async () => {
+                    mediaRecorder.stop();
+                    oscillator.stop();
+
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+                        log(`Created audio blob: ${audioBlob.size} bytes`);
+
+                        // Upload to backend
+                        const formData = new FormData();
+                        formData.append('chunk', audioBlob, 'test_chunk.webm');
+                        formData.append('meeting_id', testMeetingId);
+
+                        statusDiv.textContent = 'Uploading to backend...';
+                        log('Uploading audio chunk to /api/process-audio-chunk...');
+
+                        try {
+                            const response = await fetch(`${API_BASE}/api/process-audio-chunk`, {
+                                method: 'POST',
+                                body: formData
+                            });
+
+                            if (response.ok) {
+                                const result = await response.json();
+                                statusDiv.className = 'status success';
+                                statusDiv.textContent = '✅ Audio upload successful';
+                                log('✅ Audio chunk uploaded and processed');
+                                log(`Response: ${JSON.stringify(result)}`);
+                            } else {
+                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                            }
+                        } catch (error) {
+                            statusDiv.className = 'status error';
+                            statusDiv.textContent = '❌ Upload failed: ' + error.message;
+                            log('❌ Audio upload failed: ' + error.message, true);
+                        }
+                    };
+                }, 2000);
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Test failed: ' + error.message;
+                log('❌ Audio upload test failed: ' + error.message, true);
+            }
+        }
+
+        async function testMicrophone() {
+            const statusDiv = document.getElementById('micStatus');
+            statusDiv.className = 'status pending';
+            statusDiv.textContent = 'Requesting microphone access...';
+            log('Requesting microphone access...');
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    }
+                });
+
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ Microphone access granted';
+                log('✅ Microphone access granted');
+                log(`Audio tracks: ${stream.getAudioTracks().length}`);
+
+                // Stop the stream
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                    log(`Stopped track: ${track.label}`);
+                });
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Microphone access denied: ' + error.message;
+                log('❌ Microphone access denied: ' + error.message, true);
+            }
+        }
+
+        // Run API test on load
+        window.addEventListener('load', () => {
+            log('Integration test page loaded');
+            log(`Test Meeting ID: ${testMeetingId}`);
+            testAPI();
+        });
+    </script>
+</body>
+</html>
