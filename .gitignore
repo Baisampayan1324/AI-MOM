@@ -10,8 +10,16 @@
 .env.local
 .env.*.local
 backend/.env
+frontend/.env
+browser-extension/.env
+test/.env
 *.key
 *.pem
+
+# Keep example files
+!.env.example
+!backend/.env.example
+!frontend/.env.example
 
 # ============================================
 # PYTHON
@@ -26,10 +34,10 @@ venv.bak/
 virtualenv/
 
 # Python Cache
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+**/*.so
 *.egg
 *.egg-info/
 dist/
@@ -60,13 +68,20 @@ dist-ssr/
 *.local
 
 # Logs
-logs/
+backend/logs/
+frontend/logs/
+browser-extension/logs/
+logs/*.log
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+# Keep log directories with .gitkeep
+!logs/.gitkeep
+!backend/logs/.gitkeep
 
 # ============================================
 # AUDIO FILES (Too large for git)
@@ -85,12 +100,28 @@ audio/*.aac
 # ============================================
 # USER DATA & GENERATED CONTENT
 # ============================================
-user_profile.json
+# Specific user data files (not examples)
+backend/user_profile.json
+backend/tests/user_profile.json
+test/user_profile.json
+tests/user_profile.json
 userprofile.json
 *.profile
+# Generated content directories
+backend/meeting_data/
+test/meeting_data/
+tests/meeting_data/
 transcriptions/
 summaries/
-meeting_data/
+
+# Keep meeting_data directories with .gitkeep
+!backend/meeting_data/.gitkeep
+!test/meeting_data/.gitkeep
+!tests/meeting_data/.gitkeep
+
+# Keep example files
+!backend/user_profile.json.example
+!user_profile.json.example
 
 # ============================================
 # IDE & EDITORS
