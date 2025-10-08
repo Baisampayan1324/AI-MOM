@@ -1,4 +1,4 @@
-# 🤖 AI MOM - AI-Powered Meeting Minutes & Intelligence System
+#AI MOM - AI-Powered Meeting Minutes & Intelligence System
 
 <div align="center">
 
