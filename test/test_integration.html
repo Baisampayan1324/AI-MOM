@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI MOM - Integration Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .ws-messages {
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .ws-message {
+            padding: 5px;
+            margin: 5px 0;
+            border-left: 3px solid #667eea;
+            padding-left: 10px;
+        }
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 AI MOM Integration Test</h1>
+        
+        <div class="info-box">
+            <strong>📋 Prerequisites:</strong>
+            <ul style="margin-top: 10px; padding-left: 20px;">
+                <li>Backend server must be running: <code>python backend/main.py</code></li>
+                <li>Server should be running on: <code>http://localhost:8000</code></li>
+            </ul>
+        </div>
+
+        <!-- Test 1: Backend Health -->
+        <div class="test-section">
+            <h2>1️⃣ Backend Health Check</h2>
+            <button onclick="testHealth()">Test Health Endpoint</button>
+            <span id="healthStatus" class="status" style="display:none;"></span>
+            <div id="healthResult" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 2: API Info -->
+        <div class="test-section">
+            <h2>2️⃣ API System Info</h2>
+            <button onclick="testSystemInfo()">Get System Info</button>
+            <span id="systemStatus" class="status" style="display:none;"></span>
+            <div id="systemResult" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 3: WebSocket Connection -->
+        <div class="test-section">
+            <h2>3️⃣ WebSocket Connection Test</h2>
+            <button onclick="testWebSocket()" id="wsButton">Test WebSocket</button>
+            <button onclick="disconnectWebSocket()" id="wsDisconnect" style="display:none;">Disconnect</button>
+            <span id="wsStatus" class="status" style="display:none;"></span>
+            <div id="wsMessages" class="ws-messages" style="display:none;"></div>
+        </div>
+
+        <!-- Test 4: File Upload Simulation -->
+        <div class="test-section">
+            <h2>4️⃣ File Upload Endpoint Test</h2>
+            <button onclick="testFileEndpoint()">Test Upload Endpoint</button>
+            <span id="fileStatus" class="status" style="display:none;"></span>
+            <div id="fileResult" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 5: CORS Test -->
+        <div class="test-section">
+            <h2>5️⃣ CORS Configuration Test</h2>
+            <button onclick="testCORS()">Test CORS</button>
+            <span id="corsStatus" class="status" style="display:none;"></span>
+            <div id="corsResult" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:8000';
+        let websocket = null;
+
+        // Test 1: Health Check
+        async function testHealth() {
+            const statusEl = document.getElementById('healthStatus');
+            const resultEl = document.getElementById('healthResult');
+            
+            statusEl.style.display = 'inline-block';
+            statusEl.className = 'status pending';
+            statusEl.textContent = 'Testing...';
+            resultEl.style.display = 'none';
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/health`);
+                const data = await response.json();
+                
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ Success';
+                resultEl.style.display = 'block';
+                resultEl.innerHTML = `<strong>Response:</strong><br>${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Failed';
+                resultEl.style.display = 'block';
+                resultEl.innerHTML = `<strong>Error:</strong><br>${error.message}<br><br><strong>Make sure backend is running!</strong>`;
+            }
+        }
+
+        // Test 2: System Info
+        async function testSystemInfo() {
+            const statusEl = document.getElementById('systemStatus');
+            const resultEl = document.getElementById('systemResult');
+            
+            statusEl.style.display = 'inline-block';
+            statusEl.className = 'status pending';
+            statusEl.textContent = 'Testing...';
+            resultEl.style.display = 'none';
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/system-info`);
+                const data = await response.json();
+                
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ Success';
+                resultEl.style.display = 'block';
+                resultEl.innerHTML = `<strong>Response:</strong><br>${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Failed';
+                resultEl.style.display = 'block';
+                resultEl.innerHTML = `<strong>Error:</strong><br>${error.message}`;
+            }
+        }
+
+        // Test 3: WebSocket
+        function testWebSocket() {
+            const statusEl = document.getElementById('wsStatus');
+            const messagesEl = document.getElementById('wsMessages');
+            const buttonEl = document.getElementById('wsButton');
+            const disconnectEl = document.getElementById('wsDisconnect');
+            
+            statusEl.style.display = 'inline-block';
+            statusEl.className = 'status pending';
+            statusEl.textContent = 'Connecting...';
+            messagesEl.style.display = 'block';
+            messagesEl.innerHTML = '';
+
+            try {
+                websocket = new WebSocket('ws://localhost:8000/ws/audio');
+                
+                websocket.onopen = () => {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ Connected';
+                    addWSMessage('Connected to WebSocket server');
+                    buttonEl.style.display = 'none';
+                    disconnectEl.style.display = 'inline-block';
+                    
+                    // Send a test ping
+                    websocket.send(JSON.stringify({ type: 'ping' }));
+                    addWSMessage('Sent: ping message');
+                };
+                
+                websocket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    addWSMessage(`Received: ${JSON.stringify(data)}`);
+                };
+                
+                websocket.onerror = (error) => {
+                    statusEl.className = 'status error';
+                    statusEl.textContent = '❌ Error';
+                    addWSMessage(`Error: ${error.message || 'WebSocket connection failed'}`);
+                };
+                
+                websocket.onclose = () => {
+                    statusEl.className = 'status error';
+                    statusEl.textContent = '⚠️ Disconnected';
+                    addWSMessage('WebSocket connection closed');
+                    buttonEl.style.display = 'inline-block';
+                    disconnectEl.style.display = 'none';
+                };
+                
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Failed';
+                addWSMessage(`Error: ${error.message}`);
+            }
+        }
+
+        function disconnectWebSocket() {
+            if (websocket) {
+                websocket.close();
+            }
+        }
+
+        function addWSMessage(message) {
+            const messagesEl = document.getElementById('wsMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'ws-message';
+            messageDiv.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            messagesEl.appendChild(messageDiv);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        // Test 4: File Upload Endpoint
+        async function testFileEndpoint() {
+            const statusEl = document.getElementById('fileStatus');
+            const resultEl = document.getElementById('fileResult');
+            
+            statusEl.style.display = 'inline-block';
+            statusEl.className = 'status pending';
+            statusEl.textContent = 'Testing...';
+            resultEl.style.display = 'none';
+
+            try {
+                // Create a dummy FormData (without actual file)
+                const formData = new FormData();
+                
+                // Just test if endpoint is accessible
+                const response = await fetch(`${BACKEND_URL}/api/process-audio`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // We expect an error because we didn't send a file, but endpoint should respond
+                const data = await response.json();
+                
+                if (response.status === 400 || response.status === 422) {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ Endpoint Accessible';
+                    resultEl.style.display = 'block';
+                    resultEl.innerHTML = `<strong>Endpoint is working!</strong><br>Status: ${response.status}<br>Response: ${JSON.stringify(data, null, 2)}<br><br><em>This is expected - we didn't send a file.</em>`;
+                } else {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ Response Received';
+                    resultEl.style.display = 'block';
+                    resultEl.innerHTML = `<strong>Response:</strong><br>${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Failed';
+                resultEl.style.display = 'block';
+                resultEl.innerHTML = `<strong>Error:</strong><br>${error.message}`;
+            }
+        }
+
+        // Test 5: CORS
+        async function testCORS() {
+            const statusEl = document.getElementById('corsStatus');
+            const resultEl = document.getElementById('corsResult');
+            
+            statusEl.style.display = 'inline-block';
+            statusEl.className = 'status pending';
+            statusEl.textContent = 'Testing...';
+            resultEl.style.display = 'none';
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Origin': 'file://'
+                    }
+                });
+                
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                };
+                
+                if (corsHeaders['Access-Control-Allow-Origin']) {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ CORS Enabled';
+                    resultEl.style.display = 'block';
+                    resultEl.innerHTML = `<strong>CORS Headers:</strong><br>${JSON.stringify(corsHeaders, null, 2)}`;
+                } else {
+                    statusEl.className = 'status error';
+                    statusEl.textContent = '⚠️ No CORS Headers';
+                    resultEl.style.display = 'block';
+                    resultEl.innerHTML = `<strong>Warning:</strong><br>CORS headers not found. This might cause issues with frontend integration.`;
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Failed';
+                resultEl.style.display = 'block';
+                resultEl.innerHTML = `<strong>Error:</strong><br>${error.message}`;
+            }
+        }
+
+        // Auto-run health check on load
+        window.addEventListener('load', () => {
+            setTimeout(testHealth, 500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - AI MOM</title>
+    <script src="js/avatar-manager.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%);
+        }
+
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.2;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #667eea 0%, transparent 70%);
+            top: -200px;
+            right: -200px;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #764ba2 0%, transparent 70%);
+            bottom: -150px;
+            left: -150px;
+            animation-delay: -7s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.1); }
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 6px 18px rgba(102, 126, 234, 0.4);
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        /* User menu */
+        .user-menu {
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .user-avatar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 0.75rem 0;
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 0.75rem 1.25rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0.5rem 0;
+        }
+
+        /* Main content */
+        .main-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .page-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .content-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 1.5rem;
+        }
+
+        .content-text {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1.5rem;
+        }
+
+        .content-list {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .content-list li {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .content-list li::before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .highlight-box {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box .highlight-title {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 1rem 1.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .main-content {
+                padding: 100px 1.5rem 3rem;
+            }
+
+            .page-title {
+                font-size: 2.5rem;
+            }
+
+            .content-section {
+                padding: 2rem;
+            }
+        }
+
+        /* Logout Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-content h3 {
+            color: #ffffff;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .modal-content p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 2rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 100px;
+        }
+
+        .modal-buttons .btn-secondary {
+            background: #10b981;
+            color: #ffffff;
+            border: 1px solid #10b981;
+            transition: all 0.3s ease;
+        }
+
+        .modal-buttons .btn-secondary:hover {
+            background: #059669;
+            border-color: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .modal-buttons .btn-primary {
+            background: #ef4444;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .modal-buttons .btn-primary:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Acceptance Section Styles */
+        .acceptance-section .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .acceptance-section .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .acceptance-section .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .acceptance-section .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            border: none;
+        }
+
+        .acceptance-section .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <div class="content">
+        <nav>
+            <a href="index.html" class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
+                <span class="logo-text">AI <span class="highlight">MOM</span></span>
+            </a>
+            <div class="nav-right">
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="file.html">Upload</a></li>
+                    <li><a href="real.html">Live</a></li>
+                </ul>
+                
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar" onclick="toggleUserDropdown()">
+                        <img src="" alt="User Avatar" id="avatarImage" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none;">
+                        <span id="avatarInitials">U</span>
+                    </div>
+                    <div class="dropdown" id="dropdown">
+                        <a href="profile.html" class="dropdown-item">Profile</a>
+                        <a href="setting.html" class="dropdown-item">Settings</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Terms of Service</h1>
+                <p class="page-subtitle">Please read these terms carefully before using AI MOM's meeting intelligence platform.</p>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Acceptance of Terms</h2>
+                <p class="content-text">By accessing and using AI MOM's services, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.</p>
+                <div class="highlight-box">
+                    <div class="highlight-title">Important Notice</div>
+                    <p class="content-text" style="margin-bottom: 0;">These terms constitute a legally binding agreement between you and AI MOM. Please review them carefully.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Service Description</h2>
+                <p class="content-text">AI MOM provides AI-powered meeting intelligence services including:</p>
+                <ul class="content-list">
+                    <li>Real-time audio transcription and processing</li>
+                    <li>Meeting summary generation and insights</li>
+                    <li>File upload and batch processing capabilities</li>
+                    <li>User account management and data storage</li>
+                    <li>Integration tools and API access</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">User Responsibilities</h2>
+                <p class="content-text">As a user of our service, you agree to:</p>
+                <ul class="content-list">
+                    <li>Provide accurate and complete information when creating your account</li>
+                    <li>Maintain the confidentiality of your login credentials</li>
+                    <li>Use the service only for lawful purposes</li>
+                    <li>Respect intellectual property rights and privacy of others</li>
+                    <li>Comply with all applicable laws and regulations</li>
+                    <li>Not attempt to compromise the security of our systems</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Content and Data</h2>
+                <p class="content-text">You retain ownership of all content you upload to our service. However, you grant us certain rights to process this content:</p>
+                <ul class="content-list">
+                    <li>Right to process audio files for transcription and analysis</li>
+                    <li>Right to store your data securely on our servers</li>
+                    <li>Right to use anonymized data to improve our AI models</li>
+                    <li>Right to backup your data for disaster recovery</li>
+                </ul>
+                <div class="highlight-box">
+                    <div class="highlight-title">Data Protection</div>
+                    <p class="content-text" style="margin-bottom: 0;">We will never share your personal content with third parties without your explicit consent, except as required by law.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Service Availability</h2>
+                <p class="content-text">We strive to maintain high service availability, but cannot guarantee uninterrupted access:</p>
+                <ul class="content-list">
+                    <li>Scheduled maintenance may temporarily affect service availability</li>
+                    <li>We aim for 99.9% uptime but do not guarantee it</li>
+                    <li>Force majeure events may impact service delivery</li>
+                    <li>We reserve the right to modify or discontinue features</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Payment and Billing</h2>
+                <p class="content-text">For paid services, the following terms apply:</p>
+                <ul class="content-list">
+                    <li>Subscriptions are billed in advance on a recurring basis</li>
+                    <li>All fees are non-refundable unless otherwise stated</li>
+                    <li>We may change pricing with 30 days' notice</li>
+                    <li>Failure to pay may result in service suspension</li>
+                    <li>Taxes are additional where applicable</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Prohibited Uses</h2>
+                <p class="content-text">You may not use our service for:</p>
+                <ul class="content-list">
+                    <li>Recording conversations without proper consent</li>
+                    <li>Processing content that violates others' privacy rights</li>
+                    <li>Illegal activities or content that violates laws</li>
+                    <li>Spreading malware or attempting system breaches</li>
+                    <li>Reverse engineering or copying our AI technology</li>
+                    <li>Commercial resale without our written permission</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Limitation of Liability</h2>
+                <p class="content-text">Our liability is limited to the fullest extent permitted by law:</p>
+                <ul class="content-list">
+                    <li>We provide the service "as is" without warranties</li>
+                    <li>We are not liable for indirect or consequential damages</li>
+                    <li>Our total liability shall not exceed the amount you paid us</li>
+                    <li>We are not responsible for third-party content or services</li>
+                </ul>
+                <div class="highlight-box">
+                    <div class="highlight-title">AI Accuracy Disclaimer</div>
+                    <p class="content-text" style="margin-bottom: 0;">AI-generated transcriptions and summaries may contain errors. Please review all output before making important decisions based on our service.</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Termination</h2>
+                <p class="content-text">Either party may terminate this agreement:</p>
+                <ul class="content-list">
+                    <li>You may cancel your account at any time through your settings</li>
+                    <li>We may suspend or terminate accounts for terms violations</li>
+                    <li>Upon termination, your data will be deleted per our retention policy</li>
+                    <li>Some provisions of these terms survive termination</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Changes to Terms</h2>
+                <p class="content-text">We may modify these terms from time to time:</p>
+                <ul class="content-list">
+                    <li>Material changes will be communicated via email or service notifications</li>
+                    <li>Continued use after changes constitutes acceptance</li>
+                    <li>You may terminate your account if you disagree with changes</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Governing Law</h2>
+                <p class="content-text">These terms are governed by the laws of the jurisdiction where AI MOM is incorporated. Any disputes will be resolved through binding arbitration or in the courts of our jurisdiction.</p>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Contact Information</h2>
+                <p class="content-text">For questions about these terms or our service:</p>
+                <ul class="content-list">
+                    <li>Email: legal@aimom.com</li>
+                    <li>Address: House #19, Aaradhya Bungalow, Opposite Apollo Factory</li>
+                    <li>Phone: (+91) 8597716577</li>
+                </ul>
+            </div>
+
+            <!-- Terms Acceptance Section -->
+            <div class="acceptance-section" id="acceptanceSection" style="display: none;">
+                <div class="content-section" style="text-align: center; background: rgba(102, 126, 234, 0.1); border-color: rgba(102, 126, 234, 0.3);">
+                    <h2 class="section-title">Terms Acceptance</h2>
+                    <p class="content-text">By clicking "I Accept" below, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.</p>
+                    <div style="margin-top: 2rem;">
+                        <button class="btn btn-secondary" onclick="goBackToSignup()" style="margin-right: 1rem;">Go Back</button>
+                        <button class="btn btn-primary" onclick="acceptTerms()">I Accept Terms</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="last-updated">
+                <p>Last updated: October 4, 2025</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal-content">
+            <h3>Confirm Logout</h3>
+            <p>Are you sure you want to logout?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="cancelLogout()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if user came from signup page
+        window.addEventListener('DOMContentLoaded', function() {
+            if (sessionStorage.getItem('returnToSignup') === 'true') {
+                // Show acceptance section when user scrolls to bottom
+                showAcceptanceSectionOnScroll();
+            }
+        });
+
+        function showAcceptanceSectionOnScroll() {
+            const acceptanceSection = document.getElementById('acceptanceSection');
+            
+            function checkScroll() {
+                const scrollPosition = window.scrollY + window.innerHeight;
+                const documentHeight = document.documentElement.scrollHeight;
+                
+                // Show acceptance section when user reaches 90% of the page
+                if (scrollPosition >= documentHeight * 0.9) {
+                    acceptanceSection.style.display = 'block';
+                    acceptanceSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    window.removeEventListener('scroll', checkScroll);
+                }
+            }
+            
+            window.addEventListener('scroll', checkScroll);
+            
+            // Also check immediately in case the page is short
+            setTimeout(checkScroll, 1000);
+        }
+
+        function goBackToSignup() {
+            window.location.href = 'signin.html';
+        }
+
+        function acceptTerms() {
+            // Mark terms as accepted
+            sessionStorage.setItem('termsAccepted', 'true');
+            
+            // Check if privacy policy was also accepted
+            const privacyAccepted = sessionStorage.getItem('privacyAccepted') === 'true';
+            
+            if (privacyAccepted) {
+                // Both accepted, go back to signup
+                window.location.href = 'signin.html';
+            } else {
+                // Redirect to privacy policy
+                window.location.href = 'privacy.html';
+            }
+        }
+
+        // User dropdown functionality
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('dropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const userMenu = document.querySelector('.user-menu');
+            const dropdown = document.getElementById('dropdown');
+            
+            if (!userMenu.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const logoutModal = document.getElementById('logoutModal');
+            logoutModal.classList.add('show');
+        });
+
+        function cancelLogout() {
+            const logoutModal = document.getElementById('logoutModal');
+            logoutModal.classList.remove('show');
+        }
+
+        function confirmLogout() {
+            // Clear user data
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('currentUser');
+            
+            // Redirect to signin page
+            window.location.href = 'signin.html';
+        }
+
+        // Close modal when clicking outside
+        const logoutModal = document.getElementById('logoutModal');
+        if (logoutModal) {
+            logoutModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                }
+            });
+        }
+    </script>
+
+    <!-- Initialize Avatar Manager -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof AvatarManager !== 'undefined') {
+                const avatarManager = new AvatarManager();
+                avatarManager.refreshAllAvatars();
+            }
+        });
+    </script>
+
+</body>
+</html>

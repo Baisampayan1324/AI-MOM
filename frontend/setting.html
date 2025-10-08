@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - AI MOM</title>
+    <script src="js/avatar-manager.js"></script>
+    <style>
+        :root {
+            --accent-primary: #667eea;
+            --accent-secondary: #764ba2;
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a2e;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Light theme */
+        .theme-light {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        }
+
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #667eea 0%, transparent 70%);
+            top: -200px;
+            right: -200px;
+        }
+
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #764ba2 0%, transparent 70%);
+            bottom: -150px;
+            left: -150px;
+            animation-delay: -7s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -50px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+        }
+
+        nav {
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 6px 18px rgba(102, 126, 234, 0.4);
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .logo-text {
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .logo-text .highlight {
+            color: var(--accent-primary);
+        }
+
+        .logo span {
+            color: #667eea;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #ffffff;
+        }
+
+        /* User Menu */
+        .user-menu {
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .user-avatar:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            min-width: 180px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0.5rem 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1rem;
+        }
+
+        /* Settings Sections */
+        .settings-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .settings-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-info h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .setting-info p {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Toggle Switch */
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle.active {
+            background: #667eea;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: #ffffff;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle.active .toggle-slider {
+            transform: translateX(24px);
+        }
+
+        /* Select */
+        .select {
+            padding: 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.9rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .select option {
+            background: #1a1a2e;
+            color: #ffffff;
+        }
+
+        /* Input */
+        .input {
+            padding: 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.9rem;
+            outline: none;
+            width: 150px;
+        }
+
+        .input:focus {
+            border-color: #667eea;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: #ffffff;
+            color: #0a0a0a;
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Success Message */
+        .success-message {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 2rem;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                padding: 1.5rem 2rem;
+            }
+
+            .container {
+                padding: 2rem 1.5rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .setting-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+
+        /* Logout Confirmation Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            min-width: 350px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content h3 {
+            margin: 0 0 1rem 0;
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-content p {
+            margin: 0 0 2rem 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .modal-buttons .btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 100px;
+        }
+
+        .modal-buttons .btn-secondary {
+            background: #10b981;
+            color: #ffffff;
+            border: 1px solid #10b981;
+            transition: all 0.3s ease;
+        }
+
+        .modal-buttons .btn-secondary:hover {
+            background: #059669;
+            border-color: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .modal-buttons .btn-primary {
+            background: #ef4444;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .modal-buttons .btn-primary:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <div class="content">
+        <nav>
+            <a href="index.html" class="logo">
+                <div class="logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <span class="logo-text">AI <span class="highlight">MOM</span></span>
+            </a>
+            <div class="nav-right">
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="real.html">Live</a></li>
+                    <li><a href="file.html">Upload</a></li>
+                </ul>
+                
+                <!-- User menu -->
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar">
+                        JD
+                    </div>
+                    <div class="dropdown" id="dropdown">
+                        <a href="profile.html" class="dropdown-item">Profile</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="header">
+                <h1>Settings</h1>
+                <p>Customize your experience</p>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                ✓ Settings saved successfully
+            </div>
+
+            <!-- Appearance -->
+            <div class="settings-section">
+                <h2>Appearance</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h3>Font Size</h3>
+                        <p>Adjust the interface font size for better readability</p>
+                    </div>
+                    <select class="select" id="fontSizeSelect">
+                        <option value="small">Small</option>
+                        <option value="medium">Medium (Default)</option>
+                        <option value="large">Large</option>
+                        <option value="extra-large">Extra Large</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h3>Accent Color</h3>
+                        <p>Customize the accent color used throughout the app</p>
+                    </div>
+                    <select class="select" id="accentColorSelect">
+                        <option value="blue">Blue (Default)</option>
+                        <option value="purple">Purple</option>
+                        <option value="green">Green</option>
+                        <option value="orange">Orange</option>
+                        <option value="pink">Pink</option>
+                        <option value="red">Red</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Transcription -->
+            <div class="settings-section">
+                <h2>Transcription</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h3>Language</h3>
+                        <p>Select transcription language</p>
+                    </div>
+                    <select class="select" id="languageSelect">
+                        <option value="en">English</option>
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
+                        <option value="de">German</option>
+                        <option value="it">Italian</option>
+                        <option value="pt">Portuguese</option>
+                        <option value="ja">Japanese</option>
+                        <option value="zh">Chinese</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h3>Chunk Duration</h3>
+                        <p>Audio processing chunk size (seconds)</p>
+                    </div>
+                    <input type="number" class="input" id="chunkDuration" min="5" max="60" value="30">
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="settings-section">
+                <h2>Notifications</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h3>Speaker Alerts</h3>
+                        <p>Get notified when mentioned</p>
+                    </div>
+                    <div class="toggle active" id="alertsToggle">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h3>Auto Summary</h3>
+                        <p>Generate summaries automatically</p>
+                    </div>
+                    <div class="toggle active" id="summaryToggle">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h3>Email Notifications</h3>
+                        <p>Receive email updates</p>
+                    </div>
+                    <div class="toggle" id="emailToggle">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="settings-section">
+                <h2>Data Management</h2>
+                <button class="btn btn-primary" id="saveBtn">Save Settings</button>
+                <button class="btn btn-danger" id="clearBtn">Clear All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // User menu functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const userAvatar = document.getElementById('userAvatar');
+            const dropdown = document.getElementById('dropdown');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            // Toggle dropdown
+            if (userAvatar) {
+                userAvatar.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('active');
+                });
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                if (dropdown) {
+                    dropdown.classList.remove('active');
+                }
+            });
+
+            // Prevent dropdown from closing when clicking inside
+            if (dropdown) {
+                dropdown.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            }
+
+            // Logout functionality
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const logoutModal = document.getElementById('logoutModal');
+                    logoutModal.classList.add('show');
+                });
+            }
+
+            // Modal functions
+            window.confirmLogout = function() {
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userEmail');
+                localStorage.removeItem('userName');
+                localStorage.removeItem('userSession');
+                window.location.href = 'index.html';
+            };
+
+            window.cancelLogout = function() {
+                const logoutModal = document.getElementById('logoutModal');
+                logoutModal.classList.remove('show');
+            };
+
+            // Close modal when clicking on overlay
+            const logoutModal = document.getElementById('logoutModal');
+            if (logoutModal) {
+                logoutModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('show');
+                    }
+                });
+            }
+        });
+
+        // Initialize settings from memory
+        const settings = {
+            fontSize: 'medium',
+            accentColor: 'blue',
+            language: 'en',
+            chunkDuration: 30,
+            speakerAlerts: true,
+            autoSummary: true,
+            emailNotifications: false
+        };
+
+        // Elements
+        const fontSizeSelect = document.getElementById('fontSizeSelect');
+        const accentColorSelect = document.getElementById('accentColorSelect');
+        const languageSelect = document.getElementById('languageSelect');
+        const chunkDuration = document.getElementById('chunkDuration');
+        const alertsToggle = document.getElementById('alertsToggle');
+        const summaryToggle = document.getElementById('summaryToggle');
+        const emailToggle = document.getElementById('emailToggle');
+        const saveBtn = document.getElementById('saveBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const successMessage = document.getElementById('successMessage');
+
+        // Load settings
+        fontSizeSelect.value = settings.fontSize;
+        accentColorSelect.value = settings.accentColor;
+        languageSelect.value = settings.language;
+        chunkDuration.value = settings.chunkDuration;
+
+        // Font size and color handlers
+        fontSizeSelect.addEventListener('change', () => {
+            settings.fontSize = fontSizeSelect.value;
+            applyFontSize(settings.fontSize);
+        });
+
+        accentColorSelect.addEventListener('change', () => {
+            settings.accentColor = accentColorSelect.value;
+            applyAccentColor(settings.accentColor);
+        });
+
+        // Toggle handlers
+        alertsToggle.addEventListener('click', () => {
+            alertsToggle.classList.toggle('active');
+            settings.speakerAlerts = alertsToggle.classList.contains('active');
+        });
+
+        summaryToggle.addEventListener('click', () => {
+            summaryToggle.classList.toggle('active');
+            settings.autoSummary = summaryToggle.classList.contains('active');
+        });
+
+        emailToggle.addEventListener('click', () => {
+            emailToggle.classList.toggle('active');
+            settings.emailNotifications = emailToggle.classList.contains('active');
+        });
+
+        // Font size functions
+        function applyFontSize(size) {
+            const root = document.documentElement;
+            const sizes = {
+                small: '0.875rem',
+                medium: '1rem', 
+                large: '1.125rem',
+                'extra-large': '1.25rem'
+            };
+            
+            if (sizes[size]) {
+                root.style.setProperty('--base-font-size', sizes[size]);
+                document.body.style.fontSize = sizes[size];
+            }
+        }
+
+        function applyAccentColor(color) {
+            const root = document.documentElement;
+            const colors = {
+                blue: { primary: '#667eea', secondary: '#764ba2' },
+                purple: { primary: '#a855f7', secondary: '#7c3aed' },
+                green: { primary: '#22c55e', secondary: '#16a34a' },
+                orange: { primary: '#f97316', secondary: '#ea580c' },
+                pink: { primary: '#ec4899', secondary: '#db2777' },
+                red: { primary: '#ef4444', secondary: '#dc2626' }
+            };
+            
+            if (colors[color]) {
+                root.style.setProperty('--accent-primary', colors[color].primary);
+                root.style.setProperty('--accent-secondary', colors[color].secondary);
+                
+                // Update logo gradient to match accent color
+                const logoIcon = document.querySelector('.logo-icon');
+                if (logoIcon) {
+                    logoIcon.style.background = `linear-gradient(135deg, ${colors[color].primary} 0%, ${colors[color].secondary} 100%)`;
+                }
+            }
+        }
+
+        // Apply initial font size and accent color
+        applyFontSize(settings.fontSize);
+        applyAccentColor(settings.accentColor);
+
+        // Save settings
+        saveBtn.addEventListener('click', () => {
+            settings.language = languageSelect.value;
+            settings.chunkDuration = parseInt(chunkDuration.value);
+            
+            // Show success message
+            successMessage.classList.add('show');
+            setTimeout(() => {
+                successMessage.classList.remove('show');
+            }, 3000);
+            
+            console.log('Settings saved:', settings);
+        });
+
+        // Clear all data
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                alert('All data cleared successfully');
+                location.reload();
+            }
+        });
+    </script>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal-content">
+            <h3>Confirm Logout</h3>
+            <p>Are you sure you want to logout?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="cancelLogout()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Initialize Avatar Manager -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof AvatarManager !== 'undefined') {
+                const avatarManager = new AvatarManager();
+                avatarManager.refreshAllAvatars();
+            }
+        });
+    </script>
+
+</body>
+</html>

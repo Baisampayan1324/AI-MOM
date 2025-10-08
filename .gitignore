@@ -1,0 +1,237 @@
+# ============================================
+# AI-MOM Project .gitignore
+# Updated: October 2, 2025
+# ============================================
+
+# ============================================
+# ENVIRONMENT & SECRETS
+# ============================================
+.env
+.env.local
+.env.*.local
+.env.test
+.env.production
+backend/.env
+frontend/.env
+extension/.env
+test/.env
+*.key
+*.pem
+
+# Keep example files
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+!extension/.env.example
+
+# ============================================
+# PYTHON
+# ============================================
+# Virtual Environments
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+virtualenv/
+
+# Python Cache
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+**/*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.Python
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ============================================
+# NODE.JS / FRONTEND
+# ============================================
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+*.local
+
+# Logs
+backend/logs/
+frontend/logs/
+browser-extension/logs/
+logs/*.log
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Keep log directories with .gitkeep
+!logs/.gitkeep
+!backend/logs/.gitkeep
+
+# ============================================
+# AUDIO FILES (Too large for git)
+# ============================================
+audio/*.mp3
+audio/*.mp4
+audio/*.wav
+audio/*.m4a
+audio/*.flac
+audio/*.ogg
+audio/*.aac
+
+# Keep sample files and README
+!audio/README.md
+!audio/sample*.mp3
+!audio/sample*.m4a
+
+# ============================================
+# USER DATA & GENERATED CONTENT
+# ============================================
+# Specific user data files (not examples)
+user_profile.json
+backend/user_profile.json
+backend/tests/user_profile.json
+test/user_profile.json
+tests/user_profile.json
+userprofile.json
+*.profile
+
+# Test scripts (temporary/debugging)
+backend/test/test_import.py
+test_import.py
+
+# API usage tracking (contains sensitive usage data)
+api_usage.json
+backend/api_usage.json
+
+# Generated content directories
+backend/meeting_data/
+test/meeting_data/
+tests/meeting_data/
+transcriptions/
+summaries/
+temp_audio/
+processed_audio/
+
+# Keep meeting_data directories with .gitkeep
+!backend/meeting_data/.gitkeep
+!test/meeting_data/.gitkeep
+!tests/meeting_data/.gitkeep
+
+# Keep example files (if they exist)
+!backend/user_profile.json.example
+!user_profile.json.example
+!**/user_profile.json.example
+
+# ============================================
+# IDE & EDITORS
+# ============================================
+# VSCode
+.vscode/
+!.vscode/extensions.json
+
+# JetBrains
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ============================================
+# OPERATING SYSTEM FILES
+# ============================================
+# macOS
+.DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============================================
+# TEMPORARY FILES
+# ============================================
+*.tmp
+*.temp
+*.bak
+.tmp/
+temp/
+tmp/
+
+# ============================================
+# DOCUMENTATION - TEMPORARY ANALYSIS FILES
+# (Keep only permanent documentation in docs/)
+# ============================================
+# Temporary analysis files (AI-generated sessions, not permanent docs)
+TEMP_*.md
+*_TEMP.md
+SESSION_*.md
+QUICK_DECISION_GUIDE.md
+*_DRAFT.md
+
+# Keep permanent documentation
+!docs/*.md
+!docs/**/*.md
+!README.md
+!**/README.md
+!CHANGELOG.md
+!LICENSE.md
+
+# ============================================
+# BUILD ARTIFACTS & CACHE
+# ============================================
+*.pyc
+.cache/
+.sass-cache/
+
+# ============================================
+# TESTING
+# ============================================
+.pytest_cache/
+coverage/
+.nyc_output/
+
+# ============================================
+# MISC
+# ============================================
+*.lock
+.pnpm-store/
+bun.lockb

@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - AI MOM</title>
+    <script src="js/avatar-manager.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%);
+        }
+
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.2;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #667eea 0%, transparent 70%);
+            top: -200px;
+            right: -200px;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #764ba2 0%, transparent 70%);
+            bottom: -150px;
+            left: -150px;
+            animation-delay: -7s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.1); }
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 6px 18px rgba(102, 126, 234, 0.4);
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        /* User menu */
+        .user-menu {
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .user-avatar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 0.75rem 0;
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 0.75rem 1.25rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0.5rem 0;
+        }
+
+        /* Main content */
+        .main-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .page-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .content-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 1.5rem;
+        }
+
+        .content-text {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1.5rem;
+        }
+
+        .content-list {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .content-list li {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .content-list li::before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 1rem 1.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .main-content {
+                padding: 100px 1.5rem 3rem;
+            }
+
+            .page-title {
+                font-size: 2.5rem;
+            }
+
+            .content-section {
+                padding: 2rem;
+            }
+        }
+
+        /* Logout Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-content h3 {
+            color: #ffffff;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .modal-content p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 2rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 100px;
+        }
+
+        .modal-buttons .btn-secondary {
+            background: #10b981;
+            color: #ffffff;
+            border: 1px solid #10b981;
+            transition: all 0.3s ease;
+        }
+
+        .modal-buttons .btn-secondary:hover {
+            background: #059669;
+            border-color: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .modal-buttons .btn-primary {
+            background: #ef4444;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .modal-buttons .btn-primary:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Acceptance Section Styles */
+        .acceptance-section .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .acceptance-section .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .acceptance-section .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .acceptance-section .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            border: none;
+        }
+
+        .acceptance-section .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <div class="content">
+        <nav>
+            <a href="index.html" class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
+                <span class="logo-text">AI <span class="highlight">MOM</span></span>
+            </a>
+            <div class="nav-right">
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="file.html">Upload</a></li>
+                    <li><a href="real.html">Live</a></li>
+                </ul>
+                
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar" onclick="toggleUserDropdown()">
+                        <img src="" alt="User Avatar" id="avatarImage" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none;">
+                        <span id="avatarInitials">U</span>
+                    </div>
+                    <div class="dropdown" id="dropdown">
+                        <a href="profile.html" class="dropdown-item">Profile</a>
+                        <a href="setting.html" class="dropdown-item">Settings</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Privacy Policy</h1>
+                <p class="page-subtitle">Your privacy and data security are our top priorities. Learn how we collect, use, and protect your information.</p>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Information We Collect</h2>
+                <p class="content-text">We collect information you provide directly to us, such as when you create an account, use our services, or contact us for support.</p>
+                <ul class="content-list">
+                    <li>Account information (name, email address, profile picture)</li>
+                    <li>Audio recordings and transcriptions processed through our service</li>
+                    <li>Usage data and analytics to improve our service</li>
+                    <li>Device information and IP addresses for security purposes</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">How We Use Your Information</h2>
+                <p class="content-text">We use the information we collect to provide, maintain, and improve our AI-powered meeting intelligence services.</p>
+                <ul class="content-list">
+                    <li>Process and transcribe your audio recordings</li>
+                    <li>Generate meeting summaries and insights</li>
+                    <li>Provide customer support and respond to your requests</li>
+                    <li>Send important updates about our service</li>
+                    <li>Improve our AI models and service quality</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Data Security</h2>
+                <p class="content-text">We implement industry-standard security measures to protect your personal information and audio data.</p>
+                <ul class="content-list">
+                    <li>End-to-end encryption for all audio transmissions</li>
+                    <li>Secure cloud storage with regular backups</li>
+                    <li>Access controls and authentication protocols</li>
+                    <li>Regular security audits and vulnerability assessments</li>
+                    <li>GDPR and CCPA compliance measures</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Data Retention</h2>
+                <p class="content-text">We retain your data only as long as necessary to provide our services and comply with legal obligations.</p>
+                <ul class="content-list">
+                    <li>Account data: Retained while your account is active</li>
+                    <li>Audio recordings: Deleted after processing unless explicitly saved</li>
+                    <li>Transcriptions: Stored according to your retention preferences</li>
+                    <li>Usage data: Anonymized and retained for service improvement</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Your Rights</h2>
+                <p class="content-text">You have full control over your personal data and can exercise the following rights at any time.</p>
+                <ul class="content-list">
+                    <li>Access and download your personal data</li>
+                    <li>Correct or update your information</li>
+                    <li>Delete your account and associated data</li>
+                    <li>Opt out of marketing communications</li>
+                    <li>Request data portability to another service</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Third-Party Services</h2>
+                <p class="content-text">We may use trusted third-party services to help provide our AI meeting intelligence platform.</p>
+                <ul class="content-list">
+                    <li>Cloud hosting providers for secure data storage</li>
+                    <li>AI processing services for transcription and analysis</li>
+                    <li>Analytics tools for service improvement</li>
+                    <li>Customer support platforms</li>
+                </ul>
+                <p class="content-text">All third-party providers are carefully vetted and required to maintain the same privacy standards we uphold.</p>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Contact Us</h2>
+                <p class="content-text">If you have any questions about this Privacy Policy or our data practices, please don't hesitate to reach out to us.</p>
+                <ul class="content-list">
+                    <li>Email: privacy@aimom.com</li>
+                    <li>Address: House #19, Aaradhya Bungalow, Opposite Apollo Factory</li>
+                    <li>Phone: (+91) 8597716577</li>
+                </ul>
+            </div>
+
+            <!-- Privacy Acceptance Section -->
+            <div class="acceptance-section" id="acceptanceSection" style="display: none;">
+                <div class="content-section" style="text-align: center; background: rgba(102, 126, 234, 0.1); border-color: rgba(102, 126, 234, 0.3);">
+                    <h2 class="section-title">Privacy Policy Acceptance</h2>
+                    <p class="content-text">By clicking "I Accept" below, you acknowledge that you have read, understood, and agree to our Privacy Policy and data handling practices.</p>
+                    <div style="margin-top: 2rem;">
+                        <button class="btn btn-secondary" onclick="goBackToSignup()" style="margin-right: 1rem;">Go Back</button>
+                        <button class="btn btn-primary" onclick="acceptPrivacy()">I Accept Privacy Policy</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="last-updated">
+                <p>Last updated: October 4, 2025</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal-content">
+            <h3>Confirm Logout</h3>
+            <p>Are you sure you want to logout?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="cancelLogout()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if user came from signup page
+        window.addEventListener('DOMContentLoaded', function() {
+            if (sessionStorage.getItem('returnToSignup') === 'true') {
+                // Show acceptance section when user scrolls to bottom
+                showAcceptanceSectionOnScroll();
+            }
+        });
+
+        function showAcceptanceSectionOnScroll() {
+            const acceptanceSection = document.getElementById('acceptanceSection');
+            
+            function checkScroll() {
+                const scrollPosition = window.scrollY + window.innerHeight;
+                const documentHeight = document.documentElement.scrollHeight;
+                
+                // Show acceptance section when user reaches 90% of the page
+                if (scrollPosition >= documentHeight * 0.9) {
+                    acceptanceSection.style.display = 'block';
+                    acceptanceSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    window.removeEventListener('scroll', checkScroll);
+                }
+            }
+            
+            window.addEventListener('scroll', checkScroll);
+            
+            // Also check immediately in case the page is short
+            setTimeout(checkScroll, 1000);
+        }
+
+        function goBackToSignup() {
+            window.location.href = 'signin.html';
+        }
+
+        function acceptPrivacy() {
+            // Mark privacy policy as accepted
+            sessionStorage.setItem('privacyAccepted', 'true');
+            
+            // Check if terms were also accepted
+            const termsAccepted = sessionStorage.getItem('termsAccepted') === 'true';
+            
+            if (termsAccepted) {
+                // Both accepted, go back to signup
+                window.location.href = 'signin.html';
+            } else {
+                // Redirect to terms of service
+                window.location.href = 'terms.html';
+            }
+        }
+
+        // User dropdown functionality
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('dropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const userMenu = document.querySelector('.user-menu');
+            const dropdown = document.getElementById('dropdown');
+            
+            if (!userMenu.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const logoutModal = document.getElementById('logoutModal');
+            logoutModal.classList.add('show');
+        });
+
+        function cancelLogout() {
+            const logoutModal = document.getElementById('logoutModal');
+            logoutModal.classList.remove('show');
+        }
+
+        function confirmLogout() {
+            // Clear user data
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('currentUser');
+            
+            // Redirect to signin page
+            window.location.href = 'signin.html';
+        }
+
+        // Close modal when clicking outside
+        const logoutModal = document.getElementById('logoutModal');
+        if (logoutModal) {
+            logoutModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                }
+            });
+        }
+    </script>
+
+    <!-- Initialize Avatar Manager -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof AvatarManager !== 'undefined') {
+                const avatarManager = new AvatarManager();
+                avatarManager.refreshAllAvatars();
+            }
+        });
+    </script>
+
+</body>
+</html>

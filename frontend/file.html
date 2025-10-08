@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Processing - AI MOM</title>
+    <script src="js/avatar-manager.js"></script>
+    <script src="js/file-processing.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%);
+        }
+
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #667eea 0%, transparent 70%);
+            top: -200px;
+            right: -200px;
+        }
+
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #764ba2 0%, transparent 70%);
+            bottom: -150px;
+            left: -150px;
+            animation-delay: -7s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -50px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+        }
+
+        nav {
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 6px 18px rgba(102, 126, 234, 0.4);
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .logo-text {
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .logo-text .highlight {
+            color: #667eea;
+        }
+
+        .logo span {
+            color: #667eea;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #ffffff;
+        }
+
+        /* User Menu */
+        .user-menu {
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .user-avatar:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            min-width: 180px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0.5rem 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1rem;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 4rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 2rem;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.01);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-area:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .upload-area h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-area p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* File Info */
+        .file-info {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .file-info.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .file-details {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .file-icon {
+            font-size: 2rem;
+        }
+
+        .file-name {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .file-size {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+
+        .remove-file {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .remove-file:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Progress */
+        .progress-container {
+            display: none;
+            margin-bottom: 2rem;
+        }
+
+        .progress-container.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .progress-bar-bg {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            height: 8px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 8px;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #ffffff;
+            color: #0a0a0a;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Results */
+        .results {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 2rem;
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .results h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .transcript-item {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border-left: 3px solid;
+        }
+
+        .speaker {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .text {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+
+        .speaker-1 { border-color: #667eea; }
+        .speaker-1 .speaker { color: #667eea; }
+        
+        .speaker-2 { border-color: #764ba2; }
+        .speaker-2 .speaker { color: #764ba2; }
+
+        /* Buttons */
+        .btn {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #ffffff;
+            color: #0a0a0a;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Download Dropdown */
+        .download-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            min-width: 180px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .dropdown-item:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* AI Summary Section */
+        .summary-container {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .summary-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-header h3 {
+            font-size: 1.3rem;
+            margin: 0;
+        }
+
+        .summary-generating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 2px;
+        }
+
+        .loading-dots span {
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: dot-pulse 1.4s ease-in-out infinite both;
+        }
+
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes dot-pulse {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .summary-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .summary-section h4 {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .summary-section p {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+
+        .summary-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .summary-section li {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            padding: 0.25rem 0;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .summary-section li:before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <div class="content">
+        <nav>
+            <a href="index.html" class="logo">
+                <div class="logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <span class="logo-text">AI <span class="highlight">MOM</span></span>
+            </a>
+            <div class="nav-right">
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="real.html">Live</a></li>
+                </ul>
+                
+                <!-- User menu (assuming user is logged in) -->
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar">
+                        JD
+                    </div>
+                    <div class="dropdown" id="dropdown">
+                        <a href="profile.html" class="dropdown-item">Profile</a>
+                        <a href="setting.html" class="dropdown-item">Settings</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="header">
+                <h1>Audio Processing</h1>
+                <p>Upload audio files for transcription and analysis</p>
+            </div>
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">🎵</div>
+                <h3>Drop your audio file here</h3>
+                <p>or click to browse • Supports MP3, WAV, M4A, AAC, OGG, FLAC</p>
+                <p><small>Maximum file size: 200MB</small></p>
+                <input type="file" id="fileInput" class="file-input" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac">
+            </div>
+
+            <div class="file-info" id="fileInfo">
+                <div class="file-details">
+                    <span class="file-icon">🎵</span>
+                    <div style="flex: 1;">
+                        <div class="file-name" id="fileName"></div>
+                        <div class="file-size" id="fileSize"></div>
+                    </div>
+                    <button class="remove-file" id="removeFile">Remove</button>
+                </div>
+                <button class="btn btn-primary" id="processBtn">Process Audio</button>
+            </div>
+
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="progress-text" id="progressText">Processing: 0%</div>
+            </div>
+
+            <div class="results" id="results">
+                <h3>Transcript Results</h3>
+                <div id="transcriptResults"></div>
+                <div class="download-dropdown">
+                    <button class="btn btn-secondary" id="downloadBtn">
+                        Download <span>▼</span>
+                    </button>
+                    <div class="dropdown-menu" id="downloadMenu">
+                        <a href="#" class="dropdown-item" id="downloadTranscript">Transcript (.txt)</a>
+                        <a href="#" class="dropdown-item" id="downloadSummary">AI Summary (.txt)</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Summary Section -->
+            <div class="summary-container" id="summaryContainer" style="display: none;">
+                <div class="summary-header">
+                    <h3>🤖 AI Summary</h3>
+                    <div class="summary-generating" id="summaryGenerating">
+                        <div class="loading-dots">
+                            <span>.</span><span>.</span><span>.</span>
+                        </div>
+                        <span>Generating AI summary...</span>
+                    </div>
+                </div>
+                <div class="summary-content" id="summaryContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Error display for debugging
+    const errorDiv = document.createElement('div');
+    errorDiv.id = 'errorDisplay';
+    errorDiv.style.position = 'fixed';
+    errorDiv.style.bottom = '0';
+    errorDiv.style.left = '0';
+    errorDiv.style.width = '100vw';
+    errorDiv.style.background = 'rgba(239,68,68,0.95)';
+    errorDiv.style.color = '#fff';
+    errorDiv.style.fontWeight = 'bold';
+    errorDiv.style.padding = '8px 16px';
+    errorDiv.style.zIndex = '9999';
+    errorDiv.style.display = 'none';
+    document.body.appendChild(errorDiv);
+
+    window.addEventListener('error', function(e) {
+        errorDiv.textContent = 'JS Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno;
+        errorDiv.style.display = 'block';
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+        errorDiv.textContent = 'Promise Error: ' + (e.reason && e.reason.message ? e.reason.message : e.reason);
+        errorDiv.style.display = 'block';
+    });
+
+        // Combined DOMContentLoaded for all functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM fully loaded, initializing...');
+            
+            // User menu functionality
+            const userAvatar = document.getElementById('userAvatar');
+            const dropdown = document.getElementById('dropdown');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            // Toggle dropdown
+            if (userAvatar) {
+                userAvatar.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('active');
+                });
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                if (dropdown) {
+                    dropdown.classList.remove('active');
+                }
+            });
+
+            // Prevent dropdown from closing when clicking inside
+            if (dropdown) {
+                dropdown.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            }
+
+            // Logout functionality
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const logoutModal = document.getElementById('logoutModal');
+                    logoutModal.classList.add('show');
+                });
+            }
+
+            // Modal functions
+            window.confirmLogout = function() {
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userEmail');
+                localStorage.removeItem('userName');
+                localStorage.removeItem('userSession');
+                window.location.href = 'index.html';
+            };
+
+            window.cancelLogout = function() {
+                const logoutModal = document.getElementById('logoutModal');
+                logoutModal.classList.remove('show');
+            };
+
+            // Close modal when clicking on overlay
+            const logoutModal = document.getElementById('logoutModal');
+            if (logoutModal) {
+                logoutModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('show');
+                    }
+                });
+            }
+
+            // File upload functionality
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const removeFile = document.getElementById('removeFile');
+            const processBtn = document.getElementById('processBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const results = document.getElementById('results');
+            const transcriptResults = document.getElementById('transcriptResults');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const downloadMenu = document.getElementById('downloadMenu');
+            const downloadTranscript = document.getElementById('downloadTranscript');
+            const downloadSummary = document.getElementById('downloadSummary');
+            const summaryContainer = document.getElementById('summaryContainer');
+            const summaryGenerating = document.getElementById('summaryGenerating');
+            const summaryContent = document.getElementById('summaryContent');
+
+            let selectedFile = null;
+            let transcriptData = [];
+            let aiSummary = null;
+
+            console.log('Elements found:', {
+                uploadArea: !!uploadArea,
+                fileInput: !!fileInput,
+                processBtn: !!processBtn
+            });
+
+            // Ensure all elements exist before adding event listeners
+            if (uploadArea && fileInput) {
+                console.log('Setting up upload event listeners');
+                
+                // Prevent default drag behaviors
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false);
+                });
+
+                // Highlight drop area when item is dragged over it
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, highlight, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, unhighlight, false);
+                });
+
+                // Handle dropped files
+                uploadArea.addEventListener('drop', handleDrop, false);
+
+                // Upload area click
+                uploadArea.addEventListener('click', () => {
+                    console.log('Upload area clicked, triggering file input');
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', (e) => {
+                    console.log('File input changed, files:', e.target.files.length);
+                    if (e.target.files.length > 0) {
+                        handleFile(e.target.files[0]);
+                    }
+                });
+            } else {
+                console.error('Upload area or file input not found!');
+            }
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            function highlight(e) {
+                console.log('Drag highlight');
+                uploadArea.classList.add('dragover');
+            }
+
+            function unhighlight(e) {
+                console.log('Drag unhighlight');
+                uploadArea.classList.remove('dragover');
+            }
+
+            function handleDrop(e) {
+                console.log('Files dropped');
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                console.log('Dropped files count:', files.length);
+                
+                if (files.length > 0) {
+                    const file = files[0];
+                    console.log('File dropped:', file.name, file.type, file.size);
+                    
+                    // Check if it's an audio file
+                    if (file.type.startsWith('audio/') || 
+                        file.name.match(/\.(mp3|wav|m4a|aac|ogg|flac)$/i)) {
+                        handleFile(file);
+                    } else {
+                        alert('Please select an audio file (MP3, WAV, M4A, AAC, OGG, FLAC)');
+                    }
+                }
+            }
+
+            if (removeFile) removeFile.addEventListener('click', resetUpload);
+            if (processBtn) {
+                processBtn.addEventListener('click', () => {
+                    console.log('Process button clicked');
+                    processAudio();
+                });
+            }
+            if (downloadBtn) downloadBtn.addEventListener('click', toggleDownloadMenu);
+            if (downloadTranscript) downloadTranscript.addEventListener('click', downloadTranscriptFile);
+            if (downloadSummary) downloadSummary.addEventListener('click', downloadSummaryFile);
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!downloadBtn.contains(e.target) && !downloadMenu.contains(e.target)) {
+                    downloadMenu.classList.remove('show');
+                }
+            });
+
+            function handleFile(file) {
+                console.log('Handling file:', file.name, file.type, file.size);
+                
+                // Validate file type
+                const validTypes = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/aac', 'audio/ogg', 'audio/flac'];
+                const validExtensions = /\.(mp3|wav|m4a|aac|ogg|flac)$/i;
+                
+                if (!validTypes.includes(file.type) && !validExtensions.test(file.name)) {
+                    alert('Please select a valid audio file (MP3, WAV, M4A, AAC, OGG, FLAC)');
+                    return;
+                }
+                
+                // Check file size (limit to 100MB)
+                const maxSize = 100 * 1024 * 1024; // 100MB
+                if (file.size > maxSize) {
+                    alert('File size must be less than 100MB');
+                    return;
+                }
+                
+                selectedFile = file;
+                if (fileName) fileName.textContent = file.name;
+                if (fileSize) fileSize.textContent = formatFileSize(file.size);
+                if (fileInfo) fileInfo.classList.add('active');
+                if (uploadArea) uploadArea.style.display = 'none';
+                
+                console.log('File successfully loaded');
+            }
+
+            function resetUpload() {
+                selectedFile = null;
+                fileInput.value = '';
+                fileInfo.classList.remove('active');
+                uploadArea.style.display = 'block';
+                progressContainer.classList.remove('active');
+                results.classList.remove('active');
+                summaryContainer.style.display = 'none';
+                aiSummary = null;
+                processBtn.disabled = false;
+                
+                // Clear all result content to prevent showing old data
+                if (transcriptResults) {
+                    transcriptResults.innerHTML = '';
+                }
+                if (summaryContent) {
+                    summaryContent.innerHTML = '';
+                }
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                }
+                if (progressText) {
+                    progressText.textContent = 'Processing: 0%';
+                }
+                
+                console.log('✅ Upload reset - ready for new file');
+            }
+
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+            }
+
+            function processAudio() {
+                if (!selectedFile) {
+                    alert('Please select a file first');
+                    return;
+                }
+                
+                console.log('Processing audio file:', selectedFile.name);
+                processBtn.disabled = true;
+                progressContainer.classList.add('active');
+                
+                // REAL BACKEND INTEGRATION - Use file-processing.js
+                processAudioFile(selectedFile, {
+                    onProgress: (progress) => {
+                        progressBar.style.width = progress + '%';
+                        progressText.textContent = `Processing: ${progress}%`;
+                    },
+                    onComplete: (result) => {
+                        console.log('Processing complete:', result);
+                        showResults(result);
+                        generateAISummary(result);
+                        processBtn.disabled = false;
+                    },
+                    onError: (error) => {
+                        console.error('Processing error:', error);
+                        alert('Error processing audio: ' + error.message);
+                        processBtn.disabled = false;
+                        progressContainer.classList.remove('active');
+                    }
+                });
+            }
+
+            function showResults(result) {
+                console.log('Showing results');
+                // Use real transcript data from backend
+                transcriptData = result.transcription || result.transcript || [];
+
+                transcriptResults.innerHTML = '';
+                transcriptData.forEach((item, index) => {
+                    const speakerNum = (index % 2) + 1;
+                    const itemEl = document.createElement('div');
+                    itemEl.className = `transcript-item speaker-${speakerNum}`;
+                    itemEl.innerHTML = `
+                        <div class="speaker">${item.speaker || 'Speaker ' + (speakerNum)}</div>
+                        <div class="text">${item.text}</div>
+                    `;
+                    transcriptResults.appendChild(itemEl);
+                });
+
+                results.classList.add('active');
+            }
+
+            function generateAISummary(result) {
+                console.log('Generating AI summary');
+                summaryContainer.style.display = 'block';
+                summaryGenerating.style.display = 'flex';
+                summaryContent.innerHTML = '';
+                
+                // Use real AI summary from backend
+                setTimeout(() => {
+                    summaryGenerating.style.display = 'none';
+                    
+                    // Use backend response
+                    aiSummary = {
+                        overview: result.summary || "Meeting summary generated from audio file.",
+                        keyPoints: result.key_points || [],
+                        actionItems: result.action_items || [],
+                        conclusions: result.conclusions || [],
+                        participants: result.participants || "Various speakers"
+                    };
+                    
+                    displaySummary();
+                }, 500);
+            }
+
+            function displaySummary() {
+                console.log('Displaying AI summary');
+                summaryContent.innerHTML = `
+                    <div class="summary-section">
+                        <h4>📋 Meeting Overview</h4>
+                        <p>${aiSummary.overview}</p>
+                    </div>
+                    <div class="summary-section">
+                        <h4>🔑 Key Points</h4>
+                        <ul>
+                            ${aiSummary.keyPoints.map(point => `<li>${point}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="summary-section">
+                        <h4>✅ Action Items</h4>
+                        <ul>
+                            ${aiSummary.actionItems.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="summary-section">
+                        <h4>🎯 Conclusions</h4>
+                        <ul>
+                            ${aiSummary.conclusions.map(conclusion => `<li>${conclusion}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="summary-section">
+                        <h4>👥 Participants</h4>
+                        <p>${aiSummary.participants}</p>
+                    </div>
+                `;
+            }
+
+            function toggleDownloadMenu() {
+                downloadMenu.classList.toggle('show');
+            }
+
+            function downloadTranscriptFile(e) {
+                e.preventDefault();
+                if (transcriptData.length === 0) {
+                    alert('No transcript to download');
+                    return;
+                }
+
+                let content = 'Meeting Transcript\n';
+                content += '=================\n\n';
+                content += `Generated: ${new Date().toLocaleString()}\n\n`;
+                
+                transcriptData.forEach(item => {
+                    content += `${item.speaker}\n`;
+                    content += `${item.text}\n\n`;
+                });
+
+                downloadFile(content, `transcript-${Date.now()}.txt`);
+                downloadMenu.classList.remove('show');
+            }
+
+            function downloadSummaryFile(e) {
+                e.preventDefault();
+                if (!aiSummary) {
+                    alert('No AI summary available. Please process an audio file first to generate a summary.');
+                    return;
+                }
+
+                let content = 'AI Meeting Summary\n';
+                content += '=================\n\n';
+                content += `Generated: ${new Date().toLocaleString()}\n\n`;
+                
+                content += `Meeting Overview:\n${aiSummary.overview}\n\n`;
+                
+                content += `Key Points:\n`;
+                aiSummary.keyPoints.forEach((point, index) => {
+                    content += `${index + 1}. ${point}\n`;
+                });
+                content += '\n';
+                
+                content += `Action Items:\n`;
+                aiSummary.actionItems.forEach((item, index) => {
+                    content += `${index + 1}. ${item}\n`;
+                });
+                content += '\n';
+                
+                content += `Conclusions:\n`;
+                aiSummary.conclusions.forEach((conclusion, index) => {
+                    content += `${index + 1}. ${conclusion}\n`;
+                });
+                content += '\n';
+                
+                content += `Participants: ${aiSummary.participants}\n`;
+
+                downloadFile(content, `summary-${Date.now()}.txt`);
+                downloadMenu.classList.remove('show');
+            }
+
+            function downloadFile(content, filename) {
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }); // Close combined DOMContentLoaded
+    </script>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal-content">
+            <h3>Confirm Logout</h3>
+            <p>Are you sure you want to logout?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="cancelLogout()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Initialize Avatar Manager -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof AvatarManager !== 'undefined') {
+                const avatarManager = new AvatarManager();
+                avatarManager.refreshAllAvatars();
+            }
+        });
+    </script>
+
+</body>
+</html>
