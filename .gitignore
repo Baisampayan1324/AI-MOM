@@ -223,6 +223,29 @@ QUICK_DECISION_GUIDE.md
 .sass-cache/
 
 # ============================================
+# EXECUTABLE BUILD FILES (PyInstaller)
+# ============================================
+# Ignore exe build scripts and documentation
+exe/BUILD_GUIDE.md
+exe/DISTRIBUTION_GUIDE.md
+exe/INSTALLATION.txt
+exe/QUICK_BUILD.bat
+exe/README.md
+exe/SIMPLE_BUILD.bat
+exe/STEP_BY_STEP_GUIDE.md
+exe/build.bat
+exe/build_exe.py
+exe/.env.example
+
+# Ignore PyInstaller build artifacts
+exe/build/
+exe/dist/
+exe/*.spec
+
+# Keep only essential exe documentation (if needed)
+!exe/README_ESSENTIAL.md
+
+# ============================================
 # TESTING
 # ============================================
 .pytest_cache/
