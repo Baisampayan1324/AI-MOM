@@ -24,6 +24,18 @@ class UnifiedScreenCapture {
         this.startTime = null;
         this.currentPlatform = this.detectPlatform();
         
+        // Initialize hybrid audio router for robust audio handling
+        this.hybridRouter = null;
+        this.useHybridRouter = true; // Flag to enable hybrid router
+        
+        // Audio processing queue and throttling (fallback)
+        this.audioProcessingQueue = [];
+        this.isProcessingAudio = false;
+        this.lastProcessTime = 0;
+        this.processingThrottleMs = 100;
+        this.audioContextErrors = 0;
+        this.maxAudioContextErrors = 5;
+        
         this.init();
     }
     
@@ -221,6 +233,19 @@ class UnifiedScreenCapture {
             console.log('⏹️ Stopping unified screen capture...');
             
             this.isActive = false;
+            
+            // Stop hybrid router if active
+            if (this.hybridRouter) {
+                console.log('🔄 Stopping hybrid audio router...');
+                this.hybridRouter.stop();
+                this.hybridRouter = null;
+            }
+            
+            // Clear legacy audio processing queue
+            if (this.audioProcessingQueue) {
+                this.audioProcessingQueue.length = 0;
+            }
+            this.isProcessingAudio = false;
             
             // Stop media recorder
             if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
@@ -422,8 +447,12 @@ class UnifiedScreenCapture {
             // Connect to WebSocket for real-time transcription
             await this.connectWebSocket();
             
-            // Setup media recorder for audio processing
-            this.setupMediaRecorder();
+            // Use hybrid router if enabled, otherwise fall back to legacy approach
+            if (this.useHybridRouter) {
+                await this.initializeHybridRouter();
+            } else {
+                this.setupMediaRecorder();
+            }
             
             console.log('✅ Audio processing started successfully');
         } catch (error) {
@@ -433,6 +462,37 @@ class UnifiedScreenCapture {
                 `Failed to connect to backend: ${error.message}\n\nPlease ensure:\n1. Backend server is running on ${this.backendUrl}\n2. WebSocket connection is available`,
                 'error'
             );
+        }
+    }
+
+    async initializeHybridRouter() {
+        try {
+            console.log('🔄 Initializing hybrid audio router...');
+            
+            // Check if HybridAudioRouter is available (should be loaded via manifest)
+            if (typeof HybridAudioRouter === 'undefined') {
+                throw new Error('HybridAudioRouter class not available');
+            }
+            
+            // Initialize the hybrid router
+            this.hybridRouter = new HybridAudioRouter();
+            this.hybridRouter.backendUrl = this.backendUrl;
+            this.hybridRouter.websocket = this.websocket;
+            
+            // Initialize with existing stream if available
+            if (this.stream) {
+                await this.hybridRouter.initializeWithStream(this.stream);
+            } else {
+                await this.hybridRouter.initialize();
+            }
+            
+            console.log('✅ Hybrid audio router initialized successfully');
+            this.updateOverlayStatus('Hybrid audio router active');
+            
+        } catch (error) {
+            console.warn('⚠️ Hybrid router failed, falling back to legacy audio processing:', error);
+            this.useHybridRouter = false;
+            this.setupMediaRecorder();
         }
     }
     
@@ -461,10 +521,32 @@ class UnifiedScreenCapture {
             const wsUrl = `${this.backendUrl.replace('http', 'ws')}/ws/audio`;
             console.log('🔗 Connecting to WebSocket:', wsUrl);
             
+            // Close existing connection if any
+            if (this.websocket && this.websocket.readyState !== WebSocket.CLOSED) {
+                this.websocket.close();
+            }
+            
             this.websocket = new WebSocket(wsUrl);
             
+            // Add connection timeout
+            const connectionTimeout = setTimeout(() => {
+                if (this.websocket.readyState !== WebSocket.OPEN) {
+                    this.websocket.close();
+                    reject(new Error('WebSocket connection timeout'));
+                }
+            }, 10000);
+            
             this.websocket.onopen = () => {
+                clearTimeout(connectionTimeout);
                 console.log('✅ WebSocket connected');
+                this.updateOverlayStatus('Connected to backend');
+                
+                // Send initial ping to test connection
+                this.websocket.send(JSON.stringify({
+                    type: 'ping',
+                    timestamp: Date.now()
+                }));
+                
                 resolve();
             };
             
@@ -478,20 +560,30 @@ class UnifiedScreenCapture {
             };
             
             this.websocket.onerror = (error) => {
+                clearTimeout(connectionTimeout);
                 console.error('❌ WebSocket error:', error);
+                this.updateOverlayStatus('WebSocket connection error');
                 reject(new Error('WebSocket connection failed'));
             };
             
-            this.websocket.onclose = () => {
-                console.log('🔗 WebSocket disconnected');
+            this.websocket.onclose = (event) => {
+                clearTimeout(connectionTimeout);
+                console.log('🔗 WebSocket disconnected:', event.code, event.reason);
+                
                 if (this.isActive) {
                     this.updateOverlayStatus('Connection lost - retrying...');
-                    // Try to reconnect after 3 seconds
-                    setTimeout(() => {
-                        if (this.isActive) {
-                            this.connectWebSocket().catch(console.error);
-                        }
-                    }, 3000);
+                    // Try to reconnect after 3 seconds, but only if not intentionally closed
+                    if (event.code !== 1000) {
+                        setTimeout(() => {
+                            if (this.isActive) {
+                                console.log('🔄 Attempting to reconnect WebSocket...');
+                                this.connectWebSocket().catch(error => {
+                                    console.error('❌ WebSocket reconnection failed:', error);
+                                    this.updateOverlayStatus('Connection failed');
+                                });
+                            }
+                        }, 3000);
+                    }
                 }
             };
         });
@@ -542,70 +634,526 @@ class UnifiedScreenCapture {
             // Create audio-only stream for processing
             const audioStream = new MediaStream(audioTracks);
             
-            this.mediaRecorder = new MediaRecorder(audioStream, {
-                mimeType: 'audio/webm;codecs=opus',
-                audioBitsPerSecond: 128000
-            });
+            // Add audio processing throttling
+            this.audioProcessingQueue = [];
+            this.isProcessingAudio = false;
+            this.lastProcessTime = 0;
+            this.processingThrottleMs = 100; // Minimum time between processing attempts
+            
+            // Try different MIME types in order of preference
+            const mimeTypes = [
+                'audio/webm;codecs=opus',
+                'audio/webm',
+                'audio/ogg;codecs=opus',
+                'audio/mp4',
+                '' // Let browser choose
+            ];
+            
+            let selectedMimeType = '';
+            for (const mimeType of mimeTypes) {
+                if (MediaRecorder.isTypeSupported(mimeType) || mimeType === '') {
+                    selectedMimeType = mimeType;
+                    console.log('✅ Selected MIME type:', mimeType || 'browser default');
+                    break;
+                }
+            }
+            
+            // Create MediaRecorder with optimal settings
+            const recorderOptions = {
+                audioBitsPerSecond: 64000 // Lower bitrate for more stable encoding
+            };
+            
+            if (selectedMimeType) {
+                recorderOptions.mimeType = selectedMimeType;
+            }
+            
+            this.mediaRecorder = new MediaRecorder(audioStream, recorderOptions);
             
             this.mediaRecorder.ondataavailable = (event) => {
                 if (event.data.size > 0 && this.isActive) {
-                    console.log('🎵 Audio chunk received:', event.data.size, 'bytes');
-                    this.processAudioChunk(event.data);
+                    console.log('🎵 Audio chunk received:', event.data.size, 'bytes, type:', event.data.type);
+                    
+                    // Validate chunk before processing
+                    if (event.data.size < 100) {
+                        console.warn('⚠️ Skipping very small audio chunk:', event.data.size, 'bytes');
+                        return;
+                    }
+                    
+                    this.queueAudioProcessing(event.data);
                 }
             };
             
             this.mediaRecorder.onerror = (error) => {
                 console.error('❌ MediaRecorder error:', error);
+                
+                // Try to restart with different settings
+                if (this.isActive) {
+                    console.log('🔄 Attempting to restart MediaRecorder...');
+                    setTimeout(() => {
+                        if (this.isActive) {
+                            this.restartMediaRecorder();
+                        }
+                    }, 1000);
+                }
             };
             
             this.mediaRecorder.onstart = () => {
-                console.log('✅ MediaRecorder started');
+                console.log('✅ MediaRecorder started with options:', recorderOptions);
             };
             
-            // Start recording with 1 second chunks
-            this.mediaRecorder.start(1000);
+            this.mediaRecorder.onstop = () => {
+                console.log('⏹️ MediaRecorder stopped');
+            };
+            
+            // Start recording with 1.5 second chunks (longer chunks = more stable)
+            this.mediaRecorder.start(1500);
             console.log('🎙️ Media recorder setup complete and started');
             
         } catch (error) {
             console.error('❌ Failed to setup media recorder:', error);
             this.mediaRecorder = null; // Ensure it's null on error
+            
+            // Show user-friendly error message
+            this.showNotification(
+                'Audio Recording Failed',
+                'Failed to set up audio recording. This may be due to:\n\n1. Unsupported audio format\n2. No audio permission\n3. Browser compatibility issue\n\nTrying fallback mode...'
+            );
+        }
+    }
+
+    restartMediaRecorder() {
+        try {
+            console.log('🔄 Restarting MediaRecorder with fallback settings...');
+            
+            if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                this.mediaRecorder.stop();
+            }
+            
+            // Use more conservative settings for restart
+            const audioTracks = this.stream.getAudioTracks();
+            if (audioTracks.length === 0) return;
+            
+            const audioStream = new MediaStream(audioTracks);
+            
+            // Use most basic settings for compatibility
+            this.mediaRecorder = new MediaRecorder(audioStream, {
+                audioBitsPerSecond: 32000 // Even lower bitrate
+            });
+            
+            this.mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0 && this.isActive) {
+                    console.log('🎵 Restarted audio chunk received:', event.data.size, 'bytes');
+                    this.queueAudioProcessing(event.data);
+                }
+            };
+            
+            this.mediaRecorder.onerror = (error) => {
+                console.error('❌ Restarted MediaRecorder error:', error);
+            };
+            
+            // Start with longer chunks for stability
+            this.mediaRecorder.start(2000);
+            console.log('✅ MediaRecorder restarted successfully');
+            
+        } catch (restartError) {
+            console.error('❌ Failed to restart MediaRecorder:', restartError);
+        }
+    }
+
+    queueAudioProcessing(audioBlob) {
+        // Add to queue
+        this.audioProcessingQueue.push(audioBlob);
+        
+        // Process queue if not already processing
+        if (!this.isProcessingAudio) {
+            this.processAudioQueue();
+        }
+    }
+
+    async processAudioQueue() {
+        if (this.isProcessingAudio || this.audioProcessingQueue.length === 0) {
+            return;
+        }
+        
+        this.isProcessingAudio = true;
+        
+        try {
+            while (this.audioProcessingQueue.length > 0 && this.isActive) {
+                const audioBlob = this.audioProcessingQueue.shift();
+                
+                // Throttle processing to prevent overwhelming the system
+                const now = Date.now();
+                const timeSinceLastProcess = now - this.lastProcessTime;
+                
+                if (timeSinceLastProcess < this.processingThrottleMs) {
+                    await new Promise(resolve => 
+                        setTimeout(resolve, this.processingThrottleMs - timeSinceLastProcess)
+                    );
+                }
+                
+                await this.processAudioChunk(audioBlob);
+                this.lastProcessTime = Date.now();
+                
+                // If queue is getting too long, skip some items to prevent memory issues
+                if (this.audioProcessingQueue.length > 10) {
+                    console.warn('⚠️ Audio queue too long, skipping some chunks');
+                    this.audioProcessingQueue.splice(0, this.audioProcessingQueue.length - 5);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error processing audio queue:', error);
+        } finally {
+            this.isProcessingAudio = false;
+            
+            // Process any remaining items that were added while processing
+            if (this.audioProcessingQueue.length > 0) {
+                setTimeout(() => this.processAudioQueue(), 100);
+            }
         }
     }
     
     async processAudioChunk(audioBlob) {
+        // HYBRID ROUTER APPROACH - Multiple fallback strategies to prevent DOMException errors
         try {
-            // Initialize AudioContext if needed
-            if (!this.audioContext) {
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            }
-
-            // Decode the compressed audio data to raw PCM
-            const arrayBuffer = await audioBlob.arrayBuffer();
-            const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-
-            // Convert to Int16Array (mono channel, 16-bit PCM)
-            const channelData = audioBuffer.getChannelData(0); // Get first channel
-            const audioData = new Int16Array(channelData.length);
+            console.log('🎵 Processing audio chunk with hybrid approach:', audioBlob.size, 'bytes');
             
-            // Convert float32 samples to int16
-            for (let i = 0; i < channelData.length; i++) {
-                audioData[i] = Math.max(-32768, Math.min(32767, channelData[i] * 32768));
+            // === VALIDATION PHASE ===
+            if (!audioBlob || audioBlob.size === 0) {
+                console.warn('⚠️ Empty audio blob received');
+                return;
             }
             
-            // Send directly to WebSocket if connected
-            if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-                this.websocket.send(JSON.stringify({
-                    type: 'audio_chunk',
-                    audio_data: Array.from(audioData),
-                    sample_rate: audioBuffer.sampleRate,
-                    timestamp: Date.now()
-                }));
-            } else {
+            if (!(audioBlob instanceof Blob)) {
+                console.warn('⚠️ Invalid audio blob type');
+                return;
+            }
+            
+            if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
                 console.warn('⚠️ WebSocket not connected, skipping audio chunk');
+                return;
             }
+            
+            // === STRATEGY 1: DIRECT WEBSOCKET SEND (FASTEST) ===
+            if (this.audioContextErrors >= this.maxAudioContextErrors) {
+                console.log('🔄 Using direct WebSocket strategy (AudioContext disabled)');
+                await this.sendAudioDirect(audioBlob);
+                return;
+            }
+            
+            // === STRATEGY 2: AUDIOCONTEXT WITH ENHANCED ERROR HANDLING ===
+            try {
+                await this.processWithAudioContext(audioBlob);
+                return; // Success, no need for fallback
+            } catch (audioContextError) {
+                console.warn('⚠️ AudioContext strategy failed:', audioContextError.name);
+                this.audioContextErrors++;
+                
+                // Fall through to strategy 3
+            }
+            
+            // === STRATEGY 3: BASE64 FALLBACK ===
+            console.log('🔄 Using base64 fallback strategy');
+            await this.processAudioChunkFallback(audioBlob);
             
         } catch (error) {
-            console.error('❌ Failed to process audio chunk:', error);
+            // === STRATEGY 4: SILENT SKIP (LAST RESORT) ===
+            if (error.name === 'DOMException') {
+                console.warn('⚠️ DOMException encountered, skipping chunk silently');
+            } else {
+                console.error('❌ Unexpected audio processing error:', error.name, error.message);
+            }
+            
+            // Don't let errors stop the entire process
+            return;
+        }
+    }
+
+    async sendAudioDirect(audioBlob) {
+        try {
+            // Send blob directly without processing
+            const reader = new FileReader();
+            
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('Direct send timeout'));
+                }, 3000);
+                
+                reader.onload = () => {
+                    clearTimeout(timeout);
+                    try {
+                        const arrayBuffer = reader.result;
+                        const uint8Array = new Uint8Array(arrayBuffer);
+                        
+                        // Send raw audio data
+                        this.websocket.send(JSON.stringify({
+                            type: 'audio_chunk_raw',
+                            data: Array.from(uint8Array),
+                            format: 'webm',
+                            size: audioBlob.size,
+                            timestamp: Date.now(),
+                            strategy: 'direct'
+                        }));
+                        
+                        console.log('📨 Sent raw audio chunk:', uint8Array.length, 'bytes');
+                        resolve();
+                    } catch (sendError) {
+                        clearTimeout(timeout);
+                        reject(sendError);
+                    }
+                };
+                
+                reader.onerror = (error) => {
+                    clearTimeout(timeout);
+                    reject(error);
+                };
+                
+                reader.readAsArrayBuffer(audioBlob);
+            });
+        } catch (error) {
+            console.warn('⚠️ Direct send failed:', error.message);
+            throw error;
+        }
+    }
+
+    async processWithAudioContext(audioBlob) {
+        // Enhanced AudioContext processing with strict error handling
+        
+        // Initialize AudioContext if needed
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: 16000,
+                latencyHint: 'interactive'
+            });
+        }
+        
+        // Check AudioContext state
+        if (this.audioContext.state === 'closed') {
+            throw new Error('AudioContext closed');
+        }
+        
+        if (this.audioContext.state === 'suspended') {
+            await this.audioContext.resume();
+        }
+        
+        // Convert blob to array buffer with timeout
+        const arrayBuffer = await Promise.race([
+            audioBlob.arrayBuffer(),
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('ArrayBuffer timeout')), 2000)
+            )
+        ]);
+        
+        if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+            throw new Error('Empty array buffer');
+        }
+        
+        // Validate audio data before decoding to prevent EncodingError
+        if (arrayBuffer.byteLength < 44) { // Minimum size for audio header
+            throw new Error('Audio data too small');
+        }
+        
+        // Check for valid audio data patterns
+        const uint8View = new Uint8Array(arrayBuffer);
+        const hasValidHeader = this.validateAudioHeader(uint8View);
+        
+        if (!hasValidHeader) {
+            console.warn('⚠️ Invalid audio header detected, using fallback');
+            throw new Error('Invalid audio format');
+        }
+        
+        // Decode audio data with timeout and specific error handling
+        let audioBuffer;
+        try {
+            audioBuffer = await Promise.race([
+                this.audioContext.decodeAudioData(arrayBuffer.slice()),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Decode timeout')), 2000)
+                )
+            ]);
+        } catch (decodeError) {
+            // Handle specific audio decoding errors
+            if (decodeError.name === 'EncodingError') {
+                console.warn('⚠️ Audio encoding error - data format unsupported');
+                throw new Error('Audio encoding not supported');
+            } else if (decodeError.name === 'DOMException') {
+                console.warn('⚠️ DOMException during audio decoding');
+                throw new Error('Audio decoding failed');
+            } else {
+                console.warn('⚠️ Unknown audio decoding error:', decodeError.name);
+                throw decodeError;
+            }
+        }
+        
+        if (!audioBuffer || audioBuffer.length === 0) {
+            throw new Error('Empty decoded audio buffer');
+        }
+        
+        // Validate audio buffer properties
+        if (audioBuffer.sampleRate <= 0 || audioBuffer.numberOfChannels === 0) {
+            throw new Error('Invalid audio buffer properties');
+        }
+        
+        // Convert to PCM with validation
+        const channelData = audioBuffer.getChannelData(0);
+        const audioData = new Int16Array(channelData.length);
+        
+        let validSamples = 0;
+        let silentSamples = 0;
+        
+        for (let i = 0; i < channelData.length; i++) {
+            const sample = channelData[i];
+            if (isNaN(sample) || !isFinite(sample)) {
+                audioData[i] = 0; // Replace invalid samples
+            } else {
+                const convertedSample = Math.max(-32768, Math.min(32767, sample * 32768));
+                audioData[i] = convertedSample;
+                validSamples++;
+                
+                // Count silent samples to detect empty audio
+                if (Math.abs(convertedSample) < 100) {
+                    silentSamples++;
+                }
+            }
+        }
+        
+        // Only send if we have sufficient valid samples and not all silent
+        if (validSamples < channelData.length * 0.5) {
+            throw new Error('Too many invalid samples');
+        }
+        
+        // Skip if audio is mostly silent (likely no actual audio content)
+        if (silentSamples > channelData.length * 0.95) {
+            console.log('🔇 Skipping mostly silent audio chunk');
+            return; // Don't throw error, just skip silently
+        }
+        
+        // Send to backend
+        this.websocket.send(JSON.stringify({
+            type: 'audio_chunk',
+            audio_data: Array.from(audioData),
+            sample_rate: audioBuffer.sampleRate,
+            timestamp: Date.now(),
+            strategy: 'audiocontext',
+            valid_samples: validSamples,
+            total_samples: channelData.length,
+            silent_samples: silentSamples
+        }));
+        
+        console.log('📨 Sent AudioContext processed chunk:', audioData.length, 'samples,', validSamples, 'valid,', silentSamples, 'silent');
+    }
+
+    validateAudioHeader(uint8Array) {
+        // Check for common audio format headers
+        const header = uint8Array.slice(0, 12);
+        
+        // WebM header check
+        if (header[0] === 0x1A && header[1] === 0x45 && header[2] === 0xDF && header[3] === 0xA3) {
+            return true; // WebM format
+        }
+        
+        // OGG header check
+        if (header[0] === 0x4F && header[1] === 0x67 && header[2] === 0x67 && header[3] === 0x53) {
+            return true; // OGG format
+        }
+        
+        // WAV header check
+        if (header[0] === 0x52 && header[1] === 0x49 && header[2] === 0x46 && header[3] === 0x46) {
+            return true; // WAV format
+        }
+        
+        // If no known header is found, still allow processing but with caution
+        console.warn('⚠️ Unknown audio format header, proceeding with caution');
+        return true; // Allow unknown formats to proceed
+    }
+
+    async processAudioChunkFallback(audioBlob) {
+        try {
+            console.log('🔄 Using fallback audio processing for blob size:', audioBlob.size);
+            
+            // Validate blob before processing
+            if (!audioBlob || audioBlob.size === 0) {
+                console.warn('⚠️ Invalid blob for fallback processing');
+                return;
+            }
+            
+            // Skip if WebSocket is not connected
+            if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
+                console.warn('⚠️ WebSocket not connected, skipping fallback processing');
+                return;
+            }
+            
+            // Convert blob to base64 as fallback
+            const reader = new FileReader();
+            
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('FileReader timeout'));
+                }, 5000);
+                
+                reader.onload = () => {
+                    clearTimeout(timeout);
+                    try {
+                        const arrayBuffer = reader.result;
+                        
+                        if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+                            console.warn('⚠️ Empty array buffer in fallback');
+                            resolve();
+                            return;
+                        }
+                        
+                        // Convert to base64 with chunking for large files
+                        const uint8Array = new Uint8Array(arrayBuffer);
+                        let base64Audio = '';
+                        
+                        // Process in chunks to avoid string length limits
+                        const chunkSize = 8192;
+                        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+                            const chunk = uint8Array.slice(i, i + chunkSize);
+                            base64Audio += String.fromCharCode.apply(null, chunk);
+                        }
+                        
+                        const finalBase64 = btoa(base64Audio);
+                        
+                        // Only send if we have data and connection is still open
+                        if (finalBase64.length > 0 && this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                            this.websocket.send(JSON.stringify({
+                                type: 'audio_chunk_base64',
+                                data: finalBase64,
+                                format: 'webm',
+                                sample_rate: 16000,
+                                timestamp: Date.now(),
+                                fallback: true
+                            }));
+                            
+                            console.log('📨 Sent fallback audio chunk to backend:', finalBase64.length, 'chars');
+                        }
+                        resolve();
+                    } catch (sendError) {
+                        clearTimeout(timeout);
+                        console.warn('⚠️ Failed to send fallback audio:', sendError.message);
+                        reject(sendError);
+                    }
+                };
+                
+                reader.onerror = (error) => {
+                    clearTimeout(timeout);
+                    console.warn('⚠️ FileReader error in fallback:', error);
+                    reject(error);
+                };
+                
+                // Read the blob as ArrayBuffer
+                try {
+                    reader.readAsArrayBuffer(audioBlob);
+                } catch (readError) {
+                    clearTimeout(timeout);
+                    console.warn('⚠️ Failed to read blob in fallback:', readError.message);
+                    reject(readError);
+                }
+            });
+            
+        } catch (error) {
+            console.warn('⚠️ Fallback audio processing failed:', error.message);
+            // Don't throw here to prevent cascading errors
         }
     }
     

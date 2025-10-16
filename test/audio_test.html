@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Processing Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background: #4CAF50;
+            color: white;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .error { color: red; }
+        .success { color: green; }
+        .warning { color: orange; }
+        #log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 AI MOM Audio Processing Test</h1>
+    
+    <div class="test-section">
+        <h3>🔗 Backend Connection Test</h3>
+        <button onclick="testBackendConnection()">Test Backend Connection</button>
+        <div id="connection-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>🎤 Audio Processing Test</h3>
+        <button onclick="testAudioProcessing()" id="audio-test-btn">Start Audio Test</button>
+        <button onclick="stopAudioTest()" id="stop-audio-btn" disabled>Stop Audio Test</button>
+        <div id="audio-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>📡 WebSocket Test</h3>
+        <button onclick="testWebSocket()">Test WebSocket Connection</button>
+        <div id="websocket-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>📜 Test Log</h3>
+        <button onclick="clearLog()">Clear Log</button>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        let websocket = null;
+        let mediaRecorder = null;
+        let audioContext = null;
+        let stream = null;
+        
+        const backendUrl = 'http://localhost:8000';
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+            logDiv.innerHTML += `<div class="${colorClass}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        async function testBackendConnection() {
+            const statusDiv = document.getElementById('connection-status');
+            statusDiv.innerHTML = 'Testing...';
+            
+            try {
+                log('Testing backend connection...', 'info');
+                const response = await fetch(`${backendUrl}/health`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDiv.innerHTML = `<span class="success">✅ Connected - ${data.status} (v${data.version})</span>`;
+                    log(`Backend connection successful: ${JSON.stringify(data)}`, 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="error">❌ Connection failed: ${error.message}</span>`;
+                log(`Backend connection failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testWebSocket() {
+            const statusDiv = document.getElementById('websocket-status');
+            statusDiv.innerHTML = 'Connecting...';
+            
+            try {
+                log('Testing WebSocket connection...', 'info');
+                
+                if (websocket) {
+                    websocket.close();
+                }
+                
+                const wsUrl = `${backendUrl.replace('http', 'ws')}/ws/audio`;
+                websocket = new WebSocket(wsUrl);
+                
+                websocket.onopen = () => {
+                    statusDiv.innerHTML = '<span class="success">✅ WebSocket Connected</span>';
+                    log('WebSocket connection successful', 'success');
+                    
+                    // Send test ping
+                    websocket.send(JSON.stringify({
+                        type: 'ping',
+                        timestamp: Date.now()
+                    }));
+                };
+                
+                websocket.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        log(`WebSocket message received: ${JSON.stringify(data)}`, 'info');
+                    } catch (error) {
+                        log(`Failed to parse WebSocket message: ${error.message}`, 'error');
+                    }
+                };
+                
+                websocket.onerror = (error) => {
+                    statusDiv.innerHTML = '<span class="error">❌ WebSocket Error</span>';
+                    log(`WebSocket error: ${error.message || 'Unknown error'}`, 'error');
+                };
+                
+                websocket.onclose = (event) => {
+                    statusDiv.innerHTML = `<span class="warning">⚠️ WebSocket Closed (Code: ${event.code})</span>`;
+                    log(`WebSocket closed: Code ${event.code}, Reason: ${event.reason}`, 'warning');
+                };
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="error">❌ Failed to create WebSocket: ${error.message}</span>`;
+                log(`WebSocket creation failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAudioProcessing() {
+            const statusDiv = document.getElementById('audio-status');
+            const startBtn = document.getElementById('audio-test-btn');
+            const stopBtn = document.getElementById('stop-audio-btn');
+            
+            try {
+                log('Starting audio processing test...', 'info');
+                statusDiv.innerHTML = 'Requesting microphone access...';
+                
+                // Request microphone access
+                stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 16000
+                    }
+                });
+                
+                statusDiv.innerHTML = 'Setting up audio processing...';
+                log('Microphone access granted', 'success');
+                
+                // Initialize audio context
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    sampleRate: 16000
+                });
+                
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                
+                // Setup media recorder
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus',
+                    audioBitsPerSecond: 64000
+                });
+                
+                mediaRecorder.ondataavailable = async (event) => {
+                    if (event.data.size > 0) {
+                        await processAudioChunk(event.data);
+                    }
+                };
+                
+                mediaRecorder.onerror = (error) => {
+                    log(`MediaRecorder error: ${error.message}`, 'error');
+                };
+                
+                mediaRecorder.start(1000); // 1 second chunks
+                
+                statusDiv.innerHTML = '<span class="success">✅ Audio processing active</span>';
+                log('Audio processing started successfully', 'success');
+                
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="error">❌ Audio test failed: ${error.message}</span>`;
+                log(`Audio processing test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function processAudioChunk(audioBlob) {
+            try {
+                log(`Processing audio chunk: ${audioBlob.size} bytes`, 'info');
+                
+                // Validate audio blob
+                if (!audioBlob || audioBlob.size === 0) {
+                    log('Empty audio blob received', 'warning');
+                    return;
+                }
+                
+                // Resume AudioContext if suspended
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                
+                try {
+                    // Decode the compressed audio data to raw PCM
+                    const arrayBuffer = await audioBlob.arrayBuffer();
+                    
+                    if (arrayBuffer.byteLength === 0) {
+                        log('Empty audio buffer', 'warning');
+                        return;
+                    }
+                    
+                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                    
+                    // Convert to Int16Array (mono channel, 16-bit PCM)
+                    const channelData = audioBuffer.getChannelData(0);
+                    const audioData = new Int16Array(channelData.length);
+                    
+                    // Convert float32 samples to int16
+                    for (let i = 0; i < channelData.length; i++) {
+                        audioData[i] = Math.max(-32768, Math.min(32767, channelData[i] * 32768));
+                    }
+                    
+                    // Send via WebSocket if connected
+                    if (websocket && websocket.readyState === WebSocket.OPEN) {
+                        websocket.send(JSON.stringify({
+                            type: 'audio_chunk',
+                            audio_data: Array.from(audioData),
+                            sample_rate: audioBuffer.sampleRate,
+                            timestamp: Date.now(),
+                            test: true
+                        }));
+                        
+                        log(`Sent audio chunk: ${audioData.length} samples at ${audioBuffer.sampleRate}Hz`, 'success');
+                    } else {
+                        log('WebSocket not connected, skipping audio chunk', 'warning');
+                    }
+                    
+                } catch (decodeError) {
+                    log(`Audio decoding failed: ${decodeError.message}`, 'error');
+                    
+                    // Try fallback base64 encoding
+                    await processAudioChunkFallback(audioBlob);
+                }
+                
+            } catch (error) {
+                log(`Failed to process audio chunk: ${error.message}`, 'error');
+                
+                if (error.name === 'DOMException') {
+                    log(`DOMException details: ${error.name} - ${error.message} (Code: ${error.code})`, 'error');
+                }
+            }
+        }
+        
+        async function processAudioChunkFallback(audioBlob) {
+            try {
+                log('Using fallback audio processing...', 'info');
+                
+                const reader = new FileReader();
+                
+                return new Promise((resolve, reject) => {
+                    reader.onload = () => {
+                        try {
+                            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                                const arrayBuffer = reader.result;
+                                const base64Audio = btoa(
+                                    new Uint8Array(arrayBuffer).reduce(
+                                        (data, byte) => data + String.fromCharCode(byte), ''
+                                    )
+                                );
+                                
+                                websocket.send(JSON.stringify({
+                                    type: 'audio_chunk_base64',
+                                    data: base64Audio,
+                                    format: 'webm',
+                                    sample_rate: 16000,
+                                    timestamp: Date.now(),
+                                    test: true
+                                }));
+                                
+                                log(`Sent fallback audio chunk: ${base64Audio.length} chars`, 'success');
+                            }
+                            resolve();
+                        } catch (sendError) {
+                            reject(sendError);
+                        }
+                    };
+                    
+                    reader.onerror = (error) => {
+                        log(`FileReader error: ${error.message}`, 'error');
+                        reject(error);
+                    };
+                    
+                    reader.readAsArrayBuffer(audioBlob);
+                });
+                
+            } catch (error) {
+                log(`Fallback audio processing failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function stopAudioTest() {
+            const statusDiv = document.getElementById('audio-status');
+            const startBtn = document.getElementById('audio-test-btn');
+            const stopBtn = document.getElementById('stop-audio-btn');
+            
+            try {
+                log('Stopping audio test...', 'info');
+                
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                }
+                
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                
+                if (audioContext && audioContext.state !== 'closed') {
+                    audioContext.close();
+                    audioContext = null;
+                }
+                
+                statusDiv.innerHTML = '<span class="warning">⏹️ Audio test stopped</span>';
+                log('Audio test stopped successfully', 'success');
+                
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="error">❌ Failed to stop audio test: ${error.message}</span>`;
+                log(`Failed to stop audio test: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-test backend connection on page load
+        window.addEventListener('load', () => {
+            log('Audio Processing Test page loaded', 'info');
+            testBackendConnection();
+        });
+    </script>
+</body>
+</html>

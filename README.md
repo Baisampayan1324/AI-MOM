@@ -1,4 +1,4 @@
-# 🤖 AI MOM - AI-Powered Meeting Minutes & Intelligence System
+# AI MOM - AI-Powered Meeting Minutes & Intelligence System
 
 <div align="center">
 
@@ -870,7 +870,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ### Contributors
 
-- **Baisampayan1324** - Creator & Lead Developer
+- **Baisampayan1324**
 
 ---
 

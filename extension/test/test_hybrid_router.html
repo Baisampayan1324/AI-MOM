@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Audio Router Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #a8e6cf;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .error {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+        
+        .warning {
+            border-left-color: #ff9800;
+            background: rgba(255, 152, 0, 0.1);
+        }
+        
+        #log {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .metric {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #a8e6cf;
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎧 Hybrid Audio Router Test</h1>
+        
+        <div class="test-section">
+            <h3>📊 Connection Status</h3>
+            <div id="connection-status" class="status">Not connected</div>
+            <button onclick="testBackendConnection()">Test Backend Connection</button>
+            <button onclick="connectWebSocket()">Connect WebSocket</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎵 Audio Source Testing</h3>
+            <button onclick="testScreenCapture()">Test Screen Capture</button>
+            <button onclick="testMicrophone()">Test Microphone</button>
+            <button onclick="testHybridRouter()">Initialize Hybrid Router</button>
+            <button onclick="startAudioTest()" id="start-audio-btn">Start Audio Test</button>
+            <button onclick="stopAudioTest()" id="stop-audio-btn" disabled>Stop Audio Test</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>📈 Performance Metrics</h3>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-value" id="chunks-processed">0</div>
+                    <div class="metric-label">Chunks Processed</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="errors-count">0</div>
+                    <div class="metric-label">Errors</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="current-source">None</div>
+                    <div class="metric-label">Current Source</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="websocket-status">Disconnected</div>
+                    <div class="metric-label">WebSocket</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📝 Debug Log</h3>
+            <button onclick="clearLog()">Clear Log</button>
+            <button onclick="exportLog()">Export Log</button>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <script>
+        let hybridRouter = null;
+        let websocket = null;
+        let isActive = false;
+        let chunksProcessed = 0;
+        let errorsCount = 0;
+        
+        // Logging function
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('log');
+            logDiv.textContent += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function updateMetric(id, value) {
+            document.getElementById(id).textContent = value;
+        }
+        
+        function setStatus(message, type = 'normal') {
+            const statusDiv = document.getElementById('connection-status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        async function testBackendConnection() {
+            try {
+                log('🔗 Testing backend connection...');
+                setStatus('Testing connection...', 'warning');
+                
+                const response = await fetch('http://localhost:8000/health', {
+                    method: 'GET',
+                    timeout: 5000
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                log('✅ Backend connection successful: ' + JSON.stringify(data));
+                setStatus('Backend connected: ' + data.status, 'normal');
+                
+            } catch (error) {
+                log('❌ Backend connection failed: ' + error.message);
+                setStatus('Backend connection failed: ' + error.message, 'error');
+            }
+        }
+        
+        async function connectWebSocket() {
+            try {
+                log('🔗 Connecting to WebSocket...');
+                setStatus('Connecting to WebSocket...', 'warning');
+                
+                if (websocket) {
+                    websocket.close();
+                }
+                
+                websocket = new WebSocket('ws://localhost:8000/ws/audio');
+                
+                websocket.onopen = () => {
+                    log('✅ WebSocket connected');
+                    setStatus('WebSocket connected', 'normal');
+                    updateMetric('websocket-status', 'Connected');
+                };
+                
+                websocket.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        log('📨 WebSocket message: ' + JSON.stringify(data));
+                    } catch (error) {
+                        log('⚠️ Failed to parse WebSocket message: ' + error.message);
+                    }
+                };
+                
+                websocket.onerror = (error) => {
+                    log('❌ WebSocket error: ' + error);
+                    setStatus('WebSocket error', 'error');
+                    updateMetric('websocket-status', 'Error');
+                };
+                
+                websocket.onclose = (event) => {
+                    log(`🔗 WebSocket closed: ${event.code} - ${event.reason}`);
+                    setStatus('WebSocket disconnected', 'error');
+                    updateMetric('websocket-status', 'Disconnected');
+                };
+                
+            } catch (error) {
+                log('❌ WebSocket connection failed: ' + error.message);
+                setStatus('WebSocket connection failed: ' + error.message, 'error');
+            }
+        }
+        
+        async function testScreenCapture() {
+            try {
+                log('📺 Testing screen capture...');
+                
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: true,
+                    audio: true
+                });
+                
+                log('✅ Screen capture successful');
+                log('📹 Video tracks: ' + stream.getVideoTracks().length);
+                log('🔊 Audio tracks: ' + stream.getAudioTracks().length);
+                
+                // Test for a few seconds then stop
+                setTimeout(() => {
+                    stream.getTracks().forEach(track => track.stop());
+                    log('🛑 Screen capture test stopped');
+                }, 3000);
+                
+            } catch (error) {
+                log('❌ Screen capture failed: ' + error.message);
+            }
+        }
+        
+        async function testMicrophone() {
+            try {
+                log('🎤 Testing microphone...');
+                
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+                
+                log('✅ Microphone access successful');
+                log('🔊 Audio tracks: ' + stream.getAudioTracks().length);
+                
+                // Test for a few seconds then stop
+                setTimeout(() => {
+                    stream.getTracks().forEach(track => track.stop());
+                    log('🛑 Microphone test stopped');
+                }, 3000);
+                
+            } catch (error) {
+                log('❌ Microphone access failed: ' + error.message);
+            }
+        }
+        
+        async function testHybridRouter() {
+            try {
+                log('🔄 Initializing Hybrid Audio Router...');
+                
+                // Simulate the hybrid router class (simplified version for testing)
+                hybridRouter = {
+                    sources: new Map(),
+                    activeSource: null,
+                    websocket: websocket,
+                    isActive: false,
+                    
+                    async initialize() {
+                        try {
+                            // Try screen capture
+                            const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                                video: true,
+                                audio: true
+                            });
+                            
+                            if (screenStream.getAudioTracks().length > 0) {
+                                this.sources.set('screen', {
+                                    stream: screenStream,
+                                    type: 'screen',
+                                    priority: 1,
+                                    quality: 'high'
+                                });
+                                log('✅ Screen audio source available');
+                            }
+                        } catch (error) {
+                            log('ℹ️ Screen audio not available: ' + error.message);
+                        }
+                        
+                        // Try microphone
+                        try {
+                            const micStream = await navigator.mediaDevices.getUserMedia({
+                                audio: true
+                            });
+                            
+                            this.sources.set('microphone', {
+                                stream: micStream,
+                                type: 'microphone',
+                                priority: 2,
+                                quality: 'medium'
+                            });
+                            log('✅ Microphone source available');
+                        } catch (error) {
+                            log('ℹ️ Microphone not available: ' + error.message);
+                        }
+                        
+                        if (this.sources.size === 0) {
+                            throw new Error('No audio sources available');
+                        }
+                        
+                        // Select best source
+                        const sortedSources = Array.from(this.sources.entries())
+                            .sort(([,a], [,b]) => a.priority - b.priority);
+                        
+                        const [sourceName, sourceData] = sortedSources[0];
+                        this.activeSource = { name: sourceName, ...sourceData };
+                        
+                        log(`🎯 Selected audio source: ${sourceName}`);
+                        updateMetric('current-source', sourceName);
+                        
+                        return true;
+                    },
+                    
+                    stop() {
+                        this.isActive = false;
+                        this.sources.forEach(source => {
+                            source.stream.getTracks().forEach(track => track.stop());
+                        });
+                        this.sources.clear();
+                        this.activeSource = null;
+                        updateMetric('current-source', 'None');
+                        log('🛑 Hybrid router stopped');
+                    }
+                };
+                
+                await hybridRouter.initialize();
+                log('✅ Hybrid Audio Router initialized successfully');
+                
+            } catch (error) {
+                log('❌ Hybrid router initialization failed: ' + error.message);
+                errorsCount++;
+                updateMetric('errors-count', errorsCount);
+            }
+        }
+        
+        async function startAudioTest() {
+            if (!hybridRouter || !hybridRouter.activeSource) {
+                log('⚠️ Hybrid router not initialized. Please initialize first.');
+                return;
+            }
+            
+            if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+                log('⚠️ WebSocket not connected. Please connect first.');
+                return;
+            }
+            
+            try {
+                log('🎵 Starting audio test...');
+                isActive = true;
+                
+                document.getElementById('start-audio-btn').disabled = true;
+                document.getElementById('stop-audio-btn').disabled = false;
+                
+                // Setup MediaRecorder
+                const mediaRecorder = new MediaRecorder(hybridRouter.activeSource.stream, {
+                    mimeType: 'audio/webm;codecs=opus',
+                    audioBitsPerSecond: 128000
+                });
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0 && isActive) {
+                        log(`🎵 Audio chunk received: ${event.data.size} bytes`);
+                        chunksProcessed++;
+                        updateMetric('chunks-processed', chunksProcessed);
+                        
+                        // Simulate processing (without actual DOMException-prone operations)
+                        setTimeout(() => {
+                            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                                websocket.send(JSON.stringify({
+                                    type: 'audio_chunk_test',
+                                    size: event.data.size,
+                                    timestamp: Date.now(),
+                                    source: hybridRouter.activeSource.name,
+                                    test: true
+                                }));
+                                log('📨 Test audio chunk sent to backend');
+                            }
+                        }, 10);
+                    }
+                };
+                
+                mediaRecorder.onerror = (error) => {
+                    log('❌ MediaRecorder error: ' + error);
+                    errorsCount++;
+                    updateMetric('errors-count', errorsCount);
+                };
+                
+                mediaRecorder.onstart = () => {
+                    log('✅ MediaRecorder started for testing');
+                };
+                
+                // Start recording with 1 second chunks
+                mediaRecorder.start(1000);
+                hybridRouter.mediaRecorder = mediaRecorder;
+                
+                log('🎙️ Audio test started successfully');
+                
+            } catch (error) {
+                log('❌ Audio test start failed: ' + error.message);
+                errorsCount++;
+                updateMetric('errors-count', errorsCount);
+            }
+        }
+        
+        function stopAudioTest() {
+            log('⏹️ Stopping audio test...');
+            isActive = false;
+            
+            if (hybridRouter && hybridRouter.mediaRecorder) {
+                hybridRouter.mediaRecorder.stop();
+                hybridRouter.mediaRecorder = null;
+            }
+            
+            document.getElementById('start-audio-btn').disabled = false;
+            document.getElementById('stop-audio-btn').disabled = true;
+            
+            log('✅ Audio test stopped');
+        }
+        
+        function clearLog() {
+            document.getElementById('log').textContent = '';
+            log('📝 Log cleared');
+        }
+        
+        function exportLog() {
+            const logContent = document.getElementById('log').textContent;
+            const blob = new Blob([logContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `hybrid-router-test-${new Date().toISOString().replace(/[:.]/g, '-')}.log`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            log('📄 Log exported');
+        }
+        
+        // Initialize
+        log('🚀 Hybrid Audio Router Test initialized');
+        log('💡 Step 1: Test Backend Connection');
+        log('💡 Step 2: Connect WebSocket');
+        log('💡 Step 3: Initialize Hybrid Router');
+        log('💡 Step 4: Start Audio Test');
+    </script>
+</body>
+</html>

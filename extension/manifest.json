@@ -34,37 +34,37 @@
     "content_scripts": [
         {
             "matches": ["https://meet.google.com/*"],
-            "js": ["content/common.js", "content/screen-capture.js", "content/google-meet.js"],
+            "js": ["content/common.js", "content/hybrid-audio-router.js", "content/screen-capture.js", "content/google-meet.js"],
             "css": ["overlay/overlay.css"],
             "run_at": "document_idle"
         },
         {
             "matches": ["https://*.zoom.us/*"],
-            "js": ["content/common.js", "content/screen-capture.js", "content/zoom.js"], 
+            "js": ["content/common.js", "content/hybrid-audio-router.js", "content/screen-capture.js", "content/zoom.js"], 
             "css": ["overlay/overlay.css"],
             "run_at": "document_idle"
         },
         {
             "matches": ["https://teams.microsoft.com/*", "https://*.teams.microsoft.com/*"],
-            "js": ["content/common.js", "content/screen-capture.js", "content/microsoft-teams.js"],
+            "js": ["content/common.js", "content/hybrid-audio-router.js", "content/screen-capture.js", "content/microsoft-teams.js"],
             "css": ["overlay/overlay.css"],
             "run_at": "document_idle"
         },
         {
             "matches": ["https://meeting.zoho.com/*", "https://*.meeting.zoho.com/*"],
-            "js": ["content/common.js", "content/screen-capture.js", "content/zoho-meeting.js"],
+            "js": ["content/common.js", "content/hybrid-audio-router.js", "content/screen-capture.js", "content/zoho-meeting.js"],
             "css": ["overlay/overlay.css"],
             "run_at": "document_idle"
         },
         {
             "matches": ["https://www.youtube.com/*"],
-            "js": ["content/common.js", "content/screen-capture.js", "content/youtube.js"],
+            "js": ["content/common.js", "content/hybrid-audio-router.js", "content/screen-capture.js", "content/youtube.js"],
             "css": ["overlay/overlay.css"],
             "run_at": "document_idle"
         },
         {
             "matches": ["https://*/*", "http://*/*"],
-            "js": ["content/common.js", "content/screen-capture.js"],
+            "js": ["content/common.js", "content/hybrid-audio-router.js", "content/screen-capture.js"],
             "css": ["overlay/overlay.css"],
             "run_at": "document_idle",
             "exclude_matches": [

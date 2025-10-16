@@ -1,7 +1,7 @@
 import asyncio
 import time
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import aiohttp
 from groq import Groq
 import openai
@@ -12,6 +12,7 @@ from app.config import (
     GROQ_MODEL, OPENROUTER_MODEL,
     GROQ_MODEL_2, OPENROUTER_MODEL_2, OPENROUTER_MODEL_3
 )
+from app.config import TRANSCRIPTION_LANGUAGE
 from app.services.audio_processor import AudioProcessor
 
 logger = logging.getLogger(__name__)
@@ -37,8 +38,8 @@ class MultiAPIProcessor:
         )
 
         self.audio_processor = AudioProcessor()
-        # Initialize Whisper model - using 'tiny' for maximum speed with optimized settings
-        self.whisper_model = whisper.load_model("tiny")
+        # Initialize Whisper model - using 'large-v3' for maximum accuracy
+        self.whisper_model = whisper.load_model("large-v3")
         self.min_audio_length = 0.5  # Minimum 0.5 seconds of audio before processing
         self.audio_buffer = []  # Buffer for accumulating audio chunks
 
@@ -218,7 +219,7 @@ class MultiAPIProcessor:
             "transcription": full_transcription,
             "processing_time": processing_time,
             "method": "ultra_fast_v3",
-            "whisper_model": "tiny",
+            "whisper_model": "large-v3",
             "improvements_applied": 0,
             "transcription_length": len(full_transcription)
         }
@@ -727,7 +728,7 @@ Rules:
 
         return min(avg_similarity * (0.8 + 0.2 * agreement_bonus), 1.0)
 
-    async def process_realtime_chunk(self, audio_data: bytes, sample_rate: int = 16000) -> Dict[str, Any]:
+    async def process_realtime_chunk(self, audio_data: bytes, sample_rate: int = 16000, language: Optional[str] = None) -> Dict[str, Any]:
         """Process real-time audio chunk with optimized multi-API approach."""
         # Convert bytes to numpy
         audio_array = self.audio_processor.process_audio_chunk(audio_data, sample_rate)
@@ -735,9 +736,12 @@ Rules:
         # For real-time, use Whisper directly for speed with aggressive filtering
         try:
             # Use optimized Whisper settings for real-time processing
+            # Use provided language if set, otherwise fall back to configured default
+            _language = language or TRANSCRIPTION_LANGUAGE
             result = self.whisper_model.transcribe(
-                audio_array, 
+                audio_array,
                 fp16=False,
+                language=_language,
                 no_speech_threshold=0.6,  # Higher threshold to avoid false positives
                 beam_size=1,  # Fastest beam search
                 best_of=1,    # Don't try multiple candidates

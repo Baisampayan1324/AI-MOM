@@ -22,6 +22,13 @@ if __name__ == "__main__":
     
     host = os.getenv("HOST", "0.0.0.0")  # Listen on all interfaces
     port = int(os.getenv("PORT", "8000"))
+    
+    # Detect if running as a PyInstaller bundle (frozen)
+    is_frozen = getattr(sys, "frozen", False)
+    # Default: reload enabled in dev, disabled when frozen. Allow override via RELOAD env.
+    default_reload = "0" if is_frozen else "1"
+    reload_env = os.getenv("RELOAD", default_reload).strip().lower()
+    reload_enabled = reload_env in ("1", "true", "yes", "on")
 
     print("=" * 60)
     print("🚀 AI MOM Backend Server Starting...")
@@ -40,7 +47,7 @@ if __name__ == "__main__":
             "app.main:app",
             host=host,
             port=port,
-            reload=True,  # Enable reload for development
+            reload=reload_enabled,
             log_level="info",
             ws="websockets",  # Explicitly specify WebSocket implementation
             ws_ping_interval=20,  # Ping interval in seconds

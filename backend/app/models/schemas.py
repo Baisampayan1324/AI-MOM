@@ -6,6 +6,8 @@ class AudioProcessRequest(BaseModel):
     audio_data: bytes
     sample_rate: Optional[int] = 16000
     channels: Optional[int] = 1
+    # Optional language hint for transcription (e.g. 'en')
+    language: Optional[str] = None
     timestamp: Optional[datetime] = None
 
 class ProcessResponse(BaseModel):

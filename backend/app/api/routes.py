@@ -139,8 +139,13 @@ async def process_realtime_chunk(request: AudioProcessRequest):
     Process real-time audio chunk with multi-API optimization.
     """
     try:
-        # Process chunk
-        result = await multi_processor.process_realtime_chunk(request.audio_data)
+        # Process chunk (pass language hint if provided)
+        language = getattr(request, 'language', None)
+        result = await multi_processor.process_realtime_chunk(
+            request.audio_data,
+            request.sample_rate or 16000,
+            language=language
+        )
 
         return {
             "transcription": result['transcription'],

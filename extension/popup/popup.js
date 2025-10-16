@@ -651,6 +651,140 @@ class UnifiedPopupController {
             this.updateStatus('Microphone access denied', 'error');
         }
     }
+
+    async processAudioChunk(audioBlob) {
+        try {
+            console.log('🎵 Processing audio chunk:', audioBlob.size, 'bytes');
+            
+            // Validate audio blob
+            if (!audioBlob || audioBlob.size === 0) {
+                console.warn('⚠️ Empty audio blob received');
+                return;
+            }
+            
+            // Initialize AudioContext if not already done
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    sampleRate: 16000
+                });
+            }
+            
+            // Resume AudioContext if suspended
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
+            
+            try {
+                // Decode the compressed audio data to raw PCM
+                const arrayBuffer = await audioBlob.arrayBuffer();
+                
+                // Check if arrayBuffer is valid
+                if (arrayBuffer.byteLength === 0) {
+                    console.warn('⚠️ Empty audio buffer');
+                    return;
+                }
+                
+                const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+                
+                // Convert to Int16Array (mono channel, 16-bit PCM)
+                const channelData = audioBuffer.getChannelData(0); // Get first channel
+                const audioData = new Int16Array(channelData.length);
+                
+                // Convert float32 samples to int16
+                for (let i = 0; i < channelData.length; i++) {
+                    audioData[i] = Math.max(-32768, Math.min(32767, channelData[i] * 32768));
+                }
+                
+                // Send directly to WebSocket if connected
+                if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                    this.websocket.send(JSON.stringify({
+                        type: 'audio_chunk',
+                        audio_data: Array.from(audioData),
+                        sample_rate: audioBuffer.sampleRate,
+                        timestamp: Date.now(),
+                        meeting_id: this.meetingId,
+                        platform: this.currentPlatform
+                    }));
+                    
+                    console.log('📨 Sent audio chunk to backend:', audioData.length, 'samples');
+                } else {
+                    console.warn('⚠️ WebSocket not connected, skipping audio chunk');
+                }
+                
+            } catch (decodeError) {
+                console.error('❌ Audio decoding failed:', decodeError);
+                
+                // Try alternative processing
+                await this.processAudioChunkFallback(audioBlob);
+            }
+            
+        } catch (error) {
+            console.error('❌ Failed to process audio chunk:', error);
+            
+            // More detailed error logging
+            if (error.name === 'DOMException') {
+                console.error('🔍 DOMException details:', {
+                    name: error.name,
+                    message: error.message,
+                    code: error.code
+                });
+            }
+            
+            // Don't throw error to prevent breaking the recording
+        }
+    }
+
+    async processAudioChunkFallback(audioBlob) {
+        try {
+            console.log('🔄 Using fallback audio processing...');
+            
+            // Convert blob to base64 as fallback
+            const reader = new FileReader();
+            
+            return new Promise((resolve, reject) => {
+                reader.onload = () => {
+                    try {
+                        if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                            // Convert ArrayBuffer to base64
+                            const arrayBuffer = reader.result;
+                            const base64Audio = btoa(
+                                new Uint8Array(arrayBuffer).reduce(
+                                    (data, byte) => data + String.fromCharCode(byte), ''
+                                )
+                            );
+                            
+                            this.websocket.send(JSON.stringify({
+                                type: 'audio_chunk_base64',
+                                data: base64Audio,
+                                format: 'webm',
+                                sample_rate: 16000,
+                                timestamp: Date.now(),
+                                meeting_id: this.meetingId,
+                                platform: this.currentPlatform
+                            }));
+                            
+                            console.log('📨 Sent fallback audio chunk to backend:', base64Audio.length, 'chars');
+                        }
+                        resolve();
+                    } catch (sendError) {
+                        reject(sendError);
+                    }
+                };
+                
+                reader.onerror = (error) => {
+                    console.error('❌ FileReader error:', error);
+                    reject(error);
+                };
+                
+                // Read the blob as ArrayBuffer
+                reader.readAsArrayBuffer(audioBlob);
+            });
+            
+        } catch (error) {
+            console.error('❌ Fallback audio processing failed:', error);
+            this.updateStatus('Microphone access denied', 'error');
+        }
+    }
     
     async stopRecording() {
         try {
@@ -711,19 +845,56 @@ class UnifiedPopupController {
     
     async testConnection() {
         try {
-            const response = await fetch(`${this.backendUrl}/health`);
+            // Add timeout and retry logic
+            let attempt = 0;
+            const maxAttempts = 3;
             
-            if (response.ok) {
-                this.connectionStatus = 'online';
-                this.updateBackendStatus('Connected ✅');
-            } else {
-                this.connectionStatus = 'error';
-                this.updateBackendStatus('Error ❌');
+            while (attempt < maxAttempts) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                    
+                    const response = await fetch(`${this.backendUrl}/health`, {
+                        method: 'GET',
+                        signal: controller.signal,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.connectionStatus = 'online';
+                        this.updateBackendStatus('Connected ✅');
+                        console.log('✅ Backend connection successful:', data);
+                        return true;
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                } catch (attemptError) {
+                    attempt++;
+                    console.warn(`⚠️ Connection attempt ${attempt} failed:`, attemptError.message);
+                    
+                    if (attempt >= maxAttempts) {
+                        throw attemptError;
+                    }
+                    
+                    // Wait before retry
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
             }
             
         } catch (error) {
             this.connectionStatus = 'offline';
             this.updateBackendStatus('Offline ⚠️');
+            
+            console.error('❌ Backend connection failed:', error);
+            
+            // Don't show notification here, let caller handle it
+            return false;
         }
     }
     
@@ -741,19 +912,53 @@ class UnifiedPopupController {
             btn.innerHTML = '<span class="btn-icon">⏳</span><span>Testing...</span>';
         }
         
-        await this.testConnection();
-        
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<span class="btn-icon">🔗</span><span>Test Connection</span>';
+        try {
+            // Add timeout and better error handling
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            
+            const response = await fetch(`${this.backendUrl}/health`, {
+                method: 'GET',
+                signal: controller.signal,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.connectionStatus = 'online';
+                this.updateBackendStatus('Connected ✅');
+                this.showNotification('✅ Backend connection successful!', 'success');
+            } else {
+                throw new Error(`Backend returned status: ${response.status}`);
+            }
+            
+        } catch (error) {
+            this.connectionStatus = 'offline';
+            this.updateBackendStatus('Offline ⚠️');
+            
+            let errorMessage = '❌ Cannot connect to backend. ';
+            
+            if (error.name === 'AbortError') {
+                errorMessage += 'Connection timed out. ';
+            } else if (error.message.includes('fetch')) {
+                errorMessage += 'Network error. ';
+            } else {
+                errorMessage += `Error: ${error.message}. `;
+            }
+            
+            errorMessage += `Make sure the backend is running on ${this.backendUrl}`;
+            
+            this.showNotification(errorMessage, 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="btn-icon">🔗</span><span>Test Connection</span>';
+            }
         }
-        
-        // Show result to user
-        const statusMsg = this.connectionStatus === 'online' 
-            ? '✅ Backend connection successful!' 
-            : '❌ Cannot connect to backend. Make sure it\'s running on ' + this.backendUrl;
-        
-        this.showNotification(statusMsg, this.connectionStatus === 'online' ? 'success' : 'error');
     }
     
     async checkCurrentPlatform() {
