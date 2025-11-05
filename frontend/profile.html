@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-scale=1.0">
-    <title>Profile - AI MOM</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - AI MOM</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="js/avatar-manager.js"></script>
     <style>
@@ -56,9 +57,19 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(50px, -50px) scale(1.1); }
-            66% { transform: translate(-30px, 30px) scale(0.9); }
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(50px, -50px) scale(1.1);
+            }
+
+            66% {
+                transform: translate(-30px, 30px) scale(0.9);
+            }
         }
 
         .content {
@@ -185,6 +196,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -512,6 +524,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="bg-animation">
         <div class="gradient-orb orb-1"></div>
@@ -523,8 +536,8 @@
             <a href="index.html" class="logo">
                 <div class="logo-icon">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
                     </svg>
                 </div>
                 <span class="logo-text">AI <span class="highlight">MOM</span></span>
@@ -549,308 +562,261 @@
         </nav>
 
         <div class="container">
-            <div class="header">
-                <h1>Profile</h1>
-                <p>Manage your personal information</p>
+            <div id="login-prompt" style="display: none; text-align: center; padding: 3rem;">
+                <h2 style="font-size: 2rem; margin-bottom: 1rem; color: #ffffff;">Please Log In</h2>
+                <p style="color: #aaaacc; margin-bottom: 1.5rem; font-size: 1.1rem;">You need to be logged in to view
+                    your profile</p>
+                <a href="signin.html"
+                    style="display: inline-block; padding: 1rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 12px; font-weight: 700; transition: all 0.3s ease;"
+                    onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 40px rgba(102, 126, 234, 0.4)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(102, 126, 234, 0.3)'">Go
+                    to Sign In</a>
             </div>
 
-            <div class="success-message" id="successMessage">
-                ✓ Profile updated successfully
-            </div>
-
-            <div class="profile-card">
-                <div class="avatar-upload">
-                    <div class="avatar-preview" id="avatarPreview" onclick="document.getElementById('avatarInput').click()">
-                        JD
-                    </div>
-                    <label for="avatarInput" class="avatar-label" onclick="document.getElementById('avatarInput').click()">
-                        <i class="fas fa-camera"></i>
-                    </label>
-                    <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+            <div id="profile-content" style="display: none;">
+                <div class="header">
+                    <h1>Welcome Back! 👋</h1>
+                    <p>Here are your account details</p>
                 </div>
-                
-                <form id="profileForm">
-                    <div class="form-group">
-                        <label for="fullName">Full Name</label>
-                        <input type="text" id="fullName" class="form-control" placeholder="John Doe" value="John Doe">
+
+                <div class="success-message" id="successMessage">
+                    ✓ Profile loaded successfully
+                </div>
+
+                <div class="profile-card">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <div class="avatar-preview" style="width: 100px; height: 100px; margin: 0 auto;">
+                            <span id="avatarInitials" style="font-size: 2.5rem; font-weight: 800;">-</span>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" class="form-control" placeholder="john@example.com" value="john@example.com">
+                    <div
+                        style="background: rgba(77, 166, 255, 0.08); border: 1px solid rgba(77, 166, 255, 0.2); border-radius: 14px; padding: 2rem; margin-bottom: 2rem;">
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                            <div>
+                                <label
+                                    style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: #aaaacc; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Full
+                                    Name</label>
+                                <div id="displayName" style="font-size: 1.3rem; font-weight: 700; color: #ffffff;">-
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: #aaaacc; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Email
+                                    Address</label>
+                                <div id="displayEmail"
+                                    style="font-size: 1.3rem; font-weight: 700; color: #ffffff; word-break: break-all;">
+                                    -</div>
+                            </div>
+
+                            <div>
+                                <label
+                                    style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: #aaaacc; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Account
+                                    Type</label>
+                                <div style="font-size: 1.3rem; font-weight: 700; color: #4da6ff;">Premium User</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="role">Role</label>
-                        <input type="text" id="role" class="form-control" placeholder="Product Manager" value="Product Manager">
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="margin-bottom: 1rem; color: #ffffff;">Account Statistics</h3>
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem;">
+                            <div
+                                style="background: linear-gradient(135deg, rgba(77, 166, 255, 0.15) 0%, rgba(0, 102, 204, 0.1) 100%); border: 1px solid rgba(77, 166, 255, 0.2); border-radius: 12px; padding: 1.5rem; text-align: center;">
+                                <div style="font-size: 2rem; font-weight: 800; color: #4da6ff; margin-bottom: 0.5rem;">
+                                    12</div>
+                                <div style="font-size: 0.85rem; color: #aaaacc; font-weight: 600;">Meetings</div>
+                            </div>
+                            <div
+                                style="background: linear-gradient(135deg, rgba(77, 166, 255, 0.15) 0%, rgba(0, 102, 204, 0.1) 100%); border: 1px solid rgba(77, 166, 255, 0.2); border-radius: 12px; padding: 1.5rem; text-align: center;">
+                                <div style="font-size: 2rem; font-weight: 800; color: #4da6ff; margin-bottom: 0.5rem;">
+                                    48h</div>
+                                <div style="font-size: 0.85rem; color: #aaaacc; font-weight: 600;">Total Time</div>
+                            </div>
+                            <div
+                                style="background: linear-gradient(135deg, rgba(77, 166, 255, 0.15) 0%, rgba(0, 102, 204, 0.1) 100%); border: 1px solid rgba(77, 166, 255, 0.2); border-radius: 12px; padding: 1.5rem; text-align: center;">
+                                <div style="font-size: 2rem; font-weight: 800; color: #4da6ff; margin-bottom: 0.5rem;">
+                                    85%</div>
+                                <div style="font-size: 0.85rem; color: #aaaacc; font-weight: 600;">Accuracy</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="team">Team</label>
-                        <input type="text" id="team" class="form-control" placeholder="Engineering" value="Engineering">
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <a href="index.html" class="btn btn-primary" style="flex: 1; min-width: 150px;">Back to Home</a>
+                        <button onclick="logout()" class="btn btn-primary"
+                            style="flex: 1; min-width: 150px; background: linear-gradient(135deg, #ff6b6b 0%, #cc5555 100%); color: #ffffff;">Logout</button>
                     </div>
-
-                    <div class="form-group">
-                        <label for="keywords">Alert Keywords (comma separated)</label>
-                        <textarea id="keywords" class="form-control" placeholder="urgent, deadline, budget">urgent, deadline, budget</textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </form>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // User data
-        let userData = {
-            name: 'John Doe',
-            email: 'john@example.com',
-            role: 'Product Manager',
-            team: 'Engineering',
-            keywords: 'urgent, deadline, budget',
-            avatar: null
-        };
+        // Check if user is logged in
+        function checkLogin() {
+            const userEmail = localStorage.getItem('userEmail');
+            const userName = localStorage.getItem('userName');
+            const loginPrompt = document.getElementById('login-prompt');
+            const profileContent = document.getElementById('profile-content');
 
-        // Elements
-        const userAvatar = document.getElementById('userAvatar');
-        const dropdown = document.getElementById('dropdown');
-        const avatarInput = document.getElementById('avatarInput');
-        const avatarPreview = document.getElementById('avatarPreview');
-        const profileForm = document.getElementById('profileForm');
-        const successMessage = document.getElementById('successMessage');
-        const logoutBtn = document.getElementById('logoutBtn');
-
-        // Toggle dropdown
-        userAvatar.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle('show');
-        });
-
-        document.addEventListener('click', () => {
-            dropdown.classList.remove('show');
-        });
-
-        dropdown.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-
-        // Avatar upload with native file dialog
-        let selectedImageFile = null;
-
-        avatarInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                selectedImageFile = file;
-                processSelectedImage(file);
+            if (!userEmail || !userName) {
+                loginPrompt.style.display = 'block';
+                profileContent.style.display = 'none';
+            } else {
+                loginPrompt.style.display = 'none';
+                profileContent.style.display = 'block';
+                displayUserDetails(userName, userEmail);
             }
-        });
-
-        function processSelectedImage(file) {
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                showNotification('Please select a valid image file.', 'error');
-                return;
-            }
-
-            // Validate file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                showNotification('Image size should be less than 5MB.', 'error');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const imageData = e.target.result;
-                
-                // Save avatar using avatar manager
-                window.avatarManager.saveAvatar(imageData);
-                
-                // Update userData
-                userData.avatar = imageData;
-                
-                // Show success message
-                showNotification('Profile picture updated successfully!', 'success');
-            };
-            reader.readAsDataURL(file);
         }
 
-        // Form submit
-        profileForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            userData.name = document.getElementById('fullName').value;
-            userData.email = document.getElementById('email').value;
-            userData.role = document.getElementById('role').value;
-            userData.team = document.getElementById('team').value;
-            userData.keywords = document.getElementById('keywords').value;
+        // Display user details
+        function displayUserDetails(name, email) {
+            document.getElementById('displayName').textContent = name;
+            document.getElementById('displayEmail').textContent = email;
 
-            // Store all data in localStorage to persist across page reloads
-            localStorage.setItem('userProfile', JSON.stringify(userData));
-
-            // Update avatars if name changed
-            window.avatarManager.refreshAllAvatars();
-
-            // Show success
-            successMessage.classList.add('show');
-            setTimeout(() => {
-                successMessage.classList.remove('show');
-            }, 3000);
-
-            console.log('Profile updated and saved:', userData);
-        });
-
-        // Load saved profile data on page load
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedProfile = localStorage.getItem('userProfile');
-            if (savedProfile) {
-                const profileData = JSON.parse(savedProfile);
-                
-                // Update form fields
-                document.getElementById('fullName').value = profileData.name || 'John Doe';
-                document.getElementById('email').value = profileData.email || 'john@example.com';
-                document.getElementById('role').value = profileData.role || 'Product Manager';
-                document.getElementById('team').value = profileData.team || 'Engineering';
-                document.getElementById('keywords').value = profileData.keywords || 'urgent, deadline, budget';
-                
-                // Update userData object
-                userData = { ...userData, ...profileData };
-            }
-            
-            // Avatar manager will handle avatar display
-            window.avatarManager.refreshAllAvatars();
-        });
-
-        // Logout
-        logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const logoutModal = document.getElementById('logoutModal');
-            logoutModal.classList.add('show');
-        });
-
-        // Modal functions
-        window.confirmLogout = function() {
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('userEmail');
-            localStorage.removeItem('userName');
-            localStorage.removeItem('userSession');
-            window.location.href = 'index.html';
-        };
-
-        window.cancelLogout = function() {
-            const logoutModal = document.getElementById('logoutModal');
-            logoutModal.classList.remove('show');
-        };
-
-        // Close modal when clicking on overlay
-        const logoutModal = document.getElementById('logoutModal');
-        if (logoutModal) {
-            logoutModal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.classList.remove('show');
-                }
-            });
+            // Generate initials for avatar
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+            document.getElementById('avatarInitials').textContent = initials;
         }
 
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.innerHTML = `
-                <div class="notification-content">
-                    <span>${message}</span>
-                    <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
-                </div>
-            `;
-            
-            // Add notification styles if not already present
-            if (!document.querySelector('#notificationStyles')) {
-                const styles = document.createElement('style');
-                styles.id = 'notificationStyles';
-                styles.textContent = `
-                    .notification {
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
-                        background: rgba(20, 20, 30, 0.95);
-                        backdrop-filter: blur(20px);
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        border-radius: 8px;
-                        padding: 1rem 1.5rem;
-                        color: #ffffff;
-                        z-index: 10001;
-                        min-width: 300px;
-                        animation: slideIn 0.3s ease;
-                        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-                    }
-                    .notification.success {
-                        border-left: 4px solid #00d4aa;
-                    }
-                    .notification.error {
-                        border-left: 4px solid #ff4757;
-                    }
-                    .notification.info {
-                        border-left: 4px solid #667eea;
-                    }
-                    .notification-content {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        gap: 1rem;
-                    }
-                    .notification-close {
-                        background: none;
-                        border: none;
-                        color: rgba(255, 255, 255, 0.6);
-                        font-size: 1.2rem;
-                        cursor: pointer;
-                        padding: 0;
-                        width: 20px;
-                        height: 20px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }
-                    .notification-close:hover {
-                        color: #ffffff;
-                    }
-                    @keyframes slideIn {
-                        from {
-                            transform: translateX(100%);
-                            opacity: 0;
-                        }
-                        to {
-                            transform: translateX(0);
-                            opacity: 1;
-                        }
-                    }
-                `;
-                document.head.appendChild(styles);
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userEmail');
+                localStorage.removeItem('userName');
+                window.location.href = 'signin.html';
             }
-            
-            document.body.appendChild(notification);
-            
-            // Auto remove after 3 seconds
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.remove();
-                }
-            }, 3000);
+        }
+
+        // Initialize on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkLogin);
+        } else {
+            checkLogin();
         }
     </script>
+</body>
 
-    <!-- Logout Confirmation Modal -->
-    <!-- Logout Confirmation Modal -->
-    <div class="modal-overlay" id="logoutModal">
-        <div class="modal-content">
-            <h3>Confirm Logout</h3>
-            <p>Are you sure you want to logout?</p>
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="cancelLogout()">Cancel</button>
-                <button class="btn btn-primary" onclick="confirmLogout()">Logout</button>
-            </div>
+</html>
+const logoutModal = document.getElementById('logoutModal');
+logoutModal.classList.remove('show');
+};
+
+// Close modal when clicking on overlay
+const logoutModal = document.getElementById('logoutModal');
+if (logoutModal) {
+logoutModal.addEventListener('click', function(e) {
+if (e.target === this) {
+this.classList.remove('show');
+}
+});
+}
+
+// Notification system
+function showNotification(message, type = 'info') {
+const notification = document.createElement('div');
+notification.className = `notification ${type}`;
+notification.innerHTML = `
+<div class="notification-content">
+    <span>${message}</span>
+    <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+</div>
+`;
+
+// Add notification styles if not already present
+if (!document.querySelector('#notificationStyles')) {
+const styles = document.createElement('style');
+styles.id = 'notificationStyles';
+styles.textContent = `
+.notification {
+position: fixed;
+top: 20px;
+right: 20px;
+background: rgba(20, 20, 30, 0.95);
+backdrop-filter: blur(20px);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 8px;
+padding: 1rem 1.5rem;
+color: #ffffff;
+z-index: 10001;
+min-width: 300px;
+animation: slideIn 0.3s ease;
+box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.notification.success {
+border-left: 4px solid #00d4aa;
+}
+.notification.error {
+border-left: 4px solid #ff4757;
+}
+.notification.info {
+border-left: 4px solid #667eea;
+}
+.notification-content {
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 1rem;
+}
+.notification-close {
+background: none;
+border: none;
+color: rgba(255, 255, 255, 0.6);
+font-size: 1.2rem;
+cursor: pointer;
+padding: 0;
+width: 20px;
+height: 20px;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+.notification-close:hover {
+color: #ffffff;
+}
+@keyframes slideIn {
+from {
+transform: translateX(100%);
+opacity: 0;
+}
+to {
+transform: translateX(0);
+opacity: 1;
+}
+}
+`;
+document.head.appendChild(styles);
+}
+
+document.body.appendChild(notification);
+
+// Auto remove after 3 seconds
+setTimeout(() => {
+if (notification.parentElement) {
+notification.remove();
+}
+}, 3000);
+}
+</script>
+
+<!-- Logout Confirmation Modal -->
+<!-- Logout Confirmation Modal -->
+<div class="modal-overlay" id="logoutModal">
+    <div class="modal-content">
+        <h3>Confirm Logout</h3>
+        <p>Are you sure you want to logout?</p>
+        <div class="modal-buttons">
+            <button class="btn btn-secondary" onclick="cancelLogout()">Cancel</button>
+            <button class="btn btn-primary" onclick="confirmLogout()">Logout</button>
         </div>
     </div>
+</div>
 
 </body>
+
 </html>

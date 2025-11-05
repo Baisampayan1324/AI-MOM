@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,8 +16,8 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             overflow-x: hidden;
-            background: #0a0a0a;
-            color: #ffffff;
+            background: #ffffff;
+            color: #333333;
         }
 
         /* Minimal animated background */
@@ -27,21 +28,127 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%);
+            overflow: hidden;
+        }
+
+        /* Starfield background */
+        .starfield {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(1px 1px at 10% 20%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1.5px 1.5px at 20% 30%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 50% 50%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 80% 10%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(2px 2px at 90% 60%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 30% 80%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 15% 50%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1.5px 1.5px at 70% 40%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 40% 10%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 25% 60%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(2px 2px at 60% 70%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 85% 85%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1.5px 1.5px at 35% 35%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 75% 20%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 45% 90%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1.5px 1.5px at 95% 40%, white, rgba(255, 255, 255, 0));
+            background-size: 100% 100%;
+            background-position: 0 0;
+            animation: twinkleStar 4s ease-in-out infinite;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        @keyframes twinkleStar {
+
+            0%,
+            100% {
+                opacity: 0.1;
+            }
+
+            50% {
+                opacity: 0.25;
+            }
+        }
+
+        /* Floating planets in background */
+        .bg-planet {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .bg-planet-1 {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle at 35% 35%, #ff8c42 0%, #d63031 50%, #8b1a1a 100%);
+            top: 8%;
+            right: 8%;
+            animation-delay: 0s;
+            box-shadow:
+                0 0 40px rgba(255, 140, 66, 0.6),
+                inset -10px -10px 20px rgba(0, 0, 0, 0.4),
+                inset 5px 5px 15px rgba(255, 200, 100, 0.3);
+            border: 2px solid rgba(255, 160, 80, 0.4);
+        }
+
+        .bg-planet-2 {
+            width: 75px;
+            height: 75px;
+            background: radial-gradient(circle at 40% 40%, #ffd700 0%, #f5a623 40%, #d4a017 100%);
+            bottom: 18%;
+            left: 3%;
+            animation-delay: -2s;
+            box-shadow:
+                0 0 30px rgba(255, 215, 0, 0.5),
+                inset -8px -8px 15px rgba(0, 0, 0, 0.3),
+                inset 4px 4px 12px rgba(255, 230, 100, 0.3);
+            border: 2px solid rgba(255, 200, 0, 0.3);
+        }
+
+        .bg-planet-3 {
+            width: 85px;
+            height: 85px;
+            background: radial-gradient(circle at 35% 35%, #4ecdc4 0%, #1a9f8f 50%, #0d5a52 100%);
+            top: 45%;
+            right: 1%;
+            animation-delay: -4s;
+            box-shadow:
+                0 0 35px rgba(78, 205, 196, 0.5),
+                inset -8px -8px 18px rgba(0, 0, 0, 0.3),
+                inset 5px 5px 14px rgba(150, 230, 220, 0.2);
+            border: 2px solid rgba(100, 200, 190, 0.3);
+        }
+
+        .bg-planet-4 {
+            width: 65px;
+            height: 65px;
+            background: radial-gradient(circle at 38% 38%, #56d8a0 0%, #2ecc71 50%, #27ae60 100%);
+            bottom: 8%;
+            right: 12%;
+            animation-delay: -6s;
+            box-shadow:
+                0 0 25px rgba(86, 216, 160, 0.4),
+                inset -6px -6px 12px rgba(0, 0, 0, 0.25),
+                inset 3px 3px 10px rgba(150, 240, 200, 0.2);
+            border: 2px solid rgba(100, 200, 150, 0.3);
         }
 
         .gradient-orb {
             position: absolute;
             border-radius: 50%;
             filter: blur(80px);
-            opacity: 0.3;
+            opacity: 0.08;
             animation: float 12s ease-in-out infinite;
         }
 
         .orb-1 {
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, #667eea 0%, transparent 70%);
+            background: radial-gradient(circle, #000000 0%, transparent 70%);
             top: -200px;
             left: -200px;
             animation-delay: 0s;
@@ -50,7 +157,7 @@
         .orb-2 {
             width: 400px;
             height: 400px;
-            background: radial-gradient(circle, #764ba2 0%, transparent 70%);
+            background: radial-gradient(circle, #333333 0%, transparent 70%);
             bottom: -150px;
             right: -150px;
             animation-delay: -4s;
@@ -59,22 +166,27 @@
         .orb-3 {
             width: 350px;
             height: 350px;
-            background: radial-gradient(circle, #f093fb 0%, transparent 70%);
+            background: radial-gradient(circle, #555555 0%, transparent 70%);
             top: 50%;
             right: -100px;
             animation-delay: -8s;
         }
 
         @keyframes float {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: translate(0, 0) scale(1) rotate(0deg);
             }
+
             25% {
                 transform: translate(60px, -40px) scale(1.1) rotate(90deg);
             }
+
             50% {
                 transform: translate(-40px, 60px) scale(0.9) rotate(180deg);
             }
+
             75% {
                 transform: translate(40px, 20px) scale(1.05) rotate(270deg);
             }
@@ -95,9 +207,9 @@
             justify-content: space-between;
             align-items: center;
             z-index: 100;
-            background: rgba(10, 10, 10, 0.8);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .logo {
@@ -107,38 +219,78 @@
             font-size: 1.2rem;
             font-weight: 600;
             letter-spacing: -0.5px;
-            color: #ffffff;
+            color: #000000;
             text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        nav[data-dark="true"] .logo {
+            color: #ffffff;
+        }
+
+        nav[data-dark="true"] .logo-text {
+            color: #ffffff;
+        }
+
+        nav[data-dark="true"] .nav-links a {
+            color: #ffffff;
+        }
+
+        nav[data-dark="true"] .nav-links a:hover {
+            color: #4da6ff;
+        }
+
+        nav[data-dark="true"] .btn-login {
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        nav[data-dark="true"] .btn-signup {
+            background: #4da6ff;
+            color: #ffffff;
+            border: none;
         }
 
         .logo-icon {
             width: 48px;
             height: 48px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #ffffff;
-            box-shadow: 0 6px 18px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+        }
+
+        nav[data-dark="false"] .logo-icon {
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            color: #ffffff;
+        }
+
+        nav[data-dark="true"] .logo-icon {
+            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+            color: #000000;
+            box-shadow: 0 6px 18px rgba(255, 255, 255, 0.15);
         }
 
         .logo-icon svg {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
+            stroke-width: 2.5;
         }
 
         .logo-text {
             font-weight: 700;
-            color: #ffffff;
+            color: #000000;
         }
 
         .logo-text .highlight {
-            color: #667eea;
+            color: #333333;
         }
 
         .logo span {
-            color: #667eea;
+            color: #333333;
         }
 
         .nav-right {
@@ -154,15 +306,15 @@
         }
 
         .nav-links a {
-            color: rgba(255, 255, 255, 0.6);
+            color: #000000;
             text-decoration: none;
             font-size: 0.9rem;
-            font-weight: 500;
+            font-weight: 600;
             transition: color 0.3s ease;
         }
 
         .nav-links a:hover {
-            color: #ffffff;
+            color: #4da6ff;
         }
 
         .auth-buttons {
@@ -183,21 +335,23 @@
 
         .btn-login {
             background: transparent;
-            color: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #000000;
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            font-weight: 600;
         }
 
         .btn-login:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #ffffff;
+            background: rgba(0, 0, 0, 0.05);
+            color: #000000;
         }
 
         .btn-signup {
-            background: #ffffff;
-            color: #0a0a0a;
+            background: #000000;
+            color: #ffffff;
         }
 
         .btn-signup:hover {
+            background: #333333;
             transform: translateY(-2px);
         }
 
@@ -214,7 +368,7 @@
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -222,6 +376,7 @@
             font-size: 0.9rem;
             cursor: pointer;
             transition: transform 0.3s;
+            color: #ffffff;
         }
 
         .user-avatar:hover {
@@ -239,9 +394,9 @@
             position: absolute;
             top: 50px;
             right: 0;
-            background: rgba(26, 26, 46, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 12px;
             padding: 0.5rem;
             min-width: 180px;
@@ -253,20 +408,9 @@
             display: block;
         }
 
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
         .dropdown-item {
             padding: 0.75rem 1rem;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(0, 0, 0, 0.8);
             text-decoration: none;
             display: block;
             border-radius: 8px;
@@ -275,13 +419,13 @@
         }
 
         .dropdown-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #ffffff;
+            background: rgba(0, 0, 0, 0.05);
+            color: #000000;
         }
 
         .dropdown-divider {
             height: 1px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.1);
             margin: 0.5rem 0;
         }
 
@@ -292,7 +436,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(5px);
             display: flex;
             align-items: center;
@@ -309,9 +453,9 @@
         }
 
         .modal-content {
-            background: rgba(20, 20, 30, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 12px;
             padding: 2rem;
             min-width: 350px;
@@ -326,14 +470,14 @@
 
         .modal-content h3 {
             margin: 0 0 1rem 0;
-            color: #ffffff;
+            color: #000000;
             font-size: 1.5rem;
             font-weight: 600;
         }
 
         .modal-content p {
             margin: 0 0 2rem 0;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(0, 0, 0, 0.7);
             font-size: 1rem;
         }
 
@@ -355,29 +499,29 @@
         }
 
         .modal-buttons .btn-secondary {
-            background: #10b981;
-            color: #ffffff;
-            border: 1px solid #10b981;
+            background: #e0e0e0;
+            color: #000000;
+            border: 1px solid #cccccc;
             transition: all 0.3s ease;
         }
 
         .modal-buttons .btn-secondary:hover {
-            background: #059669;
-            border-color: #059669;
+            background: #d0d0d0;
+            border-color: #bbbbbb;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .modal-buttons .btn-primary {
-            background: #ef4444;
+            background: #ff4444;
             color: #ffffff;
             transition: all 0.3s ease;
         }
 
         .modal-buttons .btn-primary:hover {
-            background: #dc2626;
+            background: #cc0000;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
         }
 
         /* Hero Section - Ultra Minimal */
@@ -389,6 +533,241 @@
             align-items: center;
             text-align: center;
             padding: 0 2rem;
+            background: linear-gradient(135deg, rgba(10, 10, 40, 0.95) 0%, rgba(20, 15, 60, 0.95) 50%, rgba(10, 25, 70, 0.95) 100%);
+            position: relative;
+            overflow: visible;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            background-image: url('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg');
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            animation: rotateEarth 30s linear infinite;
+            opacity: 0.95;
+            box-shadow:
+                0 0 80px rgba(0, 102, 204, 0.6),
+                0 0 120px rgba(0, 150, 255, 0.4),
+                inset -15px -15px 40px rgba(0, 0, 0, 0.4),
+                inset 10px 10px 30px rgba(255, 255, 255, 0.1);
+            z-index: -1;
+            filter: drop-shadow(0 0 60px rgba(0, 102, 204, 0.4)) blur(0.5px);
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(1px 1px at 10% 20%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1.5px 1.5px at 20% 30%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 50% 50%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 80% 10%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(2px 2px at 90% 60%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 30% 80%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 15% 50%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1.5px 1.5px at 70% 40%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 40% 10%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 25% 60%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(2px 2px at 60% 70%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 85% 85%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1.5px 1.5px at 35% 35%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 75% 20%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 45% 90%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1.5px 1.5px at 95% 40%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 5% 70%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 55% 15%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1.5px 1.5px at 65% 85%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 12% 12%, white, rgba(255, 255, 255, 0));
+            background-size: 100% 100%;
+            background-position: 0 0;
+            animation: twinkleStar 4s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.8;
+        }
+
+        @keyframes twinkleStar {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            background-image: url('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg');
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            animation: rotateEarth 30s linear infinite;
+            opacity: 0.9;
+            box-shadow:
+                0 0 80px rgba(0, 102, 204, 0.6),
+                0 0 120px rgba(0, 150, 255, 0.4),
+                inset -15px -15px 40px rgba(0, 0, 0, 0.4),
+                inset 10px 10px 30px rgba(255, 255, 255, 0.1);
+            z-index: 0;
+            filter: drop-shadow(0 0 60px rgba(0, 102, 204, 0.4)) blur(0.5px);
+        }
+
+        .hero::after::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 50%, transparent 30%, rgba(0, 102, 204, 0.1) 70%, transparent 100%);
+            animation: rotateStars 60s linear infinite reverse;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes rotateStars {
+            from {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        .earth-features {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .earth-stars {
+            position: absolute;
+            width: 650px;
+            height: 650px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            animation: rotateStarfield 45s linear infinite;
+            z-index: 0;
+            pointer-events: none;
+            background-image:
+                radial-gradient(1px 1px at 10% 15%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 20% 25%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1.5px 1.5px at 30% 35%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 45% 20%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 60% 15%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 75% 30%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1.5px 1.5px at 85% 50%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 80% 70%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 65% 80%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 40% 85%, white, rgba(255, 255, 255, 0));
+            background-size: 100% 100%;
+            background-position: 0 0;
+            opacity: 0.6;
+        }
+
+        @keyframes rotateStarfield {
+            from {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        .feature-tag {
+            position: absolute;
+            padding: 0.6rem 1.2rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #000000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15), 0 0 20px rgba(77, 166, 255, 0.1);
+            white-space: nowrap;
+            animation: orbit 25s linear infinite;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+
+        .feature-tag:hover {
+            background: rgba(77, 166, 255, 0.15);
+            border: 1px solid rgba(77, 166, 255, 0.3);
+            box-shadow: 0 6px 20px rgba(77, 166, 255, 0.25), 0 0 30px rgba(77, 166, 255, 0.15);
+            transform: scale(1.1);
+        }
+
+        .feature-tag:nth-child(2) {
+            animation-delay: 0s;
+        }
+
+        .feature-tag:nth-child(3) {
+            animation-delay: -4.17s;
+        }
+
+        .feature-tag:nth-child(4) {
+            animation-delay: -8.33s;
+        }
+
+        .feature-tag:nth-child(5) {
+            animation-delay: -12.5s;
+        }
+
+        .feature-tag:nth-child(6) {
+            animation-delay: -16.67s;
+        }
+
+        .feature-tag:nth-child(7) {
+            animation-delay: -20.83s;
+        }
+
+        @keyframes orbit {
+            from {
+                transform: rotate(0deg) translateY(-320px) rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg) translateY(-320px) rotate(-360deg);
+            }
+        }
+
+        @keyframes rotateEarth {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .hero h1 {
@@ -400,10 +779,12 @@
             color: #ffffff;
             opacity: 0;
             animation: fadeIn 1s ease forwards;
+            position: relative;
+            z-index: 2;
         }
 
         .hero .highlight {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ffffff 0%, #87ceeb 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -411,56 +792,142 @@
 
         .hero p {
             font-size: clamp(1rem, 2vw, 1.2rem);
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.8);
             max-width: 500px;
             margin-bottom: 3rem;
             font-weight: 400;
             opacity: 0;
             animation: fadeIn 1s ease 0.2s forwards;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Small planets */
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .planet-1 {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle at 35% 35%, #ff6b35, #d63031);
+            top: 15%;
+            right: 10%;
+            opacity: 0.7;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.4);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .planet-2 {
+            width: 45px;
+            height: 45px;
+            background: radial-gradient(circle at 35% 35%, #ffd93d, #f5a623);
+            bottom: 20%;
+            left: 8%;
+            opacity: 0.6;
+            box-shadow: 0 0 15px rgba(255, 217, 61, 0.3);
+            animation: float 7s ease-in-out infinite;
+            animation-delay: -1s;
+        }
+
+        .planet-3 {
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle at 35% 35%, #95e1d3, #4ecdc4);
+            top: 25%;
+            left: 5%;
+            opacity: 0.5;
+            box-shadow: 0 0 18px rgba(78, 205, 196, 0.3);
+            animation: float 8s ease-in-out infinite;
+            animation-delay: -2s;
+        }
+
+        .planet-4 {
+            width: 35px;
+            height: 35px;
+            background: radial-gradient(circle at 35% 35%, #a8e6cf, #56d8a0);
+            bottom: 15%;
+            right: 12%;
+            opacity: 0.6;
+            box-shadow: 0 0 12px rgba(86, 216, 160, 0.3);
+            animation: float 9s ease-in-out infinite;
+            animation-delay: -3s;
         }
 
         .cta-button {
             padding: 1.2rem 3rem;
             font-size: 1rem;
             font-weight: 600;
-            background: #ffffff;
-            color: #0a0a0a;
-            border: none;
+            background: linear-gradient(135deg, #4da6ff 0%, #0066cc 100%);
+            color: #ffffff;
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
+            position: relative;
+            z-index: 2;
             opacity: 0;
             animation: fadeIn 1s ease 0.4s forwards;
+            box-shadow: 0 0 20px rgba(77, 166, 255, 0.4);
         }
 
         .cta-button:hover {
+            background: linear-gradient(135deg, #6db3ff 0%, #0080ff 100%);
             transform: translateY(-2px);
-            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 40px rgba(77, 166, 255, 0.7), 0 10px 40px rgba(0, 102, 204, 0.3);
         }
 
         /* Features - Clean Grid */
         .features {
-            padding: 8rem 3rem;
-            max-width: 1200px;
-            margin: 0 auto;
+            padding: 0 0 8rem 0;
+            max-width: 100%;
+            margin: 0;
+            background: linear-gradient(180deg, rgba(77, 166, 255, 0.15) 0%, rgba(240, 248, 255, 0.5) 30%, #ffffff 70%, #ffffff 100%);
+            position: relative;
+            overflow: hidden;
         }
 
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
+            padding: 2rem 3rem 0 3rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
         }
 
         .feature {
             padding: 2.5rem 2rem;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            transition: all 0.4s ease;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 251, 255, 0.97) 100%);
+            border: 1.5px solid rgba(77, 166, 255, 0.3);
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             opacity: 0;
             transform: translateY(30px);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(77, 166, 255, 0.1), 0 0 20px rgba(77, 166, 255, 0.05);
+        }
+
+        .feature::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 30%, rgba(77, 166, 255, 0.1) 0%, transparent 70%),
+                linear-gradient(135deg, transparent 0%, rgba(77, 166, 255, 0.02) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
         }
 
         .feature.visible {
@@ -469,67 +936,733 @@
         }
 
         .feature:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(102, 126, 234, 0.3);
-            transform: translateY(-5px);
+            background: linear-gradient(135deg, rgba(77, 166, 255, 0.08) 0%, rgba(135, 206, 250, 0.08) 100%);
+            border-color: rgba(77, 166, 255, 0.6);
+            transform: translateY(-12px);
+            box-shadow: 0 20px 60px rgba(77, 166, 255, 0.25), 0 0 40px rgba(77, 166, 255, 0.15);
+        }
+
+        .feature:hover::before {
+            opacity: 1;
         }
 
         .feature-icon {
             font-size: 2.5rem;
             margin-bottom: 1.5rem;
             display: block;
+            animation: bounce 1.5s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+
+        .feature:nth-child(1) .feature-icon {
+            animation-delay: 0s;
+        }
+
+        .feature:nth-child(2) .feature-icon {
+            animation-delay: 0.2s;
+        }
+
+        .feature:nth-child(3) .feature-icon {
+            animation-delay: 0.4s;
+        }
+
+        .feature:nth-child(4) .feature-icon {
+            animation-delay: 0.6s;
+        }
+
+        .feature:nth-child(5) .feature-icon {
+            animation-delay: 0.8s;
+        }
+
+        .feature:nth-child(6) .feature-icon {
+            animation-delay: 1s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
         }
 
         .feature h3 {
-            font-size: 1.2rem;
-            font-weight: 600;
+            font-size: 1.3rem;
+            font-weight: 700;
             margin-bottom: 0.8rem;
-            color: #ffffff;
+            color: #000000;
         }
 
         .feature p {
-            font-size: 0.95rem;
-            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            color: rgba(0, 0, 0, 0.6);
             line-height: 1.6;
         }
 
-        /* Stats - Minimal */
+        /* Stats - New Redesign */
         .stats {
             padding: 6rem 3rem;
             text-align: center;
+            background: #ffffff;
         }
 
         .stats-grid {
             display: flex;
             justify-content: center;
-            gap: 6rem;
+            align-items: center;
+            gap: 4rem;
             flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .stat {
             opacity: 0;
-            transform: scale(0.9);
+            transform: translateY(20px);
+            flex: 1;
+            min-width: 200px;
+            max-width: 250px;
         }
 
         .stat.visible {
             opacity: 1;
-            transform: scale(1);
-            transition: all 0.6s ease;
+            transform: translateY(0);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stat-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            display: block;
+            line-height: 1;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .stat:nth-child(1) .stat-icon {
+            animation-delay: 0s;
+        }
+
+        .stat:nth-child(2) .stat-icon {
+            animation-delay: 0.3s;
+        }
+
+        .stat:nth-child(3) .stat-icon.celebration-emoji {
+            animation: celebrate 1s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0px) scale(1);
+            }
+
+            50% {
+                transform: translateY(-15px) scale(1.05);
+            }
+        }
+
+        @keyframes celebrate {
+
+            0%,
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            25% {
+                transform: scale(1.2) rotate(-15deg);
+            }
+
+            50% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            75% {
+                transform: scale(1.2) rotate(15deg);
+            }
         }
 
         .stat-number {
-            font-size: 4rem;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 0.5rem;
-            letter-spacing: -2px;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #000000;
+            margin-bottom: 0.75rem;
+            letter-spacing: -1px;
+            display: block;
+            line-height: 1.1;
+            min-height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .stat-label {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.95rem;
+            color: rgba(0, 0, 0, 0.6);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            display: block;
+        }
+
+        /* AI Meeting Minutes Generator Section */
+        .minutes-generator-section {
+            padding: 4rem 3rem;
+            background: linear-gradient(135deg, rgba(240, 248, 255, 0.3) 0%, #ffffff 100%);
+            position: relative;
+        }
+
+        .minutes-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .minutes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .minutes-content {
+            padding-right: 2rem;
+        }
+
+        .minutes-visual {
+            background: linear-gradient(135deg, rgba(77, 166, 255, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+            border-radius: 16px;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 20px 60px rgba(77, 166, 255, 0.1);
+            border: 1px solid rgba(77, 166, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .minutes-visual svg {
+            width: 100%;
+            height: auto;
+            max-width: 350px;
+        }
+
+        .minutes-illustration {
+            width: 100%;
+            height: auto;
+            max-width: 350px;
+            object-fit: contain;
+        }
+
+        .minutes-badges {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .minutes-badge {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .minutes-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #000000;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .minutes-description {
+            font-size: 0.95rem;
+            color: rgba(0, 0, 0, 0.7);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .minutes-button {
+            display: inline-block;
+            padding: 0.85rem 2rem;
+            background: #000000;
+            color: #ffffff;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .minutes-button:hover {
+            background: #1a1a1a;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .minutes-generator-section {
+                padding: 3rem 2rem;
+            }
+
+            .minutes-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .minutes-content {
+                padding-right: 0;
+            }
+
+            .minutes-title {
+                font-size: 2rem;
+            }
+
+            .minutes-visual {
+                min-height: 300px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .minutes-generator-section {
+                padding: 2rem 1.5rem;
+            }
+
+            .minutes-badges {
+                gap: 1rem;
+                flex-direction: column;
+            }
+
+            .minutes-title {
+                font-size: 1.5rem;
+            }
+
+            .minutes-description {
+                font-size: 0.9rem;
+            }
+
+            .minutes-visual {
+                min-height: 250px;
+            }
+        }
+
+        /* Reviews Section */
+        .reviews-section {
+            padding: 0 3rem 8rem 3rem;
+            width: 100%;
+            margin: 0 auto;
+            background: #ffffff;
+        }
+
+        .reviews-section h2 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 4rem;
+            letter-spacing: -1px;
+            color: #000000;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .reviews-carousel-container {
+            position: relative;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            overflow: hidden;
+            padding: 0 3rem;
+        }
+
+        .reviews-carousel {
+            display: flex;
+            gap: 2rem;
+            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+        }
+
+        .review-card {
+            flex: 0 0 calc(25% - 1.5rem);
+            min-width: 280px;
+            padding: 2.5rem 2rem;
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            min-height: 380px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .review-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.02) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .review-card:hover {
+            background: #fafafa;
+            border-color: #cccccc;
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .review-card:hover::before {
+            opacity: 1;
+        }
+
+        .review-stars {
+            font-size: 1.3rem;
+            color: #fbbf24;
+            margin-bottom: 1rem;
+            letter-spacing: 3px;
+            display: block;
+        }
+
+        .review-text {
+            font-size: 0.95rem;
+            color: #555555;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            font-weight: 400;
+            flex-grow: 1;
+        }
+
+        .review-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: auto;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            background: #e8e8e8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #666666;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .author-info {
+            flex: 1;
+        }
+
+        .author-name {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #000000;
+        }
+
+        .author-date {
+            margin: 0.25rem 0 0 0;
+            font-size: 0.8rem;
+            color: #999999;
+        }
+
+        /* Carousel Controls */
+        .carousel-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 3rem;
+        }
+
+        .carousel-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #f5f5f5;
+            border: 2px solid #cccccc;
+            color: #000000;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carousel-btn:hover {
+            background: #000000;
+            border-color: #000000;
+            color: #ffffff;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .carousel-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Real-Time Transcription Section */
+        .realtime-section {
+            padding: 80px 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 248, 255, 0.95));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .realtime-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .realtime-grid-new {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .realtime-content-new {
+            padding: 20px 0;
+            animation: fadeIn 0.8s ease-out 0.3s both;
+        }
+
+        .realtime-subtitle {
+            color: #4da6ff;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .realtime-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .realtime-description {
+            font-size: 1rem;
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+
+        .realtime-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .realtime-feature-item {
+            padding: 12px 15px;
+            background: linear-gradient(135deg, rgba(77, 166, 255, 0.1), rgba(77, 166, 255, 0.05));
+            border: 1px solid rgba(77, 166, 255, 0.2);
+            border-radius: 8px;
+            color: #333;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .realtime-feature-item:hover {
+            background: linear-gradient(135deg, rgba(77, 166, 255, 0.15), rgba(77, 166, 255, 0.1));
+            border-color: rgba(77, 166, 255, 0.4);
+            transform: translateX(5px);
+        }
+
+        .realtime-visual-new {
+            background: linear-gradient(135deg, rgba(77, 166, 255, 0.05), rgba(77, 166, 255, 0.02));
+            border-radius: 20px;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(77, 166, 255, 0.1);
+            border: 1px solid rgba(77, 166, 255, 0.15);
+            position: relative;
+        }
+
+        .realtime-center {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .center-circle-rt {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(77, 166, 255, 0.3);
+            animation: float 4s ease-in-out infinite;
+            color: #4da6ff;
+            z-index: 10;
+        }
+
+        .ring-logo {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: absolute;
+        }
+
+        .logo-1-rt {
+            animation: rotatePosition 20s linear infinite;
+        }
+
+        .logo-2-rt {
+            animation: rotatePosition 30s linear infinite reverse;
+        }
+
+        .logo-3-rt {
+            animation: rotatePosition 40s linear infinite;
+        }
+
+        @keyframes rotatePosition {
+            from {
+                transform: rotate(0deg) translateY(-120px) rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg) translateY(-120px) rotate(-360deg);
+            }
+        }
+
+        .realtime-ring {
+            position: absolute;
+            border: 2px solid rgba(77, 166, 255, 0.2);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .ring-1-rt {
+            width: 180px;
+            height: 180px;
+            border-color: rgba(77, 166, 255, 0.3);
+        }
+
+        .ring-2-rt {
+            width: 240px;
+            height: 240px;
+            border-color: rgba(77, 166, 255, 0.2);
+        }
+
+        .ring-3-rt {
+            width: 300px;
+            height: 300px;
+            border-color: rgba(77, 166, 255, 0.1);
+        }
+
+        /* Responsive - Tablet */
+        @media (max-width: 1024px) {
+            .realtime-section {
+                padding: 60px 20px;
+            }
+
+            .realtime-grid-new {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .realtime-visual-new {
+                height: 350px;
+            }
+
+            .realtime-center {
+                width: 250px;
+                height: 250px;
+            }
+
+            .realtime-title {
+                font-size: 2rem;
+            }
+        }
+
+        /* Responsive - Mobile */
+        @media (max-width: 640px) {
+            .realtime-section {
+                padding: 40px 15px;
+            }
+
+            .realtime-visual-new {
+                height: 300px;
+                border-radius: 15px;
+            }
+
+            .realtime-center {
+                width: 200px;
+                height: 200px;
+            }
+
+            .center-circle-rt {
+                width: 80px;
+                height: 80px;
+            }
+
+            .ring-logo {
+                width: 40px;
+                height: 40px;
+            }
+
+            .ring-logo svg {
+                width: 22px;
+                height: 22px;
+            }
+
+            .realtime-title {
+                font-size: 1.5rem;
+            }
+
+            .realtime-description {
+                font-size: 0.9rem;
+            }
+
+            .realtime-features {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .realtime-feature-item {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
         }
 
         /* CTA Section */
@@ -543,12 +1676,12 @@
             font-weight: 700;
             margin-bottom: 1.5rem;
             letter-spacing: -1px;
-            color: #ffffff;
+            color: #000000;
         }
 
         .cta-section p {
             font-size: 1.1rem;
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(0, 0, 0, 0.6);
             margin-bottom: 3rem;
             max-width: 500px;
             margin-left: auto;
@@ -559,9 +1692,11 @@
         footer {
             padding: 3rem;
             text-align: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            color: rgba(255, 255, 255, 0.3);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            color: #ffffff;
             font-size: 0.9rem;
+            background: linear-gradient(135deg, rgba(10, 10, 40, 0.95) 0%, rgba(20, 20, 60, 0.95) 100%);
+            backdrop-filter: blur(10px);
         }
 
         /* Animations */
@@ -572,6 +1707,17 @@
         }
 
         /* Responsive */
+        @media (max-width: 1024px) {
+            .reviews-carousel-container {
+                padding: 0 2rem;
+            }
+
+            .review-card {
+                flex: 0 0 calc(33.333% - 1.5rem);
+                min-width: 250px;
+            }
+        }
+
         @media (max-width: 768px) {
             nav {
                 padding: 1.5rem 2rem;
@@ -604,11 +1750,40 @@
             .stat-number {
                 font-size: 3rem;
             }
+
+            /* Responsive Carousel */
+            .reviews-section {
+                padding: 4rem 2rem;
+            }
+
+            .reviews-carousel-container {
+                padding: 0 1rem;
+            }
+
+            .review-card {
+                flex: 0 0 calc(50% - 1rem);
+                min-width: 220px;
+                min-height: 320px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .review-card {
+                flex: 0 0 100%;
+                min-width: 100%;
+                min-height: 300px;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="bg-animation">
+        <div class="starfield"></div>
+        <div class="bg-planet bg-planet-1"></div>
+        <div class="bg-planet bg-planet-2"></div>
+        <div class="bg-planet bg-planet-3"></div>
+        <div class="bg-planet bg-planet-4"></div>
         <div class="gradient-orb orb-1"></div>
         <div class="gradient-orb orb-2"></div>
         <div class="gradient-orb orb-3"></div>
@@ -618,9 +1793,27 @@
         <nav>
             <a href="index.html" class="logo">
                 <div class="logo-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
+                    <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Gear/Cog -->
+                        <circle cx="45" cy="40" r="18" fill="none" stroke="currentColor" stroke-width="2.5" />
+                        <g stroke="currentColor" stroke-width="2.5" fill="none">
+                            <!-- Gear teeth -->
+                            <line x1="45" y1="20" x2="45" y2="10" />
+                            <line x1="60" y1="25" x2="67" y2="18" />
+                            <line x1="65" y1="40" x2="75" y2="40" />
+                            <line x1="60" y1="55" x2="67" y2="62" />
+                            <line x1="45" y1="60" x2="45" y2="70" />
+                            <line x1="30" y1="55" x2="23" y2="62" />
+                            <line x1="25" y1="40" x2="15" y2="40" />
+                            <line x1="30" y1="25" x2="23" y2="18" />
+                        </g>
+                        <!-- Lines (speed/motion) -->
+                        <line x1="10" y1="25" x2="22" y2="25" stroke="currentColor" stroke-width="2.5" />
+                        <line x1="5" y1="40" x2="15" y2="40" stroke="currentColor" stroke-width="2.5" />
+                        <line x1="10" y1="55" x2="22" y2="55" stroke="currentColor" stroke-width="2.5" />
+                        <!-- Moon/Head silhouette on right -->
+                        <path d="M 75 25 Q 85 35 85 50 Q 85 65 75 75 Q 90 65 90 50 Q 90 35 75 25" fill="currentColor"
+                            opacity="0.7" />
                     </svg>
                 </div>
                 <span class="logo-text">AI <span class="highlight">MOM</span></span>
@@ -630,7 +1823,7 @@
                     <li><a href="real.html">Live</a></li>
                     <li><a href="file.html">Upload</a></li>
                 </ul>
-                
+
                 <!-- Authentication buttons (shown when not logged in) -->
                 <div class="auth-buttons" id="authButtons">
                     <a href="signin.html" class="btn-nav btn-login">Sign In</a>
@@ -653,9 +1846,22 @@
         </nav>
 
         <section class="hero">
+            <div class="planet planet-1"></div>
+            <div class="planet planet-2"></div>
+            <div class="planet planet-3"></div>
+            <div class="planet planet-4"></div>
             <h1>Meeting Intelligence,<br><span class="highlight">Assist</span></h1>
             <p>Transform conversations into actionable insights with AI-powered transcription and analysis</p>
-            <a href="real.html" class="cta-button">Get Started</a>
+            <div class="earth-features">
+                <div class="earth-stars"></div>
+                <div class="feature-tag">🎙️ Real-time Capture</div>
+                <div class="feature-tag">👥 Speaker Detection</div>
+                <div class="feature-tag">⚡ Smart Alerts</div>
+                <div class="feature-tag">📊 Analytics</div>
+                <div class="feature-tag">🌐 Multi-Language</div>
+                <div class="feature-tag">✨ AI Insights</div>
+            </div>
+            <a href="file.html" class="cta-button">Get Started</a>
         </section>
 
         <section id="features" class="features">
@@ -693,19 +1899,254 @@
             </div>
         </section>
 
+        <!-- AI Meeting Minutes Generator Section -->
+        <section class="minutes-generator-section">
+            <div class="minutes-container">
+                <div class="minutes-grid">
+                    <div class="minutes-content">
+                        <div class="minutes-badges">
+                            <div class="minutes-badge">🏆 1M+ users</div>
+                            <div class="minutes-badge">⭐ 4.8 stars</div>
+                            <div class="minutes-badge">💬 2.8k reviews</div>
+                        </div>
+
+                        <h2 class="minutes-title">AI Meeting Minutes Generator</h2>
+                        <p class="minutes-description">
+                            Try AI MOM free AI meeting minutes generator to create structured meeting minutes and
+                            summaries from your notes or transcript. Simply upload your notes or transcript and watch as
+                            AI MOM generates your meeting minutes in seconds.
+                        </p>
+                        <a href="real.html" class="minutes-button">Add to Chrome - It's free</a>
+                    </div>
+                    <div class="minutes-visual">
+                        <img src="./assets/images/meeting-minutes-illustration.png"
+                            alt="AI Mom Meeting Minutes Generator" class="minutes-illustration">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Real-Time Transcription Section -->
+        <section class="realtime-section">
+            <div class="realtime-container">
+                <div class="realtime-grid-new">
+                    <div class="realtime-visual-new">
+                        <div class="realtime-center">
+                            <div class="center-circle-rt">
+                                <svg width="60" height="60" viewBox="0 0 100 100" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <!-- AI Gear and Head Logo -->
+                                    <!-- Gear/Cog -->
+                                    <circle cx="45" cy="40" r="18" fill="none" stroke="currentColor" stroke-width="2" />
+                                    <g stroke="currentColor" stroke-width="2" fill="none">
+                                        <!-- Gear teeth -->
+                                        <line x1="45" y1="20" x2="45" y2="10" />
+                                        <line x1="60" y1="25" x2="67" y2="18" />
+                                        <line x1="65" y1="40" x2="75" y2="40" />
+                                        <line x1="60" y1="55" x2="67" y2="62" />
+                                        <line x1="45" y1="60" x2="45" y2="70" />
+                                        <line x1="30" y1="55" x2="23" y2="62" />
+                                        <line x1="25" y1="40" x2="15" y2="40" />
+                                        <line x1="30" y1="25" x2="23" y2="18" />
+                                    </g>
+                                    <!-- Lines (speed/motion) -->
+                                    <line x1="10" y1="25" x2="22" y2="25" stroke="currentColor" stroke-width="2" />
+                                    <line x1="5" y1="40" x2="15" y2="40" stroke="currentColor" stroke-width="2" />
+                                    <line x1="10" y1="55" x2="22" y2="55" stroke="currentColor" stroke-width="2" />
+                                    <!-- Moon/Head silhouette on right -->
+                                    <path d="M 75 25 Q 85 35 85 50 Q 85 65 75 75 Q 90 65 90 50 Q 90 35 75 25"
+                                        fill="currentColor" opacity="0.7" />
+                                </svg>
+                            </div>
+                            <div class="realtime-ring ring-1-rt">
+                                <div class="ring-logo logo-1-rt">
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <!-- Google Meet Logo -->
+                                        <rect x="2" y="2" width="8" height="8" rx="1" fill="#EA4335" />
+                                        <rect x="14" y="2" width="8" height="8" rx="1" fill="#34A853" />
+                                        <rect x="2" y="14" width="8" height="8" rx="1" fill="#4285F4" />
+                                        <rect x="14" y="14" width="8" height="8" rx="1" fill="#FBBC04" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="realtime-ring ring-2-rt">
+                                <div class="ring-logo logo-2-rt">
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <!-- YouTube Logo -->
+                                        <path
+                                            d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
+                                            fill="#FF0000" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="realtime-ring ring-3-rt">
+                                <div class="ring-logo logo-3-rt">
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <!-- Google Docs Logo -->
+                                        <rect x="3" y="3" width="18" height="18" rx="2" fill="#4285F4" opacity="0.2"
+                                            stroke="#4285F4" stroke-width="1.5" />
+                                        <path d="M6 8h12M6 12h12M6 16h8" stroke="#4285F4" stroke-width="1.5"
+                                            stroke-linecap="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="realtime-content-new">
+                        <p class="realtime-subtitle">USE IN YOUR FAVOURITE MEETING APP!</p>
+                        <h2 class="realtime-title">Real-Time Transcription</h2>
+                        <p class="realtime-description">
+                            Transform your meeting minutes into actionable insights with a single click. AI MOM
+                            highlights key points, generates summaries, and identifies action items, so you always know
+                            what to do next.
+                        </p>
+                        <div class="realtime-features">
+                            <div class="realtime-feature-item">✓ Google Meet Integration</div>
+                            <div class="realtime-feature-item">✓ Audio Recording Support</div>
+                            <div class="realtime-feature-item">✓ YouTube Video Support</div>
+                            <div class="realtime-feature-item">✓ Real-Time Processing</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="stats">
             <div class="stats-grid">
                 <div class="stat">
-                    <div class="stat-number">55%</div>
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-number" data-target="55" data-suffix="%">0%</div>
                     <div class="stat-label">Accuracy</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-number">3+</div>
+                    <div class="stat-icon">🌍</div>
+                    <div class="stat-number" data-target="3" data-suffix="+">0+</div>
                     <div class="stat-label">Languages</div>
                 </div>
                 <div class="stat">
+                    <div class="stat-icon celebration-emoji">🎉</div>
                     <div class="stat-number">Free</div>
                     <div class="stat-label">Forever</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reviews Section -->
+        <section class="reviews-section">
+            <h2>What Our Users Say</h2>
+            <div class="reviews-carousel-container">
+                <div class="reviews-carousel">
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">"Really cool stuff, works really well! I tested it in a more than 2 hours
+                            long meeting and the post-production features are awesome."</p>
+                        <div class="review-author">
+                            <div class="author-avatar">SF</div>
+                            <div class="author-info">
+                                <p class="author-name">Szklénár Ferenc</p>
+                                <p class="author-date">Mar 20, 2025</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">"Awesome Chrome extension! Just installed it today and used it in a 2½
+                            hour meeting on Zoom with 8 participants. It worked flawlessly."</p>
+                        <div class="review-author">
+                            <div class="author-avatar">DC</div>
+                            <div class="author-info">
+                                <p class="author-name">David Chang</p>
+                                <p class="author-date">Feb 20, 2025</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">"Great tool. No integration skills are necessary. Very accurate and
+                            instant results. The detailed summary makes for a great follow-up resource."</p>
+                        <div class="review-author">
+                            <div class="author-avatar">GK</div>
+                            <div class="author-info">
+                                <p class="author-name">Garrett Kolb</p>
+                                <p class="author-date">Mar 20, 2025</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">"This AI MOM application has been a game-changer for our remote team.
+                            Transcription accuracy is impressive, and speaker detection works seamlessly."</p>
+                        <div class="review-author">
+                            <div class="author-avatar">SJ</div>
+                            <div class="author-info">
+                                <p class="author-name">Sarah Johnson</p>
+                                <p class="author-date">Jan 18, 2025</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">"The meeting summaries have saved me hours of note-taking. Finally, an AI
+                            tool that actually understands context and generates meaningful action items."</p>
+                        <div class="review-author">
+                            <div class="author-avatar">MR</div>
+                            <div class="author-info">
+                                <p class="author-name">Michael Rodriguez</p>
+                                <p class="author-date">Feb 10, 2025</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">"Incredible accuracy and the privacy features give me peace of mind. All
+                            data stays local and secure. This is exactly what I was looking for."</p>
+                        <div class="review-author">
+                            <div class="author-avatar">EM</div>
+                            <div class="author-info">
+                                <p class="author-name">Emma Martinez</p>
+                                <p class="author-date">Mar 05, 2025</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">"The real-time transcription is lightning-fast, and it works perfectly
+                            with Google Meet, Teams, and Zoom. Multi-language support is a huge plus."</p>
+                        <div class="review-author">
+                            <div class="author-avatar">JL</div>
+                            <div class="author-info">
+                                <p class="author-name">James Liu</p>
+                                <p class="author-date">Feb 25, 2025</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">"Best decision we made was switching to AI MOM. The alert system notifies
+                            me of important mentions instantly, and speaker identification is accurate!"</p>
+                        <div class="review-author">
+                            <div class="author-avatar">AP</div>
+                            <div class="author-info">
+                                <p class="author-name">Amanda Peterson</p>
+                                <p class="author-date">Mar 12, 2025</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="carousel-controls">
+                    <button class="carousel-btn" id="prevBtn">❮</button>
+                    <button class="carousel-btn" id="nextBtn">❯</button>
                 </div>
             </div>
         </section>
@@ -717,7 +2158,7 @@
         </section>
 
         <footer>
-            <p>Designed by Advanced AI Technology</p>
+            <p>Designed by Sanjit Pandey</p>
             <p>© 2025 AI MOM. Built with ❤️.</p>
             <a href="privacy.html">Privacy Policy</a> / <a href="terms.html">Terms of Service</a>
         </footer>
@@ -741,7 +2182,7 @@
             const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
             const authButtons = document.getElementById('authButtons');
             const userMenu = document.getElementById('userMenu');
-            
+
             if (isLoggedIn) {
                 authButtons.style.display = 'none';
                 userMenu.style.display = 'block';
@@ -822,6 +2263,116 @@
                 observer.observe(stat);
             });
 
+            // Counter animation for stats
+            let counterAnimationStarted = false;
+
+            function animateCounter(element, target, suffix, duration = 2000) {
+                let start = 0;
+                const increment = target / (duration / 16); // 16ms per frame (60fps)
+
+                function updateCounter() {
+                    start += increment;
+                    if (start >= target) {
+                        element.textContent = target + suffix;
+                    } else {
+                        element.textContent = Math.floor(start) + suffix;
+                        requestAnimationFrame(updateCounter);
+                    }
+                }
+
+                updateCounter();
+            }
+
+            // Trigger counter animation when stats section is visible
+            const statsSection = document.querySelector('.stats');
+            const statsObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !counterAnimationStarted) {
+                        counterAnimationStarted = true;
+
+                        // Animate the counters
+                        document.querySelectorAll('.stat-number[data-target]').forEach(element => {
+                            const target = parseInt(element.getAttribute('data-target'));
+                            const suffix = element.getAttribute('data-suffix') || '';
+                            animateCounter(element, target, suffix);
+                        });
+
+                        // Stop observing after animation starts
+                        statsObserver.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.5
+            });
+
+            if (statsSection) {
+                statsObserver.observe(statsSection);
+            }
+
+            // Observe review cards
+            document.querySelectorAll('.review-card').forEach((card, index) => {
+                card.style.transitionDelay = `${index * 0.08}s`;
+                observer.observe(card);
+            });
+
+            // Horizontal Carousel functionality
+            let currentSlide = 0;
+            const carousel = document.querySelector('.reviews-carousel');
+            const reviewCards = document.querySelectorAll('.reviews-carousel .review-card');
+            const totalCards = reviewCards.length;
+            const cardsPerView = 4;
+
+            // Get card width dynamically
+            function getCardWidth() {
+                const container = document.querySelector('.reviews-carousel-container');
+                const containerWidth = container.offsetWidth;
+                return (containerWidth / cardsPerView);
+            }
+
+            function updateCarousel() {
+                const cardWidth = getCardWidth();
+                const gap = 32; // 2rem gap
+                const translateValue = currentSlide * (cardWidth + gap);
+                carousel.style.transform = `translateX(-${translateValue}px)`;
+            }
+
+            function nextSlide() {
+                const maxSlide = totalCards - cardsPerView;
+                if (currentSlide < maxSlide) {
+                    currentSlide++;
+                } else {
+                    currentSlide = 0;
+                }
+                updateCarousel();
+            }
+
+            function prevSlide() {
+                const maxSlide = totalCards - cardsPerView;
+                if (currentSlide > 0) {
+                    currentSlide--;
+                } else {
+                    currentSlide = maxSlide;
+                }
+                updateCarousel();
+            }
+
+            // Add click handlers to buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', prevSlide);
+            }
+            if (nextBtn) {
+                nextBtn.addEventListener('click', nextSlide);
+            }
+
+            // Auto-slide every 6 seconds
+            let carouselInterval = setInterval(nextSlide, 6000);
+
+            // Update carousel on window resize
+            window.addEventListener('resize', updateCarousel);
+
             // Smooth scroll
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
@@ -841,12 +2392,12 @@
                 const userSession = localStorage.getItem('userSession');
                 const signInButton = document.getElementById('signInButton');
                 const userMenu = document.getElementById('userMenu');
-                
+
                 if (!signInButton || !userMenu) {
                     console.warn('Auth UI elements not found');
                     return;
                 }
-                
+
                 if (userSession) {
                     const userData = JSON.parse(userSession);
                     signInButton.style.display = 'none';
@@ -862,30 +2413,30 @@
             }
 
             // User menu toggle functionality
-            window.toggleUserMenu = function() {
+            window.toggleUserMenu = function () {
                 const dropdown = document.querySelector('.user-dropdown');
                 dropdown.classList.toggle('show');
             };
 
             // Close user menu when clicking outside
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 const userMenu = document.getElementById('userMenu');
                 const dropdown = document.querySelector('.user-dropdown');
-                
+
                 if (userMenu && !userMenu.contains(e.target)) {
                     dropdown.classList.remove('show');
                 }
             });
 
             // Handle logout click
-            window.handleLogout = function(e) {
+            window.handleLogout = function (e) {
                 e.preventDefault();
                 const logoutModal = document.getElementById('logoutModal');
                 logoutModal.classList.add('show');
             };
 
             // Handle logout confirmation
-            window.confirmLogout = function() {
+            window.confirmLogout = function () {
                 localStorage.removeItem('userSession');
                 updateAuthUI();
                 const logoutModal = document.getElementById('logoutModal');
@@ -893,13 +2444,13 @@
             };
 
             // Handle logout cancellation
-            window.cancelLogout = function() {
+            window.cancelLogout = function () {
                 const logoutModal = document.getElementById('logoutModal');
                 logoutModal.classList.remove('show');
             };
 
             // Close modal when clicking on overlay
-            document.getElementById('logoutModal').addEventListener('click', function(e) {
+            document.getElementById('logoutModal').addEventListener('click', function (e) {
                 if (e.target === this) {
                     this.classList.remove('show');
                 }
@@ -907,7 +2458,63 @@
 
             // Check authentication status on page load
             updateAuthUI();
+
+            // Dynamic color changing based on scroll position
+            const observerOptions = {
+                threshold: 0.5
+            };
+
+            const colorChangeObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const sectionId = entry.target.id;
+
+                        if (sectionId === '') {
+                            // Hero section - Space theme (dark)
+                            document.documentElement.style.setProperty('--primary-text', '#ffffff');
+                            document.documentElement.style.setProperty('--primary-bg', 'rgba(10, 10, 40, 0.95)');
+                            document.documentElement.style.setProperty('--accent-color', '#4da6ff');
+                            document.querySelector('nav').style.background = 'rgba(10, 10, 40, 0.8)';
+                            document.querySelector('nav').style.borderBottom = '1px solid rgba(77, 166, 255, 0.2)';
+                            document.querySelector('nav').setAttribute('data-dark', 'true');
+                        } else if (sectionId === 'features') {
+                            // Features section - Light theme with space gradient
+                            document.documentElement.style.setProperty('--primary-text', '#000000');
+                            document.documentElement.style.setProperty('--accent-color', '#4da6ff');
+                            document.querySelector('nav').style.background = 'rgba(255, 255, 255, 0.95)';
+                            document.querySelector('nav').style.borderBottom = '1px solid rgba(0, 0, 0, 0.05)';
+                            document.querySelector('nav').removeAttribute('data-dark');
+                        } else if (sectionId === 'stats') {
+                            // Stats section - Light theme
+                            document.documentElement.style.setProperty('--primary-text', '#000000');
+                            document.documentElement.style.setProperty('--accent-color', '#4da6ff');
+                            document.querySelector('nav').style.background = 'rgba(255, 255, 255, 0.95)';
+                            document.querySelector('nav').style.borderBottom = '1px solid rgba(0, 0, 0, 0.05)';
+                            document.querySelector('nav').removeAttribute('data-dark');
+                        } else if (sectionId === 'reviews') {
+                            // Reviews section - Light theme
+                            document.documentElement.style.setProperty('--primary-text', '#000000');
+                            document.documentElement.style.setProperty('--accent-color', '#4da6ff');
+                            document.querySelector('nav').style.background = 'rgba(255, 255, 255, 0.95)';
+                            document.querySelector('nav').style.borderBottom = '1px solid rgba(0, 0, 0, 0.05)';
+                            document.querySelector('nav').removeAttribute('data-dark');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all major sections
+            const hero = document.querySelector('.hero');
+            const features = document.getElementById('features');
+            const stats = document.getElementById('stats');
+            const reviews = document.getElementById('reviews');
+
+            if (hero) colorChangeObserver.observe(hero);
+            if (features) colorChangeObserver.observe(features);
+            if (stats) colorChangeObserver.observe(stats);
+            if (reviews) colorChangeObserver.observe(reviews);
         });
     </script>
 </body>
+
 </html>

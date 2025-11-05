@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-time Capture - AI MOM</title>
     <script src="js/avatar-manager.js"></script>
+    <script src="js/realtime.js"></script>
     <style>
         * {
             margin: 0;
@@ -14,12 +16,13 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #0a0a0a;
-            color: #ffffff;
+            background: #ffffff;
+            color: #1a1a2e;
             overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        /* Minimal animated background */
+        /* Background Animation */
         .bg-animation {
             position: fixed;
             top: 0;
@@ -27,21 +30,42 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%);
+            overflow: hidden;
+        }
+
+        .starfield {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .star {
+            position: absolute;
+            width: 1.5px;
+            height: 1.5px;
+            background: rgba(77, 166, 255, 0.4);
+            border-radius: 50%;
+            animation: twinkleStar 3s ease-in-out infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes twinkleStar {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 0.4; }
         }
 
         .gradient-orb {
             position: absolute;
             border-radius: 50%;
             filter: blur(80px);
-            opacity: 0.3;
+            opacity: 0.15;
             animation: float 20s ease-in-out infinite;
         }
 
         .orb-1 {
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, #667eea 0%, transparent 70%);
+            background: radial-gradient(circle, #4da6ff 0%, transparent 70%);
             top: -200px;
             right: -200px;
         }
@@ -49,7 +73,7 @@
         .orb-2 {
             width: 400px;
             height: 400px;
-            background: radial-gradient(circle, #764ba2 0%, transparent 70%);
+            background: radial-gradient(circle, #0066cc 0%, transparent 70%);
             bottom: -150px;
             left: -150px;
             animation-delay: -7s;
@@ -65,17 +89,23 @@
             position: relative;
             z-index: 1;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Navigation */
+        /* Navbar */
         nav {
             padding: 1.5rem 3rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(10, 10, 10, 0.8);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(77, 166, 255, 0.15);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
         }
 
         .logo {
@@ -84,38 +114,34 @@
             gap: 0.75rem;
             font-size: 1.2rem;
             font-weight: 600;
-            color: #ffffff;
+            color: #1a1a2e;
             text-decoration: none;
         }
 
         .logo-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #4da6ff 0%, #0066cc 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #ffffff;
-            box-shadow: 0 6px 18px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 12px rgba(77, 166, 255, 0.25);
         }
 
         .logo-icon svg {
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
         }
 
         .logo-text {
             font-weight: 700;
-            color: #ffffff;
+            color: #1a1a2e;
         }
 
         .logo-text .highlight {
-            color: #667eea;
-        }
-
-        .logo span {
-            color: #667eea;
+            color: #4da6ff;
         }
 
         .nav-right {
@@ -131,500 +157,489 @@
         }
 
         .nav-links a {
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(26, 26, 46, 0.6);
             text-decoration: none;
             font-size: 0.9rem;
             transition: color 0.3s;
+            font-weight: 500;
         }
 
         .nav-links a:hover {
-            color: #ffffff;
+            color: #4da6ff;
         }
 
-        /* User Menu */
         .user-menu {
             position: relative;
         }
 
         .user-avatar {
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, #4da6ff 0%, #0066cc 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 2px solid transparent;
+            border: 2px solid rgba(77, 166, 255, 0.2);
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #ffffff;
         }
 
         .user-avatar:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .user-avatar img {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
+            box-shadow: 0 0 12px rgba(77, 166, 255, 0.4);
+            transform: scale(1.05);
         }
 
         .dropdown {
             position: absolute;
             top: 100%;
             right: 0;
-            background: rgba(20, 20, 30, 0.95);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 0.5rem 0;
-            min-width: 180px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            z-index: 1000;
+            border: 1px solid rgba(77, 166, 255, 0.2);
+            border-radius: 12px;
+            min-width: 150px;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
         }
 
-        .dropdown.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
+        .dropdown.show {
+            display: flex;
         }
 
         .dropdown-item {
-            display: block;
             padding: 0.75rem 1rem;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(26, 26, 46, 0.7);
             text-decoration: none;
             font-size: 0.9rem;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
+            border-radius: 8px;
+            cursor: pointer;
         }
 
         .dropdown-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
+            background: rgba(77, 166, 255, 0.1);
+            color: #4da6ff;
         }
 
         .dropdown-divider {
             height: 1px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(77, 166, 255, 0.15);
             margin: 0.5rem 0;
-        }
-
-        /* User Authentication Area */
-        .auth-area {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .auth-buttons {
-            display: flex;
-            gap: 0.8rem;
-        }
-
-        .auth-btn {
-            padding: 0.5rem 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: transparent;
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 0.5rem;
-            font-size: 0.85rem;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .auth-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.4);
-        }
-
-        .auth-btn.primary {
-            background: #667eea;
-            border-color: #667eea;
-        }
-
-        .auth-btn.primary:hover {
-            background: #5a67d8;
-            border-color: #5a67d8;
-        }
-
-        /* User Avatar & Dropdown */
-        .user-menu {
-            position: relative;
-        }
-
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #667eea;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            cursor: pointer;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s;
-        }
-
-        .user-avatar:hover {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-        }
-
-        .user-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            margin-top: 0.5rem;
-            background: rgba(26, 26, 46, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0.8rem;
-            min-width: 180px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s;
-        }
-
-        .user-dropdown.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .dropdown-header {
-            padding: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .dropdown-header .user-name {
-            font-weight: 600;
-            color: #ffffff;
-            font-size: 0.9rem;
-        }
-
-        .dropdown-header .user-email {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.8rem;
-            margin-top: 0.2rem;
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            padding: 0.8rem 1rem;
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            font-size: 0.85rem;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .dropdown-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #ffffff;
-        }
-
-        .dropdown-item:last-child {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .dropdown-item .icon {
-            font-size: 1rem;
-        }
-
-        /* Authentication Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 10000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, rgba(30, 30, 35, 0.95), rgba(40, 40, 50, 0.95));
-            margin: 10% auto;
-            padding: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            color: white;
-            position: relative;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            position: absolute;
-            right: 1rem;
-            top: 0.5rem;
-            cursor: pointer;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: white;
-            text-decoration: none;
-        }
-
-        .modal-content h2 {
-            margin: 0 0 1.5rem 0;
-            text-align: center;
-            color: #ffffff;
-        }
-
-        .modal-content input {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-
-        .modal-content input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .modal-content input:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
-        }
-
-        .modal-content button {
-            width: 100%;
-            padding: 12px;
-            margin: 16px 0 8px 0;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .modal-content button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
-        }
-
-        .auth-switch {
-            text-align: center;
-            margin-top: 1rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .auth-switch a {
-            color: #6366f1;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .auth-switch a:hover {
-            color: #8b5cf6;
-            text-decoration: underline;
         }
 
         /* Main Container */
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 3rem 2rem;
+            padding: 8rem 3rem 3rem;
+            flex: 1;
         }
 
+        /* Header */
         .header {
             text-align: center;
             margin-bottom: 3rem;
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            letter-spacing: -1px;
+            font-size: 3.2rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #4da6ff 0%, #0066cc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .header p {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 1rem;
+            color: rgba(26, 26, 46, 0.7);
+            font-size: 1.1rem;
+            position: relative;
+            z-index: 1;
+            line-height: 1.5;
+            font-weight: 500;
+            letter-spacing: 0.3px;
         }
 
-        /* Control Panel */
-        .control-panel {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
+        /* Controls */
+        .controls-wrapper {
+            background: linear-gradient(135deg, rgba(77, 166, 255, 0.12) 0%, rgba(77, 166, 255, 0.04) 100%);
+            border: 1.5px solid rgba(77, 166, 255, 0.25);
+            border-radius: 16px;
             padding: 2rem;
             margin-bottom: 2rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(77, 166, 255, 0.12);
         }
 
         .controls {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
         }
 
         .btn {
-            padding: 1rem 2rem;
-            font-size: 1rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-primary {
-            background: #ffffff;
-            color: #0a0a0a;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .btn-danger {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        .btn-danger:hover {
-            background: rgba(239, 68, 68, 0.2);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Download Dropdown */
-        .download-dropdown {
             position: relative;
-            display: inline-block;
-        }
-
-        .dropdown-toggle {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+            overflow: hidden;
+            animation: slideInUp 0.6s ease-out backwards;
             display: flex;
+            flex-direction: column;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .dropdown-menu {
+        .btn::before {
+            content: '';
             position: absolute;
-            top: 100%;
+            top: 0;
             left: 0;
-            background: rgba(26, 26, 46, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            min-width: 200px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(20px);
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
             opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            z-index: 1000;
+            transition: opacity 0.3s ease;
+            border-radius: 14px;
         }
 
-        .dropdown-menu.show {
+        .btn:hover::before {
             opacity: 1;
-            visibility: visible;
+        }
+
+        .btn:hover {
+            transform: translateY(-4px);
+            border-color: rgba(16, 185, 129, 0.6);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn span {
+            font-size: 2rem;
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .btn:hover span {
+            transform: scale(1.15) rotate(10deg);
+        }
+
+        .btn-connection {
+            animation-delay: 0.1s;
+        }
+
+        .btn-primary {
+            animation-delay: 0.2s;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-danger {
+            animation-delay: 0.3s;
+        }
+
+        .btn-danger:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-secondary {
+            animation-delay: 0.4s;
+        }
+
+        /* Download Button */
+        .download-section {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .download-btn-wrapper {
+            position: relative;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, rgba(100, 149, 237, 0.15) 0%, rgba(100, 149, 237, 0.05) 100%);
+            border: 2px solid rgba(100, 149, 237, 0.3);
+            border-radius: 12px;
+            color: #6495ed;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 16px rgba(100, 149, 237, 0.15);
+            backdrop-filter: blur(8px);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, rgba(100, 149, 237, 0.25) 0%, rgba(100, 149, 237, 0.1) 100%);
+            border-color: rgba(100, 149, 237, 0.5);
+            box-shadow: 0 6px 24px rgba(100, 149, 237, 0.25);
+        }
+
+        .download-btn:active {
             transform: translateY(0);
         }
 
-        .dropdown-item {
-            display: block;
-            padding: 0.75rem 1rem;
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        .download-btn .icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
         }
 
-        .dropdown-item:last-child {
-            border-bottom: none;
+        .download-btn:hover .icon {
+            transform: translateY(2px);
         }
 
-        .dropdown-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #ffffff;
+        .download-btn .arrow {
+            transition: transform 0.3s ease;
         }
 
-        .dropdown-item:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .download-btn:hover .arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Download Menu */
+        .download-menu {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: rgba(255, 255, 255, 0.98);
+            border: 1.5px solid rgba(100, 149, 237, 0.3);
+            border-radius: 12px;
+            padding: 0.5rem;
+            min-width: 220px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(12px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 1000;
+        }
+
+        .download-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .download-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            border-radius: 8px;
+            color: #1a1a2e;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+        .download-menu-item:hover {
+            background: rgba(100, 149, 237, 0.1);
+            color: #6495ed;
+        }
+
+        .download-menu-item .icon {
+            font-size: 1.1rem;
         }
 
         .status {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
+            color: #4da6ff;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            background: rgba(77, 166, 255, 0.1);
+            border-radius: 8px;
         }
 
         .status-dot {
             width: 8px;
             height: 8px;
+            background: #4da6ff;
             border-radius: 50%;
-            background: #22c55e;
-            animation: pulse 2s infinite;
+            animation: pulse 1.5s ease-in-out infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
         }
 
-        /* Transcript Area */
+        /* Security Info Section */
+        .security-info-top {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 100%);
+            border: 1.5px solid rgba(16, 185, 129, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.08);
+            animation: fadeInScale 0.8s ease;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .security-info-top h3 {
+            color: #10b981;
+            font-size: 1.4rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .security-badges {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .security-badge {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 10px;
+            padding: 0.8rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: slideInUp 0.6s ease backwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .security-badge::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .security-badge:hover {
+            transform: translateY(-4px);
+            border-color: rgba(16, 185, 129, 0.5);
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.15);
+        }
+
+        .security-badge:hover::before {
+            opacity: 1;
+        }
+
+        .badge-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.35rem;
+            display: block;
+            transition: transform 0.4s ease;
+        }
+
+        .security-badge:hover .badge-icon {
+            transform: scale(1.15) rotate(10deg);
+        }
+
+        .badge-label {
+            font-size: 0.7rem;
+            color: #10b981;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .security-badge:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .security-badge:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .security-badge:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .security-badge:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        /* Transcript */
+        .transcript-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
         .transcript-container {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(77, 166, 255, 0.04);
+            border: 1.5px solid rgba(77, 166, 255, 0.15);
             border-radius: 12px;
             padding: 2rem;
-            min-height: 500px;
-            max-height: 600px;
+            min-height: 400px;
+            max-height: 500px;
             overflow-y: auto;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         .transcript-container::-webkit-scrollbar {
@@ -632,32 +647,33 @@
         }
 
         .transcript-container::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(77, 166, 255, 0.05);
         }
 
         .transcript-container::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(77, 166, 255, 0.3);
             border-radius: 4px;
         }
 
         .transcript-empty {
             text-align: center;
-            color: rgba(255, 255, 255, 0.3);
+            color: rgba(26, 26, 46, 0.4);
             padding: 4rem 2rem;
         }
 
         .transcript-empty .icon {
             font-size: 4rem;
             margin-bottom: 1rem;
-            opacity: 0.3;
+            opacity: 0.5;
+            animation: float 3s ease-in-out infinite;
         }
 
         .transcript-item {
             margin-bottom: 1.5rem;
             padding: 1rem;
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255, 255, 255, 0.6);
             border-radius: 8px;
-            border-left: 3px solid;
+            border-left: 3px solid #4da6ff;
             animation: slideIn 0.3s ease;
         }
 
@@ -676,70 +692,49 @@
             font-weight: 600;
             margin-bottom: 0.5rem;
             font-size: 0.9rem;
+            color: #4da6ff;
         }
 
         .timestamp {
             font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(26, 26, 46, 0.4);
             margin-left: 0.5rem;
         }
 
         .text {
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(26, 26, 46, 0.8);
             line-height: 1.6;
+            word-wrap: break-word;
         }
 
-        /* Speaker colors */
-        .speaker-1 { border-color: #667eea; }
-        .speaker-1 .speaker { color: #667eea; }
-        
-        .speaker-2 { border-color: #764ba2; }
-        .speaker-2 .speaker { color: #764ba2; }
-        
-        .speaker-3 { border-color: #f093fb; }
-        .speaker-3 .speaker { color: #f093fb; }
-        
-        .speaker-4 { border-color: #22c55e; }
-        .speaker-4 .speaker { color: #22c55e; }
-
-        /* Alert Messages */
-        .alert {
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            margin: 1rem 0;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-weight: 500;
-            animation: slideDown 0.3s ease;
-            border-left: 4px solid;
+        /* Summary */
+        .summary-container {
+            background: linear-gradient(135deg, rgba(77, 166, 255, 0.12) 0%, rgba(77, 166, 255, 0.04) 100%);
+            border: 1.5px solid rgba(77, 166, 255, 0.25);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-top: 2.5rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(77, 166, 255, 0.12);
+            animation: slideInUp 0.6s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        .alert-success {
-            background: rgba(16, 185, 129, 0.1);
-            border-color: #10b981;
-            color: #10b981;
+        .summary-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(77, 166, 255, 0.3), transparent);
         }
 
-        .alert-info {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: #3b82f6;
-            color: #3b82f6;
-        }
-
-        .alert-icon {
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .alert-message {
-            flex: 1;
-        }
-
-        @keyframes slideDown {
+        @keyframes slideInUp {
             from {
                 opacity: 0;
-                transform: translateY(-20px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -747,47 +742,44 @@
             }
         }
 
-        /* AI Summary Section */
-        .summary-container {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 2rem;
-            margin-top: 2rem;
-        }
-
         .summary-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1.5px solid rgba(77, 166, 255, 0.15);
         }
 
         .summary-header h3 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #ffffff;
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4da6ff 0%, #0066cc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin: 0;
+            letter-spacing: 0.5px;
         }
 
         .summary-generating {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.9rem;
+            gap: 0.75rem;
+            color: rgba(77, 166, 255, 0.7);
+            font-size: 0.95rem;
+            font-weight: 500;
         }
 
         .loading-dots {
             display: flex;
-            gap: 2px;
+            gap: 4px;
         }
 
         .loading-dots span {
             animation: loading 1.4s ease-in-out infinite;
             font-size: 1.2rem;
+            color: #4da6ff;
         }
 
         .loading-dots span:nth-child(1) { animation-delay: 0s; }
@@ -795,42 +787,216 @@
         .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
 
         @keyframes loading {
-            0%, 80%, 100% { opacity: 0.3; }
-            40% { opacity: 1; }
+            0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+            40% { opacity: 1; transform: translateY(-4px); }
         }
 
         .summary-content {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.6;
+            color: rgba(26, 26, 46, 0.85);
+            line-height: 1.8;
         }
 
         .summary-section {
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            border-left: 3px solid #4da6ff;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease backwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .summary-section:hover {
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 12px rgba(77, 166, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .summary-section:nth-child(1) {
+            animation-delay: 0.1s;
+            border-left-color: #4da6ff;
+        }
+
+        .summary-section:nth-child(2) {
+            animation-delay: 0.2s;
+            border-left-color: #00cc99;
+        }
+
+        .summary-section:nth-child(3) {
+            animation-delay: 0.3s;
+            border-left-color: #ff9800;
         }
 
         .summary-section h4 {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4da6ff 0%, #0066cc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .summary-section:nth-child(2) h4 {
+            background: linear-gradient(135deg, #00cc99 0%, #009966 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .summary-section:nth-child(3) h4 {
+            background: linear-gradient(135deg, #ff9800 0%, #ff6b00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .summary-section ul {
             list-style: none;
             padding-left: 0;
+            margin: 0;
         }
 
         .summary-section li {
-            padding: 0.25rem 0;
+            padding: 0.75rem 0;
             position: relative;
-            padding-left: 1.5rem;
+            padding-left: 2rem;
+            color: rgba(26, 26, 46, 0.8);
+            line-height: 1.6;
+            transition: all 0.2s ease;
+        }
+
+        .summary-section li:hover {
+            color: rgba(26, 26, 46, 0.95);
+            padding-left: 2.25rem;
         }
 
         .summary-section li:before {
-            content: "•";
-            color: #667eea;
+            content: "✓";
+            color: #4da6ff;
             position: absolute;
             left: 0;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .summary-section:nth-child(2) li:before {
+            content: "→";
+            color: #00cc99;
+        }
+
+        .summary-section:nth-child(3) li:before {
+            content: "◆";
+            color: #ff9800;
+        }
+
+        .summary-section p {
+            margin: 0;
+            color: rgba(26, 26, 46, 0.8);
+            line-height: 1.7;
+            font-weight: 500;
+        }
+
+        /* Notification Container */
+        .notification-container {
+            position: fixed;
+            top: 80px;
+            right: 2rem;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        .notification {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 300px;
+            animation: slideInRight 0.4s ease;
+            pointer-events: auto;
+            border-left: 4px solid #4da6ff;
+        }
+
+        .notification.error {
+            border-left-color: #ff6b6b;
+        }
+
+        .notification.success {
+            border-left-color: #00cc99;
+        }
+
+        .notification.warning {
+            border-left-color: #ff9800;
+        }
+
+        .notification.info {
+            border-left-color: #4da6ff;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notification-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+        }
+
+        .notification-message {
+            color: rgba(26, 26, 46, 0.7);
+            font-size: 0.85rem;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: rgba(26, 26, 46, 0.4);
+            font-size: 1.2rem;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+
+        .notification-close:hover {
+            color: rgba(26, 26, 46, 0.7);
         }
 
         /* Responsive */
@@ -840,7 +1006,7 @@
             }
 
             .container {
-                padding: 2rem 1.5rem;
+                padding: 7rem 1.5rem 2rem;
             }
 
             .header h1 {
@@ -855,178 +1021,30 @@
             .btn {
                 width: 100%;
             }
-        }
 
-        /* Logout Confirmation Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .modal-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-content {
-            background: rgba(20, 20, 30, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 2rem;
-            min-width: 350px;
-            text-align: center;
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-        }
-
-        .modal-overlay.show .modal-content {
-            transform: scale(1);
-        }
-
-        .modal-content h3 {
-            margin: 0 0 1rem 0;
-            color: #ffffff;
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .modal-content p {
-            margin: 0 0 2rem 0;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1rem;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-        }
-
-        .modal-buttons .btn {
-            padding: 0.75rem 1.5rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            min-width: 100px;
-            width: auto;
-        }
-
-        .modal-buttons .btn-secondary {
-            background: #10b981;
-            color: #ffffff;
-            border: 1px solid #10b981;
-            transition: all 0.3s ease;
-        }
-
-        .modal-buttons .btn-secondary:hover {
-            background: #059669;
-            border-color: #059669;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        }
-
-        .modal-buttons .btn-primary {
-            background: #ef4444;
-            color: #ffffff;
-            transition: all 0.3s ease;
-        }
-
-        .modal-buttons .btn-primary:hover {
-            background: #dc2626;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        }
-
-        /* Connection Button Styles */
-        .btn-connection {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: #ffffff;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-connection:hover {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-connection.connecting {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            animation: pulse 2s infinite;
-        }
-
-        .btn-connection.connecting:hover {
-            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-        }
-
-        .btn-connection.connected {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-
-        .btn-connection.disconnecting {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            animation: pulse 2s infinite;
-        }
-
-        .btn-connection.disconnecting:hover {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-        }
-
-        .btn-connection::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn-connection:hover::before {
-            left: 100%;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.7;
+            .transcript-container {
+                min-height: 300px;
+                max-height: 400px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="bg-animation">
+        <div class="starfield" id="starfield"></div>
         <div class="gradient-orb orb-1"></div>
         <div class="gradient-orb orb-2"></div>
     </div>
 
     <div class="content">
+        <!-- Navigation -->
         <nav>
             <a href="index.html" class="logo">
                 <div class="logo-icon">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
                     </svg>
                 </div>
                 <span class="logo-text">AI <span class="highlight">MOM</span></span>
@@ -1036,12 +1054,8 @@
                     <li><a href="index.html">Home</a></li>
                     <li><a href="file.html">Upload</a></li>
                 </ul>
-                
-                <!-- User menu -->
                 <div class="user-menu">
-                    <div class="user-avatar" id="userAvatar">
-                        JD
-                    </div>
+                    <div class="user-avatar" id="userAvatar" style="background: linear-gradient(135deg, rgb(102, 126, 234) 0%, rgb(118, 75, 162) 100%); color: rgb(255, 255, 255);">JD</div>
                     <div class="dropdown" id="dropdown">
                         <a href="profile.html" class="dropdown-item">Profile</a>
                         <a href="setting.html" class="dropdown-item">Settings</a>
@@ -1050,48 +1064,80 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Authentication Area (hidden when logged in) -->
-            <div class="auth-area" id="auth-area" style="display: none;">
-                <!-- Will be populated by JavaScript -->
-            </div>
         </nav>
 
+        <!-- Notification Container -->
+        <div class="notification-container" id="notificationContainer"></div>
+
+        <!-- Main Container -->
         <div class="container">
+            <!-- Header -->
             <div class="header">
-                <h1>Real-time Capture</h1>
-                <p>Start recording to capture live transcription</p>
+                <h1>🎙️ Real-time Capture</h1>
+                <p>Start recording to capture live transcription with AI-powered enhancements</p>
             </div>
-            <div class="control-panel">
+
+            <!-- Security Info Section -->
+            <div class="security-info-top">
+                <h3>🔒 Your Data is Secure</h3>
+                <div class="security-badges">
+                    <div class="security-badge">
+                        <span class="badge-icon">🔐</span>
+                        <div class="badge-label">Encrypted Transfer</div>
+                    </div>
+                    <div class="security-badge">
+                        <span class="badge-icon">⚡</span>
+                        <div class="badge-label">Instant Processing</div>
+                    </div>
+                    <div class="security-badge">
+                        <span class="badge-icon">🗑️</span>
+                        <div class="badge-label">Auto Deleted</div>
+                    </div>
+                    <div class="security-badge">
+                        <span class="badge-icon">✅</span>
+                        <div class="badge-label">No Storage</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls-wrapper">
                 <div class="controls">
-                    <button class="btn btn-connection" id="connectBtn">Connect to Backend</button>
-                    <button class="btn btn-primary" id="startBtn" disabled>Start Recording</button>
-                    <button class="btn btn-danger" id="stopBtn" disabled>Stop Recording</button>
-                    <button class="btn btn-secondary" id="clearBtn">Clear Transcript</button>
-                    <div class="download-dropdown">
-                        <button class="btn btn-secondary dropdown-toggle" id="downloadBtn">
-                            Download ▼
-                        </button>
-                        <div class="dropdown-menu" id="downloadMenu">
-                            <a href="#" class="dropdown-item" id="downloadTranscript">Transcript (.txt)</a>
-                            <a href="#" class="dropdown-item" id="downloadSummary">AI Summary (.txt)</a>
-                        </div>
-                    </div>
-                    <div class="status" id="status" style="display: none;">
-                        <div class="status-dot"></div>
-                        <span>Recording...</span>
+                    <button class="btn btn-connection" id="connectBtn">
+                        <span>🔗</span>
+                        <div>Connect to Backend</div>
+                    </button>
+                    <button class="btn btn-primary" id="startBtn" disabled>
+                        <span>⏺️</span>
+                        <div>Start Recording</div>
+                    </button>
+                    <button class="btn btn-danger" id="stopBtn" disabled>
+                        <span>⏹️</span>
+                        <div>Stop Recording</div>
+                    </button>
+                    <button class="btn btn-secondary" id="clearBtn">
+                        <span>🗑️</span>
+                        <div>Clear</div>
+                    </button>
+                </div>
+                <div class="status" id="status" style="display: none;">
+                    <div class="status-dot"></div>
+                    <span>Recording...</span>
+                </div>
+            </div>
+
+            <!-- Transcript Section -->
+            <div class="transcript-section">
+                <h2 class="section-title">📝 Transcription</h2>
+                <div class="transcript-container" id="transcript">
+                    <div class="transcript-empty">
+                        <div class="icon">🎙️</div>
+                        <p>Click "Start Recording" to begin capturing audio</p>
                     </div>
                 </div>
             </div>
 
-            <div class="transcript-container" id="transcript">
-                <div class="transcript-empty">
-                    <div class="icon">🎙️</div>
-                    <p>Click "Start Recording" to begin capturing audio</p>
-                </div>
-            </div>
-
-            <!-- AI Summary Section (hidden by default) -->
+            <!-- AI Summary Section -->
             <div class="summary-container" id="summaryContainer" style="display: none;">
                 <div class="summary-header">
                     <h3>🤖 AI Summary</h3>
@@ -1099,296 +1145,69 @@
                         <div class="loading-dots">
                             <span>.</span><span>.</span><span>.</span>
                         </div>
-                        <span>Generating AI summary...</span>
+                        <span>Generating summary...</span>
                     </div>
                 </div>
                 <div class="summary-content" id="summaryContent"></div>
+            </div>
+
+            <!-- Download Section -->
+            <div class="download-section">
+                <div class="download-btn-wrapper">
+                    <button class="download-btn" id="downloadBtn">
+                        <span class="icon">📥</span>
+                        <span>Download</span>
+                        <span class="arrow">▼</span>
+                    </button>
+                    <div class="download-menu" id="downloadMenu">
+                        <button class="download-menu-item" id="downloadTranscript">
+                            <span class="icon">📄</span>
+                            <span>Download Transcript</span>
+                        </button>
+                        <button class="download-menu-item" id="downloadSummary">
+                            <span class="icon">📝</span>
+                            <span>Download Summary</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // User menu functionality
-        document.addEventListener('DOMContentLoaded', () => {
-            const userAvatar = document.getElementById('userAvatar');
-            const dropdown = document.getElementById('dropdown');
-            const logoutBtn = document.getElementById('logoutBtn');
-
-            // Toggle dropdown
-            if (userAvatar) {
-                userAvatar.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    dropdown.classList.toggle('active');
-                });
+        // Starfield background animation
+        function createStarfield() {
+            const starfield = document.getElementById('starfield');
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDuration = (2 + Math.random() * 3) + 's';
+                star.style.animationDelay = Math.random() * 2 + 's';
+                starfield.appendChild(star);
             }
+        }
 
-            // Close dropdown when clicking outside
-            document.addEventListener('click', () => {
-                if (dropdown) {
-                    dropdown.classList.remove('active');
-                }
+        // Initialize starfield
+        createStarfield();
+
+        // User avatar dropdown
+        const userAvatar = document.getElementById('userAvatar');
+        const dropdown = document.getElementById('dropdown');
+
+        if (userAvatar) {
+            userAvatar.addEventListener('click', () => {
+                dropdown.classList.toggle('show');
             });
-
-            // Prevent dropdown from closing when clicking inside
-            if (dropdown) {
-                dropdown.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                });
-            }
-
-            // Logout functionality
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const logoutModal = document.getElementById('logoutModal');
-                    logoutModal.classList.add('show');
-                });
-            }
-
-            // Check authentication state
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            if (!isLoggedIn) {
-                window.location.href = 'signin.html';
-            }
-        });
-
-        // Authentication System
-        function updateAuthenticationUI() {
-            const authArea = document.getElementById('auth-area');
-            if (!authArea) {
-                console.warn('auth-area element not found');
-                return;
-            }
-            
-            const userData = localStorage.getItem('currentUser');
-            
-            if (userData) {
-                // User is logged in - show avatar dropdown
-                const user = JSON.parse(userData);
-                authArea.innerHTML = `
-                    <div class="user-menu">
-                        <div class="user-avatar" onclick="toggleUserDropdown()" id="authUserAvatar">
-                            ${user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-                        </div>
-                        <div class="user-dropdown" id="user-dropdown">
-                            <div class="dropdown-header">
-                                <div class="user-info">
-                                    <span class="user-name">${user.name || user.email}</span>
-                                    <span class="user-email">${user.email}</span>
-                                </div>
-                            </div>
-                            <hr>
-                            <a href="../profile.html" class="dropdown-item">
-                                <span>👤</span> Profile
-                            </a>
-                            <a href="../settings.html" class="dropdown-item">
-                                <span>⚙️</span> Settings
-                            </a>
-                            <hr>
-                            <a href="#" class="dropdown-item" onclick="logout()">
-                                <span>🚪</span> Logout
-                            </a>
-                        </div>
-                    </div>
-                `;
-            } else {
-                // User not logged in - show login/signup buttons
-                authArea.innerHTML = `
-                    <div class="auth-buttons">
-                        <button class="auth-btn login-btn" onclick="showAuthModal('login')">Login</button>
-                        <button class="auth-btn signup-btn" onclick="showAuthModal('signup')">Sign Up</button>
-                    </div>
-                `;
-            }
         }
 
-        function toggleUserDropdown() {
-            const dropdown = document.getElementById('user-dropdown');
-            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function showAuthModal(type) {
-            // Create modal if it doesn't exist
-            let modal = document.getElementById('authModal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'authModal';
-                modal.className = 'modal';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <span class="close" onclick="closeAuthModal()">&times;</span>
-                        <h2 id="modalTitle">Login</h2>
-                        <form id="authForm">
-                            <input type="email" id="authEmail" placeholder="Email" required>
-                            <input type="password" id="authPassword" placeholder="Password" required>
-                            <button type="submit" id="authSubmitBtn">Login</button>
-                        </form>
-                        <p class="auth-switch">
-                            <span id="authSwitchText">Don't have an account?</span>
-                            <a href="#" id="authSwitchLink">Sign up</a>
-                        </p>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-
-                // Add form submission handler
-                document.getElementById('authForm').addEventListener('submit', handleAuth);
-                document.getElementById('authSwitchLink').addEventListener('click', switchAuthMode);
-            }
-
-            // Set modal type
-            const isLogin = type === 'login';
-            document.getElementById('modalTitle').textContent = isLogin ? 'Login' : 'Sign Up';
-            document.getElementById('authSubmitBtn').textContent = isLogin ? 'Login' : 'Sign Up';
-            document.getElementById('authSwitchText').textContent = isLogin ? 
-                "Don't have an account?" : "Already have an account?";
-            document.getElementById('authSwitchLink').textContent = isLogin ? 'Sign up' : 'Login';
-            modal.dataset.mode = type;
-
-            modal.style.display = 'block';
-        }
-
-        function closeAuthModal() {
-            const modal = document.getElementById('authModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        function switchAuthMode(e) {
-            e.preventDefault();
-            const modal = document.getElementById('authModal');
-            const currentMode = modal.dataset.mode;
-            showAuthModal(currentMode === 'login' ? 'signup' : 'login');
-        }
-
-        async function handleAuth(e) {
-            e.preventDefault();
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            const isLogin = document.getElementById('authModal').dataset.mode === 'login';
-
-            try {
-                if (isLogin) {
-                    await loginUser(email, password);
-                } else {
-                    await signupUser(email, password);
-                }
-                closeAuthModal();
-                updateAuthenticationUI();
-            } catch (error) {
-                alert(error.message);
-            }
-        }
-
-        async function loginUser(email, password) {
-            // Demo authentication
-            if (email === 'admin@example.com' && password === 'admin123') {
-                const userData = {
-                    email: email,
-                    name: 'Admin User',
-                    avatar: null
-                };
-                localStorage.setItem('currentUser', JSON.stringify(userData));
-                return userData;
-            }
-            
-            // Check stored users
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = users.find(u => u.email === email);
-            
-            if (!user) {
-                throw new Error('User not found');
-            }
-            
-            // Simple password check (in real app, use proper hashing)
-            if (user.password !== btoa(password)) {
-                throw new Error('Invalid password');
-            }
-            
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            return user;
-        }
-
-        async function signupUser(email, password) {
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            
-            if (users.find(u => u.email === email)) {
-                throw new Error('User already exists');
-            }
-            
-            const userData = {
-                email: email,
-                password: btoa(password), // Simple encoding (use proper hashing in real app)
-                name: email.split('@')[0],
-                avatar: null
-            };
-            
-            users.push(userData);
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.setItem('currentUser', JSON.stringify(userData));
-            return userData;
-        }
-
-        function logout() {
-            const logoutModal = document.getElementById('logoutModal');
-            logoutModal.classList.add('show');
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            const userMenu = document.querySelector('.user-menu');
-            const dropdown = document.getElementById('user-dropdown');
-            
-            if (userMenu && dropdown && !userMenu.contains(event.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
-
-        // Close modal when clicking outside
-        window.addEventListener('click', function(event) {
-            const modal = document.getElementById('authModal');
-            if (modal && event.target === modal) {
-                closeAuthModal();
-            }
-        });
-
-        // Initialize authentication UI on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            updateAuthenticationUI();
-        });
-
-        // REAL BACKEND INTEGRATION - Load realtime.js for actual WebSocket connection
-    </script>
-    <!-- Load the real backend integration -->
-    <script src="js/realtime.js"></script>
-    <script>
-        // Modal functions
-        function confirmLogout() {
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('userEmail');
-            localStorage.removeItem('userName');
-            localStorage.removeItem('userSession');
-            localStorage.removeItem('currentUser');
-            window.location.href = 'index.html';
-        }
-
-        function cancelLogout() {
-            const logoutModal = document.getElementById('logoutModal');
-            logoutModal.classList.remove('show');
-        }
-
-        // Close modal when clicking on overlay
-        document.addEventListener('DOMContentLoaded', function() {
-            const logoutModal = document.getElementById('logoutModal');
-            if (logoutModal) {
-                logoutModal.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        this.classList.remove('show');
-                    }
-                });
+        document.addEventListener('click', (e) => {
+            if (userAvatar && dropdown && !userAvatar.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('show');
             }
         });
     </script>
 </body>
+
 </html>
