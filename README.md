@@ -60,6 +60,7 @@
 ### 🎯 Core Capabilities
 
 #### 1. **Real-Time Meeting Capture**
+
 - Live microphone input processing with WebSocket streaming
 - Instant transcription with speaker identification
 - Dynamic speaker color coding for easy conversation tracking
@@ -68,6 +69,7 @@
 - Session save/restore functionality
 
 #### 2. **File-Based Processing**
+
 - Drag-and-drop or click-to-upload interface
 - Support for multiple audio formats (MP3, WAV, M4A, AAC, OGG, FLAC)
 - File validation (type, size up to 100MB)
@@ -75,6 +77,7 @@
 - Batch processing capability
 
 #### 3. **Browser Extension Integration**
+
 - **Screen Capture with Audio**: Record system audio during screen sharing
 - **Multi-Platform Support**: Google Meet, Zoom, Microsoft Teams, Zoho Meeting, YouTube
 - **Floating Overlay**: Draggable real-time transcription display
@@ -83,7 +86,9 @@
 - **Professional UI**: Clean, responsive interface
 
 #### 4. **AI-Powered Analysis**
+
 Automatically generates structured insights:
+
 - 📋 **Meeting Overview**: Comprehensive summary of discussions
 - 🔑 **Key Points**: Important topics and decisions
 - ✅ **Action Items**: Tasks and responsibilities with assignees
@@ -91,12 +96,14 @@ Automatically generates structured insights:
 - 👥 **Participants**: Detected speakers and attendees
 
 #### 5. **Advanced User Profiling**
+
 - Role-based analysis customization (Developer, Manager, Designer, etc.)
 - Project tracking and contextual insights
 - Custom keyword monitoring
 - Personalized meeting summaries
 
 #### 6. **Performance & Monitoring**
+
 - Real-time API cost tracking
 - Performance analytics with detailed metrics
 - Comprehensive error handling and recovery
@@ -113,14 +120,14 @@ graph TB
         A[Web Application<br/>HTML/CSS/JS]
         B[Chrome Extension<br/>Manifest V3]
     end
-    
+
     subgraph "Backend Services"
         C[FastAPI Server<br/>Python 3.9+]
         D[WebSocket Handler<br/>Real-time Communication]
         E[Audio Processor<br/>Whisper + PyTorch]
         F[Multi-API Processor<br/>5 Concurrent Models]
     end
-    
+
     subgraph "AI Processing Pipeline"
         G[Groq Llama 3.3 70B]
         H[Groq Llama 3.1 70B]
@@ -128,38 +135,38 @@ graph TB
         J[OpenRouter Claude Haiku]
         K[OpenRouter Gemini Flash]
     end
-    
+
     subgraph "Services"
         L[Speaker Diarization<br/>PyAnnote]
         M[AI Summarizer<br/>Intelligent Analysis]
         N[User Profile Service<br/>Personalization]
         O[Cost Monitor<br/>Usage Analytics]
     end
-    
+
     A --> C
     B --> C
     C --> D
     C --> E
     E --> F
     E --> L
-    
+
     F --> G
     F --> H
     F --> I
     F --> J
     F --> K
-    
+
     G --> M
     H --> M
     I --> M
     J --> M
     K --> M
-    
+
     L --> N
     M --> C
     N --> C
     C --> O
-    
+
     style A fill:#4CAF50
     style B fill:#2196F3
     style C fill:#FF9800
@@ -169,22 +176,23 @@ graph TB
 
 ### Technology Stack
 
-| Layer | Technologies |
-|-------|-------------|
-| **Frontend** | HTML5, CSS3, Vanilla JavaScript, WebSocket API |
-| **Extension** | Chrome Manifest V3, Screen Capture API, Tab Capture API |
-| **Backend** | FastAPI, Uvicorn, Python 3.9+, WebSockets |
-| **AI/ML** | OpenAI Whisper, PyTorch, Groq API, OpenRouter API |
-| **Audio Processing** | PyAudio, FFmpeg, Pydub, NumPy, SciPy |
-| **Speaker Diarization** | PyAnnote Audio, Scikit-learn |
-| **Testing** | Pytest, Pytest-asyncio, Pytest-cov |
-| **Monitoring** | Custom Cost Monitor, Performance Analytics |
+| Layer                   | Technologies                                            |
+| ----------------------- | ------------------------------------------------------- |
+| **Frontend**            | HTML5, CSS3, Vanilla JavaScript, WebSocket API          |
+| **Extension**           | Chrome Manifest V3, Screen Capture API, Tab Capture API |
+| **Backend**             | FastAPI, Uvicorn, Python 3.9+, WebSockets               |
+| **AI/ML**               | OpenAI Whisper, PyTorch, Groq API, OpenRouter API       |
+| **Audio Processing**    | PyAudio, FFmpeg, Pydub, NumPy, SciPy                    |
+| **Speaker Diarization** | PyAnnote Audio, Scikit-learn                            |
+| **Testing**             | Pytest, Pytest-asyncio, Pytest-cov                      |
+| **Monitoring**          | Custom Cost Monitor, Performance Analytics              |
 
 ---
 
 ## 📦 Components
 
 ### 1. Backend (`/backend`)
+
 **FastAPI-based REST API and WebSocket server**
 
 - **Purpose**: Core server handling transcription, AI processing, and real-time communication
@@ -200,6 +208,7 @@ graph TB
 📖 **[Backend Documentation](backend/README.md)**
 
 ### 2. Frontend (`/frontend`)
+
 **Modern web application for meeting management**
 
 - **Purpose**: User-friendly web interface for real-time capture and file processing
@@ -216,6 +225,7 @@ graph TB
 📖 **[Frontend Documentation](frontend/README.md)**
 
 ### 3. Browser Extension (`/extension`)
+
 **Chrome extension for online meeting capture**
 
 - **Purpose**: Capture any online meeting with screen recording and live transcription
@@ -246,12 +256,14 @@ graph TB
 ### Installation
 
 #### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/Baisampayan1324/AI-MOM.git
 cd AI-MOM
 ```
 
 #### 2. Set Up Backend
+
 ```bash
 # Navigate to backend
 cd backend
@@ -278,6 +290,7 @@ nano .env     # macOS/Linux
 ```
 
 **Required Environment Variables:**
+
 ```env
 GROQ_API_KEY=your_groq_api_key_here
 OPENROUTER_API_KEY=your_openrouter_api_key_here
@@ -292,14 +305,16 @@ PORT=8000
 
 #### 3. Start the Application
 
-**Option A: Use Menu System (Recommended)**
-```bash
+**Option A: One-click scripts (Windows)**
+
+```powershell
 # From project root
-AI_MOM_Menu.bat
+./start_backend.bat   # starts FastAPI backend on http://localhost:8000
+./start_frontend.bat  # opens frontend/index.html in your default browser
 ```
-Select option 1 to start the complete system.
 
 **Option B: Manual Start**
+
 ```bash
 # Terminal 1 - Start Backend
 cd backend
@@ -322,12 +337,14 @@ python main.py
 ### Verify Installation
 
 1. **Check Backend Health**:
+
    ```bash
    curl http://localhost:8000/health
    # Should return: {"status": "healthy"}
    ```
 
 2. **Test Frontend**:
+
    - Open `frontend/index.html` in your browser
    - Click "Test Connection" - should show "Connected ✅"
 
@@ -397,10 +414,13 @@ python main.py
 ### REST Endpoints
 
 #### Health Check
+
 ```http
 GET /health
 ```
+
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -409,6 +429,7 @@ GET /health
 ```
 
 #### Process Audio File
+
 ```http
 POST /api/process-audio
 Content-Type: multipart/form-data
@@ -417,6 +438,7 @@ file: <audio_file>
 ```
 
 **Response:**
+
 ```json
 {
   "transcript": "Full meeting transcript...",
@@ -439,11 +461,13 @@ file: <audio_file>
 ### WebSocket Endpoints
 
 #### Real-Time Transcription
+
 ```
 ws://localhost:8000/ws/audio
 ```
 
 **Client → Server (Audio Data):**
+
 ```json
 {
   "type": "audio",
@@ -454,6 +478,7 @@ ws://localhost:8000/ws/audio
 ```
 
 **Server → Client (Transcription):**
+
 ```json
 {
   "type": "transcription",
@@ -465,6 +490,7 @@ ws://localhost:8000/ws/audio
 ```
 
 **Server → Client (Summary):**
+
 ```json
 {
   "type": "summary",
@@ -485,53 +511,12 @@ ws://localhost:8000/ws/audio
 
 ### Project Structure
 
-```
-AI_MOM/
-├── backend/                 # FastAPI backend server
-│   ├── app/
-│   │   ├── api/            # API routes and WebSocket handlers
-│   │   ├── services/       # Business logic services
-│   │   ├── models/         # Data models and schemas
-│   │   ├── config.py       # Configuration management
-│   │   └── main.py         # FastAPI application
-│   ├── test/               # Test suite
-│   ├── requirements.txt    # Python dependencies
-│   ├── main.py            # Server entry point
-│   └── README.md          # Backend documentation
-│
-├── frontend/               # Web application
-│   ├── js/                # JavaScript modules
-│   ├── css/               # Stylesheets
-│   ├── assets/            # Images and icons
-│   ├── index.html         # Landing page
-│   ├── real.html          # Real-time capture
-│   ├── file.html          # File processing
-│   ├── profile.html       # User profile
-│   └── README.md          # Frontend documentation
-│
-├── extension/             # Chrome extension
-│   ├── content/           # Content scripts
-│   ├── popup/             # Extension popup UI
-│   ├── overlay/           # Floating overlay
-│   ├── background.js      # Service worker
-│   ├── manifest.json      # Extension manifest
-│   └── README.md          # Extension documentation
-│
-├── audio/                 # Sample audio files
-├── docs/                  # Additional documentation
-├── test/                  # Integration tests
-│
-├── AI_MOM_Menu.bat       # Interactive menu system
-├── start_app.bat         # Complete system launcher
-├── start_backend.bat     # Backend server launcher
-├── check_system.bat      # System health checker
-├── .gitignore            # Git ignore rules
-└── README.md             # This file
-```
+See a live, always-current overview in `PROJECT_STRUCTURE.md`.
 
 ### Running Tests
 
 #### Backend Tests
+
 ```bash
 cd backend
 pytest test/ -v
@@ -544,12 +529,14 @@ pytest test/test_api_costs.py -v
 ```
 
 #### Performance Tests
+
 ```bash
 cd backend
 python test/performance_test.py
 ```
 
 #### API Cost Analysis
+
 ```bash
 cd backend
 python test/api_cost_monitor.py
@@ -574,14 +561,14 @@ mypy app/
 
 ### Test Coverage
 
-| Component | Coverage | Tests |
-|-----------|----------|-------|
-| **Backend API** | 85% | 45 tests |
-| **Audio Processor** | 90% | 12 tests |
-| **AI Summarizer** | 80% | 15 tests |
-| **WebSocket Handler** | 75% | 8 tests |
-| **User Profile** | 95% | 10 tests |
-| **Multi-API Processor** | 88% | 18 tests |
+| Component               | Coverage | Tests    |
+| ----------------------- | -------- | -------- |
+| **Backend API**         | 85%      | 45 tests |
+| **Audio Processor**     | 90%      | 12 tests |
+| **AI Summarizer**       | 80%      | 15 tests |
+| **WebSocket Handler**   | 75%      | 8 tests  |
+| **User Profile**        | 95%      | 10 tests |
+| **Multi-API Processor** | 88%      | 18 tests |
 
 ### Test Suite Features
 
@@ -596,11 +583,7 @@ mypy app/
 ### Running All Tests
 
 ```bash
-# Use menu system
-AI_MOM_Menu.bat
-# Select option 5: Run Integration Tests
-
-# Or manually
+# Manual
 cd backend
 pytest test/ -v --cov=app
 ```
@@ -614,12 +597,14 @@ pytest test/ -v --cov=app
 #### Backend Deployment
 
 **Using Uvicorn (recommended for production):**
+
 ```bash
 cd backend
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 **Using Docker:**
+
 ```bash
 # Build image
 docker build -t ai-mom-backend ./backend
@@ -642,6 +627,7 @@ docker run -d \
 #### Extension Distribution
 
 1. **Chrome Web Store**:
+
    - Create developer account
    - Package extension as ZIP
    - Submit for review
@@ -688,6 +674,7 @@ LOG_LEVEL=INFO
 **Problem**: `ModuleNotFoundError: No module named 'fastapi'`
 
 **Solution**:
+
 ```bash
 cd backend
 pip install -r requirements.txt
@@ -698,6 +685,7 @@ pip install -r requirements.txt
 **Problem**: Frontend shows "WebSocket connection failed"
 
 **Solution**:
+
 1. Verify backend is running: `curl http://localhost:8000/health`
 2. Check backend logs for errors
 3. Ensure firewall allows port 8000
@@ -708,6 +696,7 @@ pip install -r requirements.txt
 **Problem**: Extension popup shows "Could not establish connection"
 
 **Solution**:
+
 1. **Reload Extension**:
    - Go to `chrome://extensions/`
    - Find "AI MOM Meeting Intelligence"
@@ -721,6 +710,7 @@ pip install -r requirements.txt
 **Problem**: Recording starts but no text appears
 
 **Solution**:
+
 1. **Check Audio**: Ensure you checked "Share system audio" when screen sharing
 2. **Test Microphone**: Verify microphone works in other apps
 3. **Backend Logs**: Check for audio processing errors
@@ -731,6 +721,7 @@ pip install -r requirements.txt
 **Problem**: Transcription takes too long
 
 **Solution**:
+
 1. **GPU**: Ensure CUDA is installed for GPU acceleration
 2. **Check GPU**: Backend should log "Using device: cuda"
 3. **CPU Mode**: If no GPU, transcription is slower but works
@@ -741,6 +732,7 @@ pip install -r requirements.txt
 **Problem**: `ValueError: GROQ_API_KEY environment variable not set`
 
 **Solution**:
+
 1. Create `backend/.env` file
 2. Add API keys:
    ```env
@@ -751,8 +743,8 @@ pip install -r requirements.txt
 
 ### Getting Help
 
-1. **Check Documentation**: Component-specific READMEs in each folder
-2. **System Health Check**: Run `check_system.bat`
+1. **Check Documentation**: Component-specific READMEs in each folder and `docs/`
+2. **Quick Start**: See `docs/setup/QUICK_START.md`
 3. **View Logs**: Backend console shows detailed error messages
 4. **GitHub Issues**: [Report bugs](https://github.com/Baisampayan1324/AI-MOM/issues)
 
@@ -762,22 +754,22 @@ pip install -r requirements.txt
 
 ### API Pricing (Current Models)
 
-| Service | Model | Input Cost | Output Cost | Free Tier |
-|---------|-------|------------|-------------|-----------|
-| **Groq** | Llama 3.3 70B | $0.59/1M tokens | $0.79/1M tokens | ✅ Generous |
-| **Groq** | Llama 3.1 70B | $0.59/1M tokens | $0.79/1M tokens | ✅ Generous |
-| **OpenRouter** | GPT-4o Mini | $0.15/1M tokens | $0.60/1M tokens | ✅ Available |
-| **OpenRouter** | Claude Haiku | $0.25/1M tokens | $1.25/1M tokens | ✅ Available |
-| **OpenRouter** | Gemini Flash | $0.075/1M tokens | $0.30/1M tokens | ✅ Available |
+| Service        | Model         | Input Cost       | Output Cost     | Free Tier    |
+| -------------- | ------------- | ---------------- | --------------- | ------------ |
+| **Groq**       | Llama 3.3 70B | $0.59/1M tokens  | $0.79/1M tokens | ✅ Generous  |
+| **Groq**       | Llama 3.1 70B | $0.59/1M tokens  | $0.79/1M tokens | ✅ Generous  |
+| **OpenRouter** | GPT-4o Mini   | $0.15/1M tokens  | $0.60/1M tokens | ✅ Available |
+| **OpenRouter** | Claude Haiku  | $0.25/1M tokens  | $1.25/1M tokens | ✅ Available |
+| **OpenRouter** | Gemini Flash  | $0.075/1M tokens | $0.30/1M tokens | ✅ Available |
 
 ### Cost Per Meeting (Estimated)
 
-| Meeting Type | Duration | Tokens Used | Total Cost | Notes |
-|--------------|----------|-------------|------------|-------|
-| **Small Meeting** | 15 min | ~5,000 | **FREE** | Well within free tier |
-| **Standard Meeting** | 1 hour | ~20,000 | **$0.02** | Negligible cost |
-| **Long Meeting** | 2 hours | ~40,000 | **$0.04** | Still very cheap |
-| **All-Day Workshop** | 6 hours | ~120,000 | **$0.12** | Extremely affordable |
+| Meeting Type         | Duration | Tokens Used | Total Cost | Notes                 |
+| -------------------- | -------- | ----------- | ---------- | --------------------- |
+| **Small Meeting**    | 15 min   | ~5,000      | **FREE**   | Well within free tier |
+| **Standard Meeting** | 1 hour   | ~20,000     | **$0.02**  | Negligible cost       |
+| **Long Meeting**     | 2 hours  | ~40,000     | **$0.04**  | Still very cheap      |
+| **All-Day Workshop** | 6 hours  | ~120,000    | **$0.12**  | Extremely affordable  |
 
 **🎉 For normal usage, AI MOM is essentially FREE!**
 
@@ -805,10 +797,10 @@ pytest test/test_api_costs.py -v
 
 ### For Users
 
-- **Quick Start Guide**: [QUICK_START.md](QUICK_START.md)
-- **Extension Integration**: [EXTENSION_POPUP_INTEGRATION.md](EXTENSION_POPUP_INTEGRATION.md)
-- **Backend Guide**: [backend/README.md](backend/README.md)
-- **Frontend Guide**: [frontend/README.md](frontend/README.md)
+- **Quick Start Guide**: `docs/setup/QUICK_START.md`
+- **Environment Variables**: `docs/configuration/ENV_VARIABLES_REFERENCE.md`
+- **Backend Guide**: `backend/README.md`
+- **Frontend Guide**: `frontend/README.md`
 
 ---
 
