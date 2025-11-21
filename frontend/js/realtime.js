@@ -29,7 +29,20 @@
     let bufferSize = 0;
     let lastSpeaker = null;  // Track last speaker to append text
     let lastTranscriptElement = null;  // Track last transcript DOM element
-    const BUFFER_THRESHOLD = 8000;  // ~0.5 seconds at 16kHz (faster for testing)
+    let summaryUpdateTimer = null;  // Timer for real-time summary updates
+    const BUFFER_THRESHOLD = 12000;  // ~0.75 seconds at 16kHz - balanced speed and accuracy
+    const SUMMARY_UPDATE_INTERVAL = 10000;  // Update summary every 10 seconds during recording
+
+    // Helper: convert Int16Array to base64 (safer than huge JSON arrays)
+    function int16ToBase64(int16Array) {
+        const uint8 = new Uint8Array(int16Array.buffer);
+        let binary = '';
+        const chunkSize = 0x8000; // avoid stack limits
+        for (let i = 0; i < uint8.length; i += chunkSize) {
+            binary += String.fromCharCode.apply(null, uint8.subarray(i, i + chunkSize));
+        }
+        return btoa(binary);
+    }
 
     const BACKEND_URL = 'ws://localhost:8000/ws/audio';
 
@@ -84,6 +97,7 @@
 
         websocket.onopen = () => {
             console.log('✅ WebSocket connected to backend');
+            console.log('🔗 Backend connection established at', BACKEND_URL);
             isConnected = true;
             isConnecting = false;
 
@@ -109,7 +123,8 @@
                 console.log('📩 Received from backend:', data);
 
                 if (data.type === 'transcription') {
-                    console.log('✅ Adding transcript item:', data.text);
+                    console.log('✅ Adding transcript item:', data.text, 'Speaker:', data.speaker_id);
+                    // Use speaker_id from backend
                     addTranscriptItem(data.text, data.speaker_id || 1);
                 } else if (data.type === 'error') {
                     console.error('Backend error:', data.message);
@@ -122,12 +137,14 @@
         };
 
         websocket.onclose = () => {
-            console.log('WebSocket disconnected');
+            console.log('🔌 WebSocket disconnected from backend');
+            console.log('❌ Backend connection closed');
             handleDisconnect();
         };
 
         websocket.onerror = (error) => {
-            console.error('WebSocket error:', error);
+            console.error('❌ WebSocket error:', error);
+            console.error('🔴 Backend connection error - check if server is running');
             showAlert('Connection error. Is the backend running on port 8000?', 'error');
             handleDisconnect();
         };
@@ -192,6 +209,8 @@
             return;
         }
 
+        console.log('🎙️ Starting real-time recording session...');
+        console.log('🔗 Connection status: CONNECTED');
         isRecording = true;
         const controls = document.querySelector('.controls');
 
@@ -224,12 +243,17 @@
             console.log('🎙️ Cleared transcript, ready to record');
         }
 
-        console.log('🎙️ Starting recording...');
+        console.log('🎙️ Recording session active - capturing audio...');
         // Start audio capture
         startAudioCapture();
+        
+        // Start real-time summary updates
+        if (summaryUpdateTimer) clearInterval(summaryUpdateTimer);
+        summaryUpdateTimer = setInterval(updateRealtimeSummary, SUMMARY_UPDATE_INTERVAL);
     }
 
     function stopRecording() {
+        console.log('⏹️ Stopping recording session...');
         isRecording = false;
         const controls = document.querySelector('.controls');
 
@@ -245,10 +269,21 @@
 
         // Stop audio capture
         stopAudioCapture();
+        
+        // Stop real-time summary updates
+        if (summaryUpdateTimer) {
+            clearInterval(summaryUpdateTimer);
+            summaryUpdateTimer = null;
+        }
 
+        console.log('📊 Recording stopped - generating final summary...');
         // Show and generate AI summary if we have transcript data
+        console.log('🛑 Recording stopped, transcript items:', transcriptData.length);
         if (transcriptData.length > 0) {
-            generateAISummary();
+            console.log('📊 Calling generateAISummary...');
+            setTimeout(() => generateAISummary(), 500);  // Small delay to ensure UI updates
+        } else {
+            console.warn('⚠️ No transcript data to generate summary');
         }
     }
 
@@ -297,7 +332,8 @@
 
                     // Send when we have enough data (~2 seconds for Whisper to work well)
                     if (bufferSize >= BUFFER_THRESHOLD) {
-                        // Concatenate all buffers
+
+                        // Concatenate all buffers into a single Int16Array
                         const combined = new Int16Array(bufferSize);
                         let offset = 0;
                         for (const chunk of audioBuffer) {
@@ -305,16 +341,17 @@
                             offset += chunk.length;
                         }
 
-                        // Send to backend
+                        // Convert to base64 and send as compact payload
                         try {
+                            const base64 = int16ToBase64(combined);
                             websocket.send(JSON.stringify({
-                                type: 'audio_chunk',
-                                audio_data: Array.from(combined),
+                                type: 'audio_chunk_base64',
+                                data: base64,
                                 sample_rate: 16000,
                                 timestamp: Date.now()
                             }));
 
-                            console.log(`📡 Sent ${bufferSize} samples (${(bufferSize / 16000).toFixed(2)}s of audio)`);
+                            console.log(`📡 Sent ${bufferSize} samples as base64 (${(bufferSize / 16000).toFixed(2)}s of audio)`);
                         } catch (sendError) {
                             console.error('Error sending audio:', sendError);
                             showAlert('Failed to send audio to backend', 'error');
@@ -374,9 +411,13 @@
             return;
         }
 
-        const speakerNum = (speakerIndex % 4) + 1;
+        // Use backend speaker_id directly (1, 2, 3, ...) - no modulo for color cycling
+        const speakerNum = speakerIndex || 1;  // Default to Speaker 1 if not provided
+        const colorNum = ((speakerNum - 1) % 4) + 1;  // Cycle colors 1-4 only for styling
         const speakerName = `Speaker ${speakerNum}`;
         const timestamp = new Date().toLocaleTimeString();
+
+        console.log(`🎤 Speaker: ${speakerName} (Color: ${colorNum})`);
 
         // Check if same speaker as last time
         if (lastSpeaker === speakerName && lastTranscriptElement) {
@@ -403,7 +444,7 @@
             transcriptData.push(item);
 
             const itemEl = document.createElement('div');
-            itemEl.className = `transcript-item speaker-${speakerNum}`;
+            itemEl.className = `transcript-item speaker-${colorNum}`;  // Use color number for styling
             itemEl.innerHTML = `
                 <div class="speaker">
                     ${item.speaker}
@@ -439,17 +480,91 @@
         if (summaryContainer) summaryContainer.style.display = 'none';
     }
 
-    function generateAISummary() {
-        if (!summaryContainer || !summaryGenerating || !summaryContent) return;
+    function updateRealtimeSummary() {
+        // Update summary during recording (lighter version)
+        if (transcriptData.length === 0) return;
+        
+        if (!summaryContainer || !summaryContent) return;
+        
+        // Show summary container during recording
+        summaryContainer.style.display = 'block';
+        if (summaryGenerating) summaryGenerating.style.display = 'none';
+        
+        const speakers = [...new Set(transcriptData.map(item => item.speaker))];
+        const totalWords = transcriptData.map(item => item.text).join(' ').split(' ').length;
+        
+        // Extract recent action items (last 20 items)
+        const recentItems = transcriptData.slice(-20);
+        const actionWords = /\b(should|need to|will|must|have to|going to|plan to|decided to|action|todo)\b/gi;
+        const potentialActions = recentItems
+            .filter(item => actionWords.test(item.text))
+            .map(item => item.text.split(/[.!?]/)[0])
+            .filter(text => text.length > 10)
+            .slice(-3);  // Last 3 action items
+        
+        // Extract recent key points
+        const keyStatements = recentItems
+            .filter(item => item.text.length > 30)
+            .map(item => {
+                const sentences = item.text.split(/[.!?]/);
+                return sentences[0] + (sentences[0].endsWith('.') ? '' : '.');
+            })
+            .filter(text => text.length > 10)
+            .slice(-3);  // Last 3 key points
+        
+        summaryContent.innerHTML = `
+            <div class="summary-section">
+                <h4>📋 Live Meeting Summary</h4>
+                <p>${speakers.length} speaker(s), ${transcriptData.length} segments, ~${totalWords} words discussed so far...</p>
+            </div>
+            <div class="summary-section">
+                <h4>🔑 Recent Key Points</h4>
+                <ul>
+                    ${keyStatements.length > 0 ? keyStatements.map(point => `<li>${point}</li>`).join('') : '<li>Keep talking to see key points...</li>'}
+                </ul>
+            </div>
+            <div class="summary-section">
+                <h4>✅ Recent Action Items</h4>
+                <ul>
+                    ${potentialActions.length > 0 ? potentialActions.map(item => `<li>${item}</li>`).join('') : '<li>Mention action items to see them here...</li>'}
+                </ul>
+            </div>
+            <div style="text-align: center; margin-top: 10px; opacity: 0.7; font-size: 0.9em;">
+                ⏱️ Updating live every 10 seconds...
+            </div>
+        `;
+    }
 
+    function generateAISummary() {
+        console.log('📊 generateAISummary called with', transcriptData.length, 'transcript items');
+        console.log('📊 First item:', transcriptData[0]);
+        
+        if (!summaryContainer || !summaryGenerating || !summaryContent) {
+            console.error('❌ Summary elements not found:', {summaryContainer, summaryGenerating, summaryContent});
+            return;
+        }
+
+        if (transcriptData.length === 0) {
+            console.warn('⚠️ No transcript data to summarize');
+            showAlert('No transcript data available for summary', 'warning');
+            return;
+        }
+
+        console.log('✅ Summary container found, generating...');
+        // Show summary section immediately
         summaryContainer.style.display = 'block';
         summaryGenerating.style.display = 'flex';
         summaryContent.innerHTML = '';
+        
+        // Scroll to summary section
+        summaryContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
         // Prepare transcript text for backend
         const transcriptText = transcriptData.map(item =>
             `${item.speaker}: ${item.text}`
         ).join('\n');
+
+        console.log('📝 Transcript text length:', transcriptText.length);
 
         // Generate summary directly without backend call (since we already have transcription)
         // We'll use local AI model approach
@@ -477,18 +592,36 @@
             .filter(text => text.length > 10)
             .slice(0, 5);  // Max 5 key points
 
+        console.log('📝 Creating summary object - keyPoints:', keyStatements.length, 'actionItems:', potentialActions.length);
+
         aiSummary = {
             overview: `Meeting captured with ${speakers.length} speaker(s), ${transcriptData.length} segments, approximately ${totalWords} words discussed.`,
             keyPoints: keyStatements.length > 0 ? keyStatements : ["Review transcript for detailed discussion"],
             actionItems: potentialActions.length > 0 ? potentialActions : ["No specific action items identified"]
         };
 
+        console.log('✅ Summary created:', aiSummary);
         displaySummary();
+        
+        // Auto-disconnect after summary is generated
+        console.log('🔌 Auto-disconnecting after summary generation...');
+        setTimeout(() => {
+            if (isConnected && !isRecording) {
+                console.log('✅ Disconnecting backend connection');
+                disconnectFromBackend();
+                showAlert('Summary complete! Connection closed. Ready for next session.', 'success');
+            }
+        }, 2000);  // 2 second delay to allow user to see summary
     }
 
     function displaySummary() {
-        if (!summaryContent || !aiSummary) return;
+        console.log('🖼️ displaySummary called, aiSummary:', aiSummary);
+        if (!summaryContent || !aiSummary) {
+            console.error('❌ Cannot display summary - missing elements');
+            return;
+        }
 
+        console.log('✅ Displaying summary in UI...');
         summaryContent.innerHTML = `
             <div class="summary-section">
                 <h4>📋 Meeting Overview</h4>
@@ -506,6 +639,9 @@
                     ${aiSummary.actionItems.map(item => `<li>${item}</li>`).join('')}
                 </ul>
             </div>
+            <div style="text-align: center; margin-top: 10px; opacity: 0.7; font-size: 0.9em;">
+                ✔️ Final summary generated
+            </div>
         `;
     }
 
@@ -519,16 +655,61 @@
             return;
         }
 
-        let content = 'Meeting Transcript\n';
-        content += '=================\n\n';
-        content += `Generated: ${new Date().toLocaleString()}\n\n`;
-
-        transcriptData.forEach(item => {
-            content += `${item.speaker} [${item.timestamp}]\n`;
-            content += `${item.text}\n\n`;
-        });
-
-        downloadFile(content, `transcript-${Date.now()}.txt`);
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Title
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.text('Meeting Transcript', 20, 20);
+            
+            // Generated date
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 30);
+            
+            // Transcript content
+            doc.setFontSize(11);
+            let yPosition = 45;
+            const pageHeight = doc.internal.pageSize.height;
+            const margin = 20;
+            const lineHeight = 7;
+            
+            transcriptData.forEach((item, index) => {
+                // Check if we need a new page
+                if (yPosition > pageHeight - 30) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                
+                // Speaker and timestamp
+                doc.setFont(undefined, 'bold');
+                doc.text(`${item.speaker} [${item.timestamp}]`, margin, yPosition);
+                yPosition += lineHeight;
+                
+                // Text content with wrapping
+                doc.setFont(undefined, 'normal');
+                const textLines = doc.splitTextToSize(item.text, 170);
+                textLines.forEach(line => {
+                    if (yPosition > pageHeight - 30) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+                    doc.text(line, margin, yPosition);
+                    yPosition += lineHeight;
+                });
+                
+                yPosition += 3; // Extra space between items
+            });
+            
+            doc.save(`transcript-${Date.now()}.pdf`);
+            showAlert('Transcript downloaded as PDF', 'success');
+        } catch (error) {
+            console.error('PDF generation failed:', error);
+            showAlert('Failed to generate PDF', 'error');
+        }
+        
         if (downloadMenu) downloadMenu.classList.remove('show');
     }
 
@@ -538,27 +719,93 @@
             return;
         }
 
-        let content = 'AI Meeting Summary\n';
-        content += '=================\n\n';
-        content += `Generated: ${new Date().toLocaleString()}\n\n`;
-
-        content += `Meeting Overview:\n${aiSummary.overview}\n\n`;
-
-        content += `Key Points:\n`;
-        aiSummary.keyPoints.forEach((point, index) => {
-            content += `${index + 1}. ${point}\n`;
-        });
-        content += '\n';
-
-        content += `Action Items:\n`;
-        aiSummary.actionItems.forEach((item, index) => {
-            content += `${index + 1}. ${item}\n`;
-        });
-        content += '\n';
-
-        content += `Participants: ${aiSummary.participants}\n`;
-
-        downloadFile(content, `summary-${Date.now()}.txt`);
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Title
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.text('AI Meeting Summary', 20, 20);
+            
+            // Generated date
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 30);
+            
+            let yPosition = 45;
+            const margin = 20;
+            const lineHeight = 7;
+            const pageHeight = doc.internal.pageSize.height;
+            
+            // Meeting Overview
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('Meeting Overview', margin, yPosition);
+            yPosition += lineHeight + 2;
+            
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'normal');
+            const overviewLines = doc.splitTextToSize(aiSummary.overview, 170);
+            overviewLines.forEach(line => {
+                doc.text(line, margin, yPosition);
+                yPosition += lineHeight;
+            });
+            yPosition += 5;
+            
+            // Key Points
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('Key Points', margin, yPosition);
+            yPosition += lineHeight + 2;
+            
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'normal');
+            aiSummary.keyPoints.forEach((point, index) => {
+                if (yPosition > pageHeight - 30) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                const pointLines = doc.splitTextToSize(`${index + 1}. ${point}`, 165);
+                pointLines.forEach(line => {
+                    doc.text(line, margin + 5, yPosition);
+                    yPosition += lineHeight;
+                });
+            });
+            yPosition += 5;
+            
+            // Action Items
+            if (yPosition > pageHeight - 50) {
+                doc.addPage();
+                yPosition = 20;
+            }
+            
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('Action Items', margin, yPosition);
+            yPosition += lineHeight + 2;
+            
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'normal');
+            aiSummary.actionItems.forEach((item, index) => {
+                if (yPosition > pageHeight - 30) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                const itemLines = doc.splitTextToSize(`${index + 1}. ${item}`, 165);
+                itemLines.forEach(line => {
+                    doc.text(line, margin + 5, yPosition);
+                    yPosition += lineHeight;
+                });
+            });
+            
+            doc.save(`summary-${Date.now()}.pdf`);
+            showAlert('Summary downloaded as PDF', 'success');
+        } catch (error) {
+            console.error('PDF generation failed:', error);
+            showAlert('Failed to generate PDF', 'error');
+        }
+        
         if (downloadMenu) downloadMenu.classList.remove('show');
     }
 
@@ -633,6 +880,8 @@
             }, 400);
         }
     }
+
+    // Removed processing step indicator helpers per request; real-time page shows transcription only
 
     // Clean up on page unload
     window.addEventListener('beforeunload', () => {

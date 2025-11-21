@@ -2040,50 +2040,52 @@
                 processBtn.disabled = true;
                 const stepsContainer = document.getElementById('stepsContainer');
                 stepsContainer.classList.add('active');
+                progressContainer.classList.add('active');
 
-                // Initialize step progression
-                let currentStep = 1;
-                const totalSteps = 4;
-                const stepDuration = 10000; // 10 seconds per step
-
-                // Show first step as active
+                // Reset steps to initial state
+                document.querySelectorAll('.step').forEach(step => {
+                    step.classList.remove('completed', 'active');
+                });
                 updateStep(1, 'active');
 
-                // Simulate step progression
-                const stepInterval = setInterval(() => {
-                    // Mark current step as completed
-                    updateStep(currentStep, 'completed');
-                    currentStep++;
+                // Map progress percentage to step states
+                function syncStepsForPercentage(pct) {
+                    const percent = Math.max(0, Math.min(100, Math.floor(pct)));
+                    // Update overall progress bar/text
+                    if (progressBar) progressBar.style.width = percent + '%';
+                    if (progressText) progressText.textContent = `Processing: ${percent}%`;
 
-                    if (currentStep <= totalSteps) {
-                        // Activate next step
-                        updateStep(currentStep, 'active');
-                        progressBar.style.width = ((currentStep - 1) / totalSteps * 100) + '%';
-                        progressText.textContent = `Processing Step ${currentStep}/${totalSteps}`;
-                    } else {
-                        // All steps completed
-                        clearInterval(stepInterval);
-                        progressBar.style.width = '100%';
-                        progressText.textContent = 'Processing Complete!';
-                        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+                    // Determine current step based on percentage
+                    // 0-24: step 1, 25-49: step 2, 50-74: step 3, 75-99: step 4, 100: all done
+                    let currentStep = 1;
+                    if (percent >= 25) currentStep = 2;
+                    if (percent >= 50) currentStep = 3;
+                    if (percent >= 75) currentStep = 4;
 
-                        setTimeout(() => {
-                            stepsContainer.classList.remove('active');
-                            processBtn.disabled = false;
-                        }, 1000);
-                        return;
+                    // Apply classes
+                    for (let s = 1; s <= 4; s++) {
+                        const el = document.getElementById(`step${s}`);
+                        if (!el) continue;
+                        el.classList.remove('active', 'completed');
+                        if (s < currentStep) {
+                            el.classList.add('completed');
+                        } else if (s === currentStep && percent < 100) {
+                            el.classList.add('active');
+                        } else if (percent === 100) {
+                            el.classList.add('completed');
+                        }
                     }
-                }, stepDuration);
+                }
 
-                // REAL BACKEND INTEGRATION - Use file-processing.js
+                // REAL BACKEND INTEGRATION - Use file-processing.js + progress WebSocket
                 processAudioFile(selectedFile, {
                     onProgress: (progress) => {
-                        // The step-based system handles the UI
-                        // Backend progress can still be logged
+                        const pct = typeof progress === 'number' ? progress : (progress && progress.percentage) || 0;
+                        syncStepsForPercentage(pct);
                     },
                     onComplete: (result) => {
                         console.log('Processing complete:', result);
-                        clearInterval(stepInterval);
+                        syncStepsForPercentage(100);
                         showResults(result);
                         generateAISummary(result);
                         processBtn.disabled = false;
@@ -2091,7 +2093,6 @@
                     },
                     onError: (error) => {
                         console.error('Processing error:', error);
-                        clearInterval(stepInterval);
                         alert('Error processing audio: ' + error.message);
                         processBtn.disabled = false;
                         stepsContainer.classList.remove('active');

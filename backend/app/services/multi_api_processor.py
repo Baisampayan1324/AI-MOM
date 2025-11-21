@@ -1,12 +1,14 @@
 import asyncio
 import time
 import logging
+import os
 from typing import Dict, Any, List, Optional
 import aiohttp
 from groq import Groq
 import openai
 import numpy as np
 import whisper
+import torch
 from app.config import (
     GROQ_API_KEY, OPENROUTER_API_KEY,
     GROQ_MODEL, OPENROUTER_MODEL,
@@ -16,6 +18,15 @@ from app.config import TRANSCRIPTION_LANGUAGE
 from app.services.audio_processor import AudioProcessor
 
 logger = logging.getLogger(__name__)
+
+# Try to import pyannote.audio for advanced speaker diarization
+try:
+    from pyannote.audio import Pipeline
+    PYANNOTE_AVAILABLE = True
+    logger.info("✅ pyannote.audio is available for speaker diarization")
+except ImportError:
+    PYANNOTE_AVAILABLE = False
+    logger.warning("⚠️ pyannote.audio not available, using simple speaker detection")
 
 class MultiAPIProcessor:
     def __init__(self):
@@ -38,10 +49,66 @@ class MultiAPIProcessor:
         )
 
         self.audio_processor = AudioProcessor()
-        # Initialize Whisper model - using 'large-v3' for maximum accuracy
-        self.whisper_model = whisper.load_model("large-v3")
+        # Initialize Whisper model for offline/file accuracy tasks (configurable)
+        self.whisper_model = whisper.load_model(os.getenv("FILE_WHISPER_MODEL", "base"))
+
+        # Load a smaller/faster model for real-time low-latency transcription.
+        # Configurable via env var `REALTIME_WHISPER_MODEL`. Default to tiny English-only model.
+        realtime_model_name = os.getenv("REALTIME_WHISPER_MODEL", "base.en")  # Prefer base.en for accuracy + reasonable speed
+        try:
+            self.realtime_whisper_model = whisper.load_model(realtime_model_name)
+            logger.info(f"Loaded realtime Whisper model: {realtime_model_name}")
+        except Exception as e:
+            # Fallback to the main model if tiny model fails to load
+            logger.warning(f"Failed to load realtime model '{realtime_model_name}', falling back to main model: {str(e)}")
+            self.realtime_whisper_model = self.whisper_model
         self.min_audio_length = 0.5  # Minimum 0.5 seconds of audio before processing
         self.audio_buffer = []  # Buffer for accumulating audio chunks
+
+        # Initialize pyannote.audio diarization pipeline if available
+        self.diarization_pipeline = None
+        if PYANNOTE_AVAILABLE:
+            hf_token = os.getenv("HUGGINGFACE_TOKEN")
+            if hf_token:
+                try:
+                    logger.info("🔄 Loading pyannote speaker diarization pipeline...")
+                    self.diarization_pipeline = Pipeline.from_pretrained(
+                        "pyannote/speaker-diarization-3.1",
+                        use_auth_token=hf_token
+                    )
+                    # Move to GPU if available for faster processing
+                    if torch.cuda.is_available():
+                        self.diarization_pipeline.to(torch.device("cuda"))
+                        logger.info("✅ Diarization pipeline loaded on GPU")
+                    else:
+                        logger.info("✅ Diarization pipeline loaded on CPU")
+                except Exception as e:
+                    logger.error(f"❌ Failed to load pyannote pipeline: {e}")
+                    self.diarization_pipeline = None
+            else:
+                logger.warning("⚠️ HUGGINGFACE_TOKEN not set - pyannote diarization disabled")
+
+        # Realtime buffering state
+        self.rt_buffer: List[np.ndarray] = []
+        self.rt_total_samples: int = 0
+        self.rt_last_text: str = ""  # last full transcription sent to client
+        self.rt_sample_rate: int = 16000
+        # Speaker diarization state - simple voice characteristics tracking (fallback)
+        self.speaker_embeddings = []  # List of known speaker voice signatures
+        self.speaker_count = 0
+        self.last_speaker_id = None
+        # Diarization buffer for pyannote (accumulate longer audio for better accuracy)
+        self.diarization_buffer: List[np.ndarray] = []
+        self.diarization_segments = []  # Store speaker segments from pyannote
+        self.total_audio_duration = 0.0  # Track total audio duration for segment mapping
+        # Tunable parameters via environment
+        self.rt_min_secs: float = float(os.getenv("REALTIME_MIN_SECONDS", "1.0"))  # minimum buffered audio before first decode
+        self.rt_max_secs: float = float(os.getenv("REALTIME_MAX_SECONDS", "3.5"))  # force flush upper bound
+        self.rt_silence_threshold: float = float(os.getenv("REALTIME_SILENCE_THRESHOLD", "4e-5"))  # energy threshold for silence
+        self.rt_silence_tail_secs: float = float(os.getenv("REALTIME_SILENCE_TAIL", "0.3"))  # tail length to test for silence
+        self.diarization_min_secs: float = float(os.getenv("DIARIZATION_MIN_SECONDS", "10.0"))  # min audio for pyannote
+        logger.info(f"Realtime params: min={self.rt_min_secs}s max={self.rt_max_secs}s silence_thr={self.rt_silence_threshold} tail={self.rt_silence_tail_secs}s")
+        logger.info(f"Diarization: {'pyannote enabled' if self.diarization_pipeline else 'simple fallback'}, min_buffer={self.diarization_min_secs}s")
 
     async def check_apis(self) -> Dict[str, bool]:
         """Check if all APIs and models are accessible."""
@@ -143,7 +210,7 @@ class MultiAPIProcessor:
             "transcription_length": len(final_transcription)
         }
 
-    async def process_transcription_ultra_fast(self, audio_data: np.ndarray) -> Dict[str, Any]:
+    async def process_transcription_ultra_fast(self, audio_data: np.ndarray, progress_callback=None) -> Dict[str, Any]:
         """
         Ultra-fast processing: Audio chunking + parallel Whisper + parallel LLMs.
         Target: 5 seconds or less for most audio files.
@@ -152,11 +219,17 @@ class MultiAPIProcessor:
 
         # Step 1: Chunk audio into 20-second segments for better parallel processing
         logger.info("🎯 Step 1: Audio chunking for parallel processing")
+        if progress_callback:
+            await progress_callback(15, "Audio chunking for parallel processing", 1)
+        
         audio_chunks = self._chunk_audio_data(audio_data, chunk_duration=20.0)  # 20-second chunks
         logger.info(f"📦 Split audio into {len(audio_chunks)} chunks")
 
         # Step 2: Process all audio chunks in parallel with Whisper
         logger.info("🚀 Step 2: Parallel Whisper transcription")
+        if progress_callback:
+            await progress_callback(35, "Whisper transcription in progress", 2)
+        
         whisper_tasks = [
             self._transcribe_audio_chunk(chunk) for chunk in audio_chunks
         ]
@@ -175,15 +248,27 @@ class MultiAPIProcessor:
         logger.info(f"📝 Got {len(chunk_transcriptions)} successful chunk transcriptions")
 
         # Step 3: Combine all chunk transcriptions
+        if progress_callback:
+            await progress_callback(60, "Combining transcriptions", 2)
+            
         full_transcription = self._combine_chunk_transcriptions(chunk_transcriptions)
-        logger.info(f"� Combined transcription length: {len(full_transcription)} characters")
+        logger.info(f"📋 Combined transcription length: {len(full_transcription)} characters")
 
         # Step 4: Single ultra-fast LLM improvement (instead of chunked)
         logger.info("⚡ Step 4: Single LLM improvement for speed")
+        if progress_callback:
+            await progress_callback(80, "LLM enhancement in progress", 3)
+            
         improved_transcription = await self._ultra_fast_improve_transcription(full_transcription)
 
+        if progress_callback:
+            await progress_callback(95, "Finalizing results", 4)
+
         processing_time = time.time() - start_time
-        logger.info(".2f")
+        logger.info(f"✅ Ultra-fast processing completed in {processing_time:.2f} seconds")
+
+        if progress_callback:
+            await progress_callback(100, "Processing complete", 4)
 
         return {
             "transcription": improved_transcription,
@@ -323,6 +408,7 @@ class MultiAPIProcessor:
     async def _transcribe_audio_chunk(self, audio_chunk: np.ndarray) -> Dict[str, Any]:
         """Transcribe a single audio chunk with Whisper."""
         try:
+            # Use main whisper model for chunked offline transcription path
             result = self.whisper_model.transcribe(audio_chunk, fp16=False)
             return {
                 "text": str(result.get("text", "")).strip(),
@@ -729,78 +815,272 @@ Rules:
         return min(avg_similarity * (0.8 + 0.2 * agreement_bonus), 1.0)
 
     async def process_realtime_chunk(self, audio_data: bytes, sample_rate: int = 16000, language: Optional[str] = None) -> Dict[str, Any]:
-        """Process real-time audio chunk with optimized multi-API approach."""
-        # Convert bytes to numpy
-        audio_array = self.audio_processor.process_audio_chunk(audio_data, sample_rate)
-
-        # For real-time, use Whisper directly for speed with aggressive filtering
+        """Accumulate audio for realtime; flush on duration or trailing silence for higher accuracy with fewer fragment artifacts."""
         try:
-            # Use optimized Whisper settings for real-time processing
-            # Use provided language if set, otherwise fall back to configured default
-            _language = language or TRANSCRIPTION_LANGUAGE
-            result = self.whisper_model.transcribe(
-                audio_array,
-                fp16=False,
-                language=_language,
-                no_speech_threshold=0.6,  # Higher threshold to avoid false positives
-                beam_size=1,  # Fastest beam search
-                best_of=1,    # Don't try multiple candidates
-                temperature=0.0,  # Most deterministic output
-                condition_on_previous_text=False,  # Don't use context from previous transcriptions
-                word_timestamps=False,  # Skip word-level timestamps for speed
-                compression_ratio_threshold=2.4  # Avoid repetitive text
-            )
-            
-            transcription = str(result.get("text", "")).strip()
-            
-            # Aggressive filtering to prevent false additions
-            if transcription:
-                # Remove common filler phrases that Whisper often adds incorrectly
-                false_phrases = [
-                    "thank you", "see you", "bye", "goodbye", "thanks", 
-                    "you know", "um", "uh", "like", "so", "well",
-                    "okay", "ok", "right", "yeah", "yes", "no"
-                ]
-                
-                # Check if transcription is likely just noise or filler
-                transcription_lower = transcription.lower().strip()
-                
-                # Skip if it's just punctuation or very short
-                if len(transcription_lower) <= 2 or transcription_lower in [".", ",", "!", "?"]:
-                    return {
-                        "transcription": "",
-                        "confidence": 0.0,
-                        "speaker_id": None
-                    }
-                
-                # Skip if it's just common filler words that might be false
-                words = transcription_lower.split()
-                if all(word.strip(".,!?") in false_phrases for word in words):
-                    return {
-                        "transcription": "",
-                        "confidence": 0.0,
-                        "speaker_id": None
-                    }
-                
-                # Only return transcription if there's meaningful content
-                if len(transcription) > 3 and len(words) > 0:
-                    return {
-                        "transcription": transcription,
-                        "confidence": 0.8,
-                        "speaker_id": 0
-                    }
+            array = self.audio_processor.process_audio_chunk(audio_data, sample_rate)
+            self.rt_buffer.append(array)
+            self.rt_total_samples += len(array)
+            duration = self.rt_total_samples / self.rt_sample_rate
 
-            # No meaningful speech detected, return empty
-            return {
-                "transcription": "",
-                "confidence": 0.0,
-                "speaker_id": None
-            }
+            # Determine if we should flush (transcribe now)
+            flush = False
+            # Force flush if exceeded max seconds
+            if duration >= self.rt_max_secs:
+                flush = True
+            # Flush if we have min seconds and trailing silence
+            if not flush and duration >= self.rt_min_secs:
+                tail_samples = int(self.rt_silence_tail_secs * self.rt_sample_rate)
+                concat = np.concatenate(self.rt_buffer)
+                tail = concat[-tail_samples:]
+                energy = float(np.mean(tail ** 2))
+                if energy < self.rt_silence_threshold:
+                    flush = True
+
+            if not flush:
+                return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+
+            # Concatenate buffered audio and check OVERALL energy to prevent hallucinations on silence
+            full_audio = np.concatenate(self.rt_buffer)
+            overall_energy = float(np.mean(full_audio ** 2))
+            
+            # If buffer is mostly silence, skip transcription to prevent Whisper hallucinations
+            if overall_energy < self.rt_silence_threshold * 2:  # 2x threshold for safety
+                logger.debug(f"Skipping transcription - buffer energy too low: {overall_energy:.2e}")
+                self.rt_buffer.clear()
+                self.rt_total_samples = 0
+                return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+            
+            model_for_realtime = getattr(self, 'realtime_whisper_model', self.whisper_model)
+            use_fp16 = os.getenv('REALTIME_WHISPER_FP16', '0') == '1'
+            # Auto-detect language - don't force any language for multilingual support
+            start = time.time()
+            result = model_for_realtime.transcribe(
+                full_audio,
+                fp16=use_fp16,
+                language=None,  # Auto-detect language
+                beam_size=2,  # Increased for better accuracy
+                best_of=2,  # Consider multiple candidates
+                temperature=0.0,
+                condition_on_previous_text=True,  # Use context for better accuracy
+                word_timestamps=False,
+                no_speech_threshold=0.4,  # Lower threshold for better speech detection
+                logprob_threshold=-0.7,  # More lenient for real words
+                compression_ratio_threshold=2.0  # Detect hallucination loops
+            )
+            elapsed = time.time() - start
+            text = str(result.get('text', '')).strip()
+            energy_val = locals().get('energy', overall_energy)
+            
+            # Speaker detection - use pyannote if available, otherwise simple
+            self.total_audio_duration += duration
+            if self.diarization_pipeline:
+                speaker_id = self._detect_speaker_pyannote(full_audio, self.total_audio_duration)
+            else:
+                speaker_id = self._detect_speaker_simple(full_audio)
+            
+            logger.debug(f"Realtime flush {duration:.2f}s energy={overall_energy:.2e} speaker={speaker_id} -> transcribed {len(text)} chars in {elapsed:.3f}s")
+
+            # SMART hallucination filtering - only block obvious false outputs
+            if text:
+                text_lower = text.lower()
+                words = text_lower.split()
+                clean_words = [w.strip('.,!?') for w in words]
+                
+                # Check compression ratio - Whisper provides this to detect loops
+                compression_ratio = result.get('compression_ratio', 0)
+                # Safely convert to float for comparison
+                try:
+                    if isinstance(compression_ratio, (int, float, str)):
+                        compression_ratio = float(compression_ratio)
+                    else:
+                        compression_ratio = 0.0
+                except (ValueError, TypeError):
+                    compression_ratio = 0.0
+                if compression_ratio > 2.4:
+                    logger.warning(f"Filtering hallucination (high compression ratio {compression_ratio:.2f}): {text[:80]}...")
+                    self.rt_buffer.clear()
+                    self.rt_total_samples = 0
+                    return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+                
+                # Filter profanity/bad words (common Whisper hallucinations when silent)
+                profanity_list = ['fuck', 'shit', 'damn', 'bitch', 'ass', 'bastard', 'hell', 'crap']
+                # Check if text contains ONLY profanity (hallucination pattern)
+                profanity_only = all(any(prof in w for prof in profanity_list) for w in clean_words)
+                if profanity_only and len(clean_words) <= 3:
+                    logger.warning(f"Filtering profanity hallucination: {text}")
+                    self.rt_buffer.clear()
+                    self.rt_total_samples = 0
+                    return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+                
+                # Check for extreme repetitive patterns (like 'a little bit of' repeated)
+                # Look for 3+ word phrases repeated multiple times
+                if len(words) > 15:
+                    # Check for repeated 3-word sequences
+                    for i in range(len(words) - 2):
+                        phrase = ' '.join(words[i:i+3])
+                        phrase_count = text_lower.count(phrase)
+                        # If same 3-word phrase appears 5+ times, it's a hallucination
+                        if phrase_count >= 5:
+                            logger.warning(f"Filtering hallucination (phrase loop: '{phrase}' x{phrase_count}): {text[:80]}...")
+                            self.rt_buffer.clear()
+                            self.rt_total_samples = 0
+                            return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+                
+                # Check for extreme repetitive patterns (word level - very strict)
+                # Only filter if >85% of words are identical (looser than before)
+                if len(words) > 8:
+                    word_counts = {}
+                    for w in words:
+                        word_counts[w] = word_counts.get(w, 0) + 1
+                    max_count = max(word_counts.values())
+                    if max_count / len(words) > 0.85:
+                        logger.warning(f"Filtering hallucination (extreme repetition): {text[:50]}")
+                        self.rt_buffer.clear()
+                        self.rt_total_samples = 0
+                        return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+
+            # Delta: only send new part beyond last_sent
+            if text.startswith(self.rt_last_text):
+                new_part = text[len(self.rt_last_text):].strip()
+            else:
+                # Reset if mismatch (e.g., model rewrote)
+                new_part = text
+            # Update state
+            self.rt_last_text = text
+            self.rt_buffer.clear()
+            self.rt_total_samples = 0
+
+            if not new_part:
+                return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+
+            # Final check: skip if new_part is too short or only punctuation
+            if len(new_part) < 3 or new_part in ['.', ',', '!', '?', '...']:
+                return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+
+            return {"transcription": new_part, "confidence": 0.85, "speaker_id": 0}
+        except Exception as e:
+            logger.error(f"Realtime processing error: {str(e)}", exc_info=True)
+            self.rt_buffer.clear()
+            self.rt_total_samples = 0
+            return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+
+    def _detect_speaker_pyannote(self, audio: np.ndarray, current_time: float) -> int:
+        """Detect speaker using pyannote.audio pipeline for better accuracy."""
+        try:
+            # Add audio to diarization buffer
+            self.diarization_buffer.append(audio)
+            buffer_duration = sum(len(chunk) for chunk in self.diarization_buffer) / self.rt_sample_rate
+            
+            # Only run diarization when we have enough audio
+            if buffer_duration >= self.diarization_min_secs:
+                logger.info(f"🎤 Running pyannote diarization on {buffer_duration:.1f}s of audio...")
+                
+                # Concatenate buffer
+                full_audio = np.concatenate(self.diarization_buffer)
+                
+                # Normalize audio to [-1, 1] range for pyannote
+                audio_float = full_audio.astype(np.float32) / 32768.0
+                
+                # Create temporary audio dict for pyannote
+                import tempfile
+                import soundfile as sf
+                
+                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
+                    sf.write(tmp_file.name, audio_float, self.rt_sample_rate)
+                    tmp_path = tmp_file.name
+                
+                try:
+                    # Run diarization
+                    diarization_result = self.diarization_pipeline(tmp_path)
+                    
+                    # Convert diarization result to segments
+                    self.diarization_segments = []
+                    for turn, _, speaker in diarization_result.itertracks(yield_label=True):
+                        self.diarization_segments.append({
+                            'start': turn.start,
+                            'end': turn.end,
+                            'speaker': speaker
+                        })
+                    
+                    logger.info(f"✅ Diarization complete: {len(self.diarization_segments)} segments, {len(set(s['speaker'] for s in self.diarization_segments))} speakers")
+                    
+                    # Clear buffer after processing
+                    self.diarization_buffer.clear()
+                    
+                finally:
+                    # Clean up temp file
+                    import os as os_module
+                    try:
+                        os_module.unlink(tmp_path)
+                    except:
+                        pass
+            
+            # Find speaker for current time based on stored segments
+            if self.diarization_segments:
+                for segment in self.diarization_segments:
+                    if segment['start'] <= current_time <= segment['end']:
+                        # Extract speaker number from label (e.g., "SPEAKER_00" -> 1)
+                        speaker_label = segment['speaker']
+                        speaker_num = int(speaker_label.split('_')[-1]) + 1
+                        self.last_speaker_id = speaker_num
+                        return speaker_num
+            
+            # Fallback to last known speaker or 1
+            return self.last_speaker_id or 1
             
         except Exception as e:
-            logger.error(f"Real-time processing failed: {str(e)}")
-            return {
-                "transcription": "",
-                "confidence": 0.0,
-                "speaker_id": None
-            }
+            logger.error(f"❌ Pyannote speaker detection error: {e}")
+            # Fallback to simple detection
+            return self._detect_speaker_simple(audio)
+    
+    def _detect_speaker_simple(self, audio: np.ndarray) -> int:
+        """Simple speaker detection based on audio characteristics (pitch, energy patterns)."""
+        try:
+            # Extract basic audio features for speaker identification
+            energy = float(np.mean(audio ** 2))
+            zero_crossings = np.sum(np.abs(np.diff(np.sign(audio)))) / (2 * len(audio))
+            
+            # Calculate spectral centroid (rough pitch indicator)
+            fft_vals = np.abs(np.fft.rfft(audio))
+            freqs = np.fft.rfftfreq(len(audio), 1/self.rt_sample_rate)
+            spectral_centroid = np.sum(freqs * fft_vals) / (np.sum(fft_vals) + 1e-10)
+            
+            # Create voice signature
+            signature = (energy * 1000, zero_crossings * 100, spectral_centroid / 100)
+            
+            if not self.speaker_embeddings:
+                self.speaker_embeddings.append(signature)
+                self.speaker_count = 1
+                self.last_speaker_id = 1
+                logger.info("New speaker detected: Speaker 1")
+                return 1
+            
+            # Find closest matching speaker
+            min_distance = float('inf')
+            best_speaker = self.last_speaker_id or 1
+            
+            for idx, known_sig in enumerate(self.speaker_embeddings):
+                distance = np.sqrt(
+                    (signature[0] - known_sig[0])**2 + 
+                    (signature[1] - known_sig[1])**2 +
+                    (signature[2] - known_sig[2])**2
+                )
+                if distance < min_distance:
+                    min_distance = distance
+                    best_speaker = idx + 1
+            
+            # Threshold for new speaker detection
+            threshold = 1.5
+            
+            if min_distance > threshold and self.speaker_count < 10:
+                self.speaker_embeddings.append(signature)
+                self.speaker_count += 1
+                best_speaker = self.speaker_count
+                logger.info(f"New speaker detected: Speaker {best_speaker}")
+            
+            self.last_speaker_id = best_speaker
+            return best_speaker
+            
+        except Exception as e:
+            logger.error(f"Speaker detection error: {e}")
+            return self.last_speaker_id or 1

@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-time Capture - AI MOM</title>
     <script src="js/avatar-manager.js"></script>
-    <script src="js/realtime.js"></script>
     <style>
         * {
             margin: 0;
@@ -19,10 +18,9 @@
             background: #ffffff;
             color: #1a1a2e;
             overflow-x: hidden;
-            min-height: 100vh;
         }
 
-        /* Background Animation */
+        /* Minimal animated background */
         .bg-animation {
             position: fixed;
             top: 0;
@@ -30,35 +28,45 @@
             width: 100%;
             height: 100%;
             z-index: 0;
+            background: linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%);
             overflow: hidden;
         }
 
+        /* Starfield background */
         .starfield {
             position: absolute;
             width: 100%;
             height: 100%;
-        }
-
-        .star {
-            position: absolute;
-            width: 1.5px;
-            height: 1.5px;
-            background: rgba(77, 166, 255, 0.4);
-            border-radius: 50%;
-            animation: twinkleStar 3s ease-in-out infinite;
+            background:
+                radial-gradient(1px 1px at 10% 20%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1.5px 1.5px at 20% 30%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 50% 50%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(1px 1px at 80% 10%, white, rgba(255, 255, 255, 0)),
+                radial-gradient(2px 2px at 90% 60%, white, rgba(255, 255, 255, 0));
+            background-size: 100% 100%;
+            background-position: 0 0;
+            animation: twinkleStar 4s ease-in-out infinite;
             opacity: 0.3;
+            pointer-events: none;
         }
 
         @keyframes twinkleStar {
-            0%, 100% { opacity: 0.1; }
-            50% { opacity: 0.4; }
+
+            0%,
+            100% {
+                opacity: 0.1;
+            }
+
+            50% {
+                opacity: 0.25;
+            }
         }
 
         .gradient-orb {
             position: absolute;
             border-radius: 50%;
             filter: blur(80px);
-            opacity: 0.15;
+            opacity: 0.08;
             animation: float 20s ease-in-out infinite;
         }
 
@@ -80,32 +88,40 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(50px, -50px) scale(1.1); }
-            66% { transform: translate(-30px, 30px) scale(0.9); }
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(50px, -50px) scale(1.1);
+            }
+
+            66% {
+                transform: translate(-30px, 30px) scale(0.9);
+            }
         }
 
         .content {
             position: relative;
             z-index: 1;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
 
-        /* Navbar */
+        /* Navigation */
         nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
             padding: 1.5rem 3rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            z-index: 100;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(77, 166, 255, 0.15);
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 100;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .logo {
@@ -114,33 +130,40 @@
             gap: 0.75rem;
             font-size: 1.2rem;
             font-weight: 600;
-            color: #1a1a2e;
+            letter-spacing: -0.5px;
+            color: #000000;
             text-decoration: none;
+            transition: color 0.3s ease;
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #4da6ff 0%, #0066cc 100%);
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #ffffff;
-            box-shadow: 0 4px 12px rgba(77, 166, 255, 0.25);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
         }
 
         .logo-icon svg {
-            width: 20px;
-            height: 20px;
+            width: 28px;
+            height: 28px;
+            stroke-width: 2.5;
         }
 
         .logo-text {
             font-weight: 700;
-            color: #1a1a2e;
+            color: #000000;
         }
 
         .logo-text .highlight {
+            color: #4da6ff;
+        }
+
+        .logo span {
             color: #4da6ff;
         }
 
@@ -157,17 +180,130 @@
         }
 
         .nav-links a {
-            color: rgba(26, 26, 46, 0.6);
+            color: rgba(0, 0, 0, 0.6);
             text-decoration: none;
             font-size: 0.9rem;
             transition: color 0.3s;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .nav-links a:hover {
             color: #4da6ff;
         }
 
+        /* User Menu */
+        .user-menu {
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .user-avatar:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            min-width: 180px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0.5rem 0;
+        }
+
+        /* User Authentication Area */
+        .auth-area {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .auth-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .auth-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .auth-btn.primary {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .auth-btn.primary:hover {
+            background: #5a67d8;
+            border-color: #5a67d8;
+        }
+
+        /* User Avatar & Dropdown */
         .user-menu {
             position: relative;
         }
@@ -177,85 +313,245 @@
             height: 40px;
             border-radius: 50%;
             background: linear-gradient(135deg, #4da6ff 0%, #0066cc 100%);
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid rgba(77, 166, 255, 0.2);
             font-weight: 600;
-            font-size: 0.85rem;
-            color: #ffffff;
+            cursor: pointer;
+            border: 2px solid rgba(77, 166, 255, 0.2);
+            transition: all 0.3s;
         }
 
         .user-avatar:hover {
-            box-shadow: 0 0 12px rgba(77, 166, 255, 0.4);
-            transform: scale(1.05);
+            border-color: #4da6ff;
+            box-shadow: 0 0 0 3px rgba(77, 166, 255, 0.2);
         }
 
-        .dropdown {
+        .user-dropdown {
             position: absolute;
             top: 100%;
             right: 0;
+            margin-top: 0.5rem;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(77, 166, 255, 0.2);
-            border-radius: 12px;
-            min-width: 150px;
-            padding: 0.5rem;
-            margin-top: 0.5rem;
-            display: none;
-            flex-direction: column;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 0.8rem;
+            min-width: 180px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s;
         }
 
-        .dropdown.show {
-            display: flex;
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-header {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .dropdown-header .user-name {
+            font-weight: 600;
+            color: #000000;
+            font-size: 0.9rem;
+        }
+
+        .dropdown-header .user-email {
+            color: rgba(0, 0, 0, 0.6);
+            font-size: 0.8rem;
+            margin-top: 0.2rem;
         }
 
         .dropdown-item {
-            padding: 0.75rem 1rem;
-            color: rgba(26, 26, 46, 0.7);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1rem;
+            color: rgba(0, 0, 0, 0.8);
             text-decoration: none;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-            border-radius: 8px;
+            font-size: 0.85rem;
+            transition: all 0.3s;
             cursor: pointer;
         }
 
         .dropdown-item:hover {
-            background: rgba(77, 166, 255, 0.1);
+            background: rgba(77, 166, 255, 0.08);
             color: #4da6ff;
         }
 
-        .dropdown-divider {
-            height: 1px;
-            background: rgba(77, 166, 255, 0.15);
-            margin: 0.5rem 0;
+        .dropdown-item:last-child {
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .dropdown-item .icon {
+            font-size: 1rem;
+        }
+
+        /* Authentication Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(30, 30, 35, 0.95), rgba(40, 40, 50, 0.95));
+            margin: 10% auto;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            color: white;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            right: 1rem;
+            top: 0.5rem;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: white;
+            text-decoration: none;
+        }
+
+        .modal-content h2 {
+            margin: 0 0 1.5rem 0;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .modal-content input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .modal-content button {
+            width: 100%;
+            padding: 12px;
+            margin: 16px 0 8px 0;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-content button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .auth-switch a {
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-switch a:hover {
+            color: #8b5cf6;
+            text-decoration: underline;
         }
 
         /* Main Container */
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 8rem 3rem 3rem;
-            flex: 1;
+            padding: 3rem 2rem;
         }
 
-        /* Header */
         .header {
             text-align: center;
             margin-bottom: 3rem;
+            margin-top: 1rem;
+            width: 100%;
+            overflow: visible;
+            padding: 2rem 2rem;
+            position: relative;
         }
 
         .header h1 {
             font-size: 3.2rem;
             font-weight: 800;
             margin-bottom: 0.75rem;
-            background: linear-gradient(135deg, #4da6ff 0%, #0066cc 100%);
+            letter-spacing: -1.5px;
+            color: #1a1a2e;
+            width: 100%;
+            white-space: normal;
+            word-wrap: break-word;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, #1a1a2e 0%, #4da6ff 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            text-shadow: 0 4px 20px rgba(77, 166, 255, 0.15);
+        }
+
+        .header h1 .header-icon {
+            display: inline-block;
+            font-size: 3.5rem;
+            margin-right: 0.5rem;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
         }
 
         .header p {
@@ -268,301 +564,65 @@
             letter-spacing: 0.3px;
         }
 
-        /* Controls */
-        .controls-wrapper {
-            background: linear-gradient(135deg, rgba(77, 166, 255, 0.12) 0%, rgba(77, 166, 255, 0.04) 100%);
-            border: 1.5px solid rgba(77, 166, 255, 0.25);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 8px 32px rgba(77, 166, 255, 0.12);
-        }
-
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-
-        .btn {
-            position: relative;
-            background: rgba(255, 255, 255, 0.03);
-            border: 2px solid rgba(16, 185, 129, 0.3);
-            border-radius: 16px;
-            padding: 1.5rem 1rem;
-            text-align: center;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            cursor: pointer;
-            overflow: hidden;
-            animation: slideInUp 0.6s ease-out backwards;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            border-radius: 14px;
-        }
-
-        .btn:hover::before {
-            opacity: 1;
-        }
-
-        .btn:hover {
-            transform: translateY(-4px);
-            border-color: rgba(16, 185, 129, 0.6);
-            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
-        }
-
-        .btn span {
-            font-size: 2rem;
-            transition: all 0.3s ease;
-            display: block;
-        }
-
-        .btn:hover span {
-            transform: scale(1.15) rotate(10deg);
-        }
-
-        .btn-connection {
-            animation-delay: 0.1s;
-        }
-
-        .btn-primary {
-            animation-delay: 0.2s;
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .btn-danger {
-            animation-delay: 0.3s;
-        }
-
-        .btn-danger:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .btn-secondary {
-            animation-delay: 0.4s;
-        }
-
-        /* Download Button */
-        .download-section {
-            display: flex;
-            justify-content: center;
-            margin: 2rem 0;
-            position: relative;
-        }
-
-        .download-btn-wrapper {
-            position: relative;
-        }
-
-        .download-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 1rem 2rem;
-            background: linear-gradient(135deg, rgba(100, 149, 237, 0.15) 0%, rgba(100, 149, 237, 0.05) 100%);
-            border: 2px solid rgba(100, 149, 237, 0.3);
-            border-radius: 12px;
-            color: #6495ed;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 4px 16px rgba(100, 149, 237, 0.15);
-            backdrop-filter: blur(8px);
-        }
-
-        .download-btn:hover {
-            transform: translateY(-2px);
-            background: linear-gradient(135deg, rgba(100, 149, 237, 0.25) 0%, rgba(100, 149, 237, 0.1) 100%);
-            border-color: rgba(100, 149, 237, 0.5);
-            box-shadow: 0 6px 24px rgba(100, 149, 237, 0.25);
-        }
-
-        .download-btn:active {
-            transform: translateY(0);
-        }
-
-        .download-btn .icon {
-            font-size: 1.2rem;
-            transition: transform 0.3s ease;
-        }
-
-        .download-btn:hover .icon {
-            transform: translateY(2px);
-        }
-
-        .download-btn .arrow {
-            transition: transform 0.3s ease;
-        }
-
-        .download-btn:hover .arrow {
-            transform: rotate(180deg);
-        }
-
-        /* Download Menu */
-        .download-menu {
-            position: absolute;
-            top: calc(100% + 0.5rem);
-            left: 50%;
-            transform: translateX(-50%) translateY(-10px);
-            background: rgba(255, 255, 255, 0.98);
-            border: 1.5px solid rgba(100, 149, 237, 0.3);
-            border-radius: 12px;
-            padding: 0.5rem;
-            min-width: 220px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(12px);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            z-index: 1000;
-        }
-
-        .download-menu.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .download-menu-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.875rem 1rem;
-            border-radius: 8px;
-            color: #1a1a2e;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: none;
+        /* Security Info */
+        .security-info {
             background: transparent;
-            width: 100%;
-            text-align: left;
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            padding: 0;
         }
 
-        .download-menu-item:hover {
-            background: rgba(100, 149, 237, 0.1);
-            color: #6495ed;
-        }
-
-        .download-menu-item .icon {
-            font-size: 1.1rem;
-        }
-
-        .status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #4da6ff;
-            font-weight: 600;
-            padding: 0.5rem 1rem;
-            background: rgba(77, 166, 255, 0.1);
-            border-radius: 8px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: #4da6ff;
-            border-radius: 50%;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.5); opacity: 0.5; }
-        }
-
-        /* Security Info Section */
-        .security-info-top {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 100%);
-            border: 1.5px solid rgba(16, 185, 129, 0.2);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.08);
-            animation: fadeInScale 0.8s ease;
-        }
-
-        @keyframes fadeInScale {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .security-info-top h3 {
-            color: #10b981;
-            font-size: 1.4rem;
+        .security-info h3 {
+            color: #1a1a2e;
+            font-size: 1.3rem;
             margin-bottom: 1.5rem;
-            text-align: center;
-            font-weight: 700;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+            gap: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
 
         .security-badges {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            align-items: center;
+            gap: 1.5rem;
+            align-items: stretch;
         }
 
         .security-badge {
-            background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            border-radius: 10px;
-            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1.2px solid rgba(16, 185, 129, 0.15);
+            border-radius: 14px;
+            padding: 1.2rem 1rem;
             text-align: center;
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             animation: slideInUp 0.6s ease backwards;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
         .security-badge::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, transparent 100%);
             opacity: 0;
             transition: opacity 0.4s ease;
         }
 
         .security-badge:hover {
-            transform: translateY(-4px);
-            border-color: rgba(16, 185, 129, 0.5);
-            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.15);
+            transform: translateY(-8px);
+            border-color: rgba(16, 185, 129, 0.3);
+            box-shadow: 0 12px 28px rgba(16, 185, 129, 0.12);
+            background: rgba(255, 255, 255, 0.95);
         }
 
         .security-badge:hover::before {
@@ -570,29 +630,33 @@
         }
 
         .badge-icon {
-            font-size: 1.8rem;
-            margin-bottom: 0.35rem;
+            font-size: 2.4rem;
+            margin-bottom: 0.5rem;
             display: block;
             transition: transform 0.4s ease;
+            line-height: 1;
         }
 
         .security-badge:hover .badge-icon {
-            transform: scale(1.15) rotate(10deg);
+            transform: scale(1.2) rotate(5deg);
         }
 
         .badge-label {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: #10b981;
             font-weight: 700;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
+            position: relative;
+            z-index: 1;
         }
 
         @keyframes slideInUp {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -615,28 +679,840 @@
             animation-delay: 0.4s;
         }
 
-        /* Transcript */
-        .transcript-section {
+        /* Control Panel */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1.5px solid rgba(77, 166, 255, 0.15);
+            border-radius: 16px;
+            padding: 2rem;
             margin-bottom: 2rem;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
         }
 
-        .section-title {
-            font-size: 1.3rem;
+        .control-panel:hover {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: rgba(77, 166, 255, 0.25);
+            box-shadow: 0 10px 35px rgba(77, 166, 255, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            position: relative;
+            padding: 1rem;
+        }
+
+        /* Process Flow Connector Lines */
+        .controls::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-image: linear-gradient(90deg, #4da6ff 0%, #4da6ff 50%, transparent 50%);
+            background-size: 10px 100%;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .controls.process-active::before {
+            opacity: 1;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+                0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1;
+        }
+
+        /* Inner shadow effect */
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+            transition: left 0.5s;
+            z-index: 2;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        /* Inner highlight shadow */
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            z-index: 1;
+        }
+
+        .btn-emoji {
+            font-size: 1.2rem;
+            display: inline-block;
+        }
+
+        .btn-connection {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-connection:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+            box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.15),
+                0 12px 35px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-connection.connecting {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            animation: pulse-glow 1.5s infinite;
+            box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.15),
+                0 0 20px rgba(245, 158, 11, 0.6);
+        }
+
+        .btn-connection.connecting:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.15),
+                0 0 30px rgba(245, 158, 11, 0.8);
+        }
+
+        .btn-connection.connected {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+                0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-connection.disconnecting {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            animation: pulse-glow 1.5s infinite;
+            box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.15),
+                0 0 20px rgba(239, 68, 68, 0.6);
+        }
+
+        .btn-connection.disconnecting:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.15),
+                0 0 30px rgba(239, 68, 68, 0.8);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4da6ff 0%, #0066cc 100%);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #66b8ff 0%, #0d7aff 100%);
+            transform: translateY(-2px);
+            box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.15),
+                0 12px 35px rgba(77, 166, 255, 0.4);
+        }
+
+        .btn-primary.active-process {
+            animation: pulse-glow 1.5s infinite;
+            box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.15),
+                0 0 25px rgba(77, 166, 255, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(77, 166, 255, 0.1);
+            color: #4da6ff;
+            border: 1.5px solid rgba(77, 166, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(77, 166, 255, 0.15);
+            border-color: rgba(77, 166, 255, 0.5);
+            box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.08),
+                0 8px 20px rgba(77, 166, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1.5px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.5);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Emoji Animation on Hover */
+        .btn-emoji {
+            display: inline-flex;
+            align-items: center;
+            font-size: 1.2rem;
+            animation: emojiHover 0.3s ease-out;
+        }
+
+        @keyframes emojiHover {
+            0% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            50% {
+                transform: scale(1.3) rotate(12deg);
+            }
+
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .btn:hover .btn-emoji {
+            animation: emojiHover 0.6s ease-in-out infinite;
+        }
+
+        /* System Check Panel - Floating Button */
+        .system-check-fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            min-width: 120px;
+            padding: 0.8rem 1.2rem;
+            background: linear-gradient(135deg, #4da6ff 0%, #0066cc 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #ffffff;
+            box-shadow: 0 6px 20px rgba(77, 166, 255, 0.4);
+            z-index: 999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .system-check-fab:hover {
+            background: linear-gradient(135deg, #66b8ff 0%, #0d7aff 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(77, 166, 255, 0.6);
+        }
+
+        .system-check-fab:active {
+            transform: scale(0.95);
+        }
+
+        .system-check-fab.checking {
+            animation: rotate 2s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* System Check Modal Popup */
+        .system-check-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .system-check-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .system-check-modal-content {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 400px;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(77, 166, 255, 0.2);
+            animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .system-check-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(77, 166, 255, 0.15);
+        }
+
+        .system-check-modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .system-check-close {
+            background: rgba(77, 166, 255, 0.1);
+            border: none;
+            color: #4da6ff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .system-check-close:hover {
+            background: rgba(77, 166, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .system-check-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* System Check Items in Column */
+        .system-check-items {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .system-check-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.6rem;
+            padding: 0.8rem;
+            background: linear-gradient(135deg, rgba(77, 166, 255, 0.1) 0%, rgba(0, 102, 204, 0.08) 100%);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1.5px solid rgba(77, 166, 255, 0.2);
+            text-align: left;
+            cursor: default;
+        }
+
+        .system-check-item:hover {
+            background: linear-gradient(135deg, rgba(77, 166, 255, 0.15) 0%, rgba(0, 102, 204, 0.12) 100%);
+            border-color: rgba(77, 166, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .system-check-item.loading {
+            background: linear-gradient(135deg, rgba(77, 166, 255, 0.2) 0%, rgba(0, 102, 204, 0.15) 100%);
+            border-color: rgba(77, 166, 255, 0.4);
+        }
+
+        .system-check-item.success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .system-check-item.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.08) 100%);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .check-icon {
+            font-size: 1.4rem;
+            height: 1.4rem;
+            min-width: 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: spinIcon 1s linear infinite;
+            flex-shrink: 0;
+        }
+
+        .check-icon.success {
+            animation: bounceIn 0.5s ease-out forwards;
+        }
+
+        .check-icon.error {
+            animation: shake 0.5s ease-out forwards;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0) rotate(-45deg);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1) rotate(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-6px);
+            }
+
+            75% {
+                transform: translateX(6px);
+            }
+        }
+
+        @keyframes spinIcon {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .check-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            width: 100%;
+        }
+
+        .check-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            line-height: 1;
+        }
+
+        .check-value {
+            font-size: 0.65rem;
+            color: rgba(26, 26, 46, 0.6);
+            line-height: 1.2;
+        }
+
+        .check-status {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 0.3rem;
+        }
+
+        .check-status.success {
+            color: #10b981;
+        }
+
+        .check-status.error {
+            color: #ef4444;
+        }
+
+        .check-status.checking {
+            color: #4da6ff;
+        }
+
+        /* Check Button in Modal */
+        .system-check-run-btn {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            background: linear-gradient(135deg, #4da6ff 0%, #0066cc 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(77, 166, 255, 0.3);
+        }
+
+        .system-check-run-btn:hover {
+            background: linear-gradient(135deg, #66b8ff 0%, #0d7aff 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(77, 166, 255, 0.4);
+        }
+
+        .system-check-run-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .system-check-run-btn.checking {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Action Buttons Container */
+        .system-check-action-buttons {
+            display: flex;
+            gap: 0.8rem;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .system-check-ok-btn,
+        .system-check-recheck-btn {
+            flex: 1;
+            padding: 0.7rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .system-check-ok-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .system-check-ok-btn:hover {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .system-check-recheck-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .system-check-recheck-btn:hover {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Notification Popup System */
+        .notification-container {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 10001;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .notification {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            background: #ffffff;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            border-left: 4px solid;
+            animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .notification.error {
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.95);
+            color: #ffffff;
+        }
+
+        .notification.success {
+            border-left-color: #10b981;
+            background: rgba(16, 185, 129, 0.95);
+            color: #ffffff;
+        }
+
+        .notification.warning {
+            border-left-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.95);
+            color: #ffffff;
+        }
+
+        .notification.info {
+            border-left-color: #4da6ff;
+            background: rgba(77, 166, 255, 0.95);
+            color: #ffffff;
+        }
+
+        .notification-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .notification-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .notification-message {
+            font-size: 0.75rem;
+            opacity: 0.95;
+            line-height: 1.3;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+            flex-shrink: 0;
+        }
+
+        .notification-close:hover {
+            opacity: 1;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+        }
+
+        .notification.removing {
+            animation: slideOutRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @media (max-width: 768px) {
+            .system-check-fab {
+                width: 50px;
+                height: 50px;
+                bottom: 1.5rem;
+                left: 1.5rem;
+                font-size: 1.3rem;
+            }
+
+            .system-check-items {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .system-check-modal-content {
+                border-radius: 16px;
+                padding: 1.5rem;
+            }
+        }
+
+        /* Download Dropdown */
+        .download-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-toggle {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(26, 26, 46, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            min-width: 200px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        .dropdown-item:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.15),
+                    0 0 20px rgba(77, 166, 255, 0.4);
+                transform: scale(1);
+            }
+
+            50% {
+                box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.15),
+                    0 0 35px rgba(77, 166, 255, 0.7);
+                transform: scale(1.02);
+            }
+        }
+
+        /* Transcript Area */
         .transcript-container {
             background: rgba(77, 166, 255, 0.04);
             border: 1.5px solid rgba(77, 166, 255, 0.15);
             border-radius: 12px;
             padding: 2rem;
-            min-height: 400px;
-            max-height: 500px;
+            min-height: 500px;
+            max-height: 600px;
             overflow-y: auto;
             backdrop-filter: blur(10px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -673,7 +1549,7 @@
             padding: 1rem;
             background: rgba(255, 255, 255, 0.6);
             border-radius: 8px;
-            border-left: 3px solid #4da6ff;
+            border-left: 3px solid;
             animation: slideIn 0.3s ease;
         }
 
@@ -682,6 +1558,7 @@
                 opacity: 0;
                 transform: translateX(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -692,7 +1569,6 @@
             font-weight: 600;
             margin-bottom: 0.5rem;
             font-size: 0.9rem;
-            color: #4da6ff;
         }
 
         .timestamp {
@@ -704,10 +1580,88 @@
         .text {
             color: rgba(26, 26, 46, 0.8);
             line-height: 1.6;
-            word-wrap: break-word;
         }
 
-        /* Summary */
+        /* Speaker colors */
+        .speaker-1 {
+            border-color: #4da6ff;
+        }
+
+        .speaker-1 .speaker {
+            color: #4da6ff;
+        }
+
+        .speaker-2 {
+            border-color: #0066cc;
+        }
+
+        .speaker-2 .speaker {
+            color: #0066cc;
+        }
+
+        .speaker-3 {
+            border-color: #10b981;
+        }
+
+        .speaker-3 .speaker {
+            color: #10b981;
+        }
+
+        .speaker-4 {
+            border-color: #f59e0b;
+        }
+
+        .speaker-4 .speaker {
+            color: #f59e0b;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+            animation: slideDown 0.3s ease;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .alert-icon {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .alert-message {
+            flex: 1;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* AI Summary Section */
         .summary-container {
             background: linear-gradient(135deg, rgba(77, 166, 255, 0.12) 0%, rgba(77, 166, 255, 0.04) 100%);
             border: 1.5px solid rgba(77, 166, 255, 0.25);
@@ -736,6 +1690,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -782,13 +1737,31 @@
             color: #4da6ff;
         }
 
-        .loading-dots span:nth-child(1) { animation-delay: 0s; }
-        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        .loading-dots span:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
 
         @keyframes loading {
-            0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
-            40% { opacity: 1; transform: translateY(-4px); }
+
+            0%,
+            80%,
+            100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+
+            40% {
+                opacity: 1;
+                transform: translateY(-4px);
+            }
         }
 
         .summary-content {
@@ -811,6 +1784,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -911,94 +1885,6 @@
             font-weight: 500;
         }
 
-        /* Notification Container */
-        .notification-container {
-            position: fixed;
-            top: 80px;
-            right: 2rem;
-            z-index: 200;
-            pointer-events: none;
-        }
-
-        .notification {
-            background: white;
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            min-width: 300px;
-            animation: slideInRight 0.4s ease;
-            pointer-events: auto;
-            border-left: 4px solid #4da6ff;
-        }
-
-        .notification.error {
-            border-left-color: #ff6b6b;
-        }
-
-        .notification.success {
-            border-left-color: #00cc99;
-        }
-
-        .notification.warning {
-            border-left-color: #ff9800;
-        }
-
-        .notification.info {
-            border-left-color: #4da6ff;
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(100px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .notification-icon {
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-
-        .notification-content {
-            flex: 1;
-        }
-
-        .notification-title {
-            font-weight: 600;
-            color: #1a1a2e;
-            margin-bottom: 0.25rem;
-            font-size: 0.95rem;
-        }
-
-        .notification-message {
-            color: rgba(26, 26, 46, 0.7);
-            font-size: 0.85rem;
-        }
-
-        .notification-close {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: rgba(26, 26, 46, 0.4);
-            font-size: 1.2rem;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            transition: color 0.2s;
-        }
-
-        .notification-close:hover {
-            color: rgba(26, 26, 46, 0.7);
-        }
-
         /* Responsive */
         @media (max-width: 768px) {
             nav {
@@ -1006,7 +1892,7 @@
             }
 
             .container {
-                padding: 7rem 1.5rem 2rem;
+                padding: 2rem 1.5rem;
             }
 
             .header h1 {
@@ -1022,29 +1908,194 @@
                 width: 100%;
             }
 
-            .transcript-container {
-                min-height: 300px;
-                max-height: 400px;
+            .notification-container {
+                left: 1rem;
+                right: 1rem;
+                max-width: none;
+            }
+
+            .notification {
+                padding: 1rem 1.2rem;
             }
         }
+
+        /* Logout Confirmation Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(77, 166, 255, 0.15);
+            border-radius: 12px;
+            padding: 2rem;
+            min-width: 350px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            color: #1a1a2e;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content h3 {
+            margin: 0 0 1rem 0;
+            color: #1a1a2e;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-content p {
+            margin: 0 0 2rem 0;
+            color: rgba(26, 26, 46, 0.8);
+            font-size: 1rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .modal-buttons .btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 100px;
+            width: auto;
+        }
+
+        .modal-buttons .btn-secondary {
+            background: #10b981;
+            color: #ffffff;
+            border: 1px solid #10b981;
+            transition: all 0.3s ease;
+        }
+
+        .modal-buttons .btn-secondary:hover {
+            background: #059669;
+            border-color: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .modal-buttons .btn-primary {
+            background: #ef4444;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .modal-buttons .btn-primary:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Connection Button Styles */
+        .btn-connection {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-connection:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-connection.connecting {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            animation: pulse 2s infinite;
+        }
+
+        .btn-connection.connecting:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        }
+
+        .btn-connection.connected {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .btn-connection.disconnecting {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            animation: pulse 2s infinite;
+        }
+
+        .btn-connection.disconnecting:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+
+        .btn-connection::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-connection:hover::before {
+            left: 100%;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        
     </style>
 </head>
 
 <body>
     <div class="bg-animation">
-        <div class="starfield" id="starfield"></div>
         <div class="gradient-orb orb-1"></div>
         <div class="gradient-orb orb-2"></div>
     </div>
 
     <div class="content">
-        <!-- Navigation -->
         <nav>
             <a href="index.html" class="logo">
                 <div class="logo-icon">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
                     </svg>
                 </div>
                 <span class="logo-text">AI <span class="highlight">MOM</span></span>
@@ -1054,31 +2105,39 @@
                     <li><a href="index.html">Home</a></li>
                     <li><a href="file.html">Upload</a></li>
                 </ul>
+
+                <!-- User menu -->
                 <div class="user-menu">
-                    <div class="user-avatar" id="userAvatar" style="background: linear-gradient(135deg, rgb(102, 126, 234) 0%, rgb(118, 75, 162) 100%); color: rgb(255, 255, 255);">JD</div>
+                    <div class="user-avatar" id="userAvatar">
+                        JD
+                    </div>
                     <div class="dropdown" id="dropdown">
+                        <!-- Profile Page Link -->
                         <a href="profile.html" class="dropdown-item">Profile</a>
+                        <!-- Settings Page Link -->
                         <a href="setting.html" class="dropdown-item">Settings</a>
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
                     </div>
                 </div>
             </div>
+
+            <!-- Authentication Area (hidden when logged in) -->
+            <div class="auth-area" id="auth-area" style="display: none;">
+                <!-- Will be populated by JavaScript -->
+            </div>
         </nav>
 
-        <!-- Notification Container -->
+        <!-- Notification Popup -->
         <div class="notification-container" id="notificationContainer"></div>
 
-        <!-- Main Container -->
         <div class="container">
-            <!-- Header -->
             <div class="header">
-                <h1>🎙️ Real-time Capture</h1>
+                <h1><span class="header-icon">🎙️</span> Real-time Capture</h1>
                 <p>Start recording to capture live transcription with AI-powered enhancements</p>
             </div>
 
-            <!-- Security Info Section -->
-            <div class="security-info-top">
+            <div class="security-info">
                 <h3>🔒 Your Data is Secure</h3>
                 <div class="security-badges">
                     <div class="security-badge">
@@ -1100,44 +2159,40 @@
                 </div>
             </div>
 
-            <!-- Controls -->
-            <div class="controls-wrapper">
+            <div class="control-panel">
                 <div class="controls">
-                    <button class="btn btn-connection" id="connectBtn">
-                        <span>🔗</span>
-                        <div>Connect to Backend</div>
-                    </button>
-                    <button class="btn btn-primary" id="startBtn" disabled>
-                        <span>⏺️</span>
-                        <div>Start Recording</div>
-                    </button>
-                    <button class="btn btn-danger" id="stopBtn" disabled>
-                        <span>⏹️</span>
-                        <div>Stop Recording</div>
-                    </button>
-                    <button class="btn btn-secondary" id="clearBtn">
-                        <span>🗑️</span>
-                        <div>Clear</div>
-                    </button>
-                </div>
-                <div class="status" id="status" style="display: none;">
-                    <div class="status-dot"></div>
-                    <span>Recording...</span>
-                </div>
-            </div>
-
-            <!-- Transcript Section -->
-            <div class="transcript-section">
-                <h2 class="section-title">📝 Transcription</h2>
-                <div class="transcript-container" id="transcript">
-                    <div class="transcript-empty">
-                        <div class="icon">🎙️</div>
-                        <p>Click "Start Recording" to begin capturing audio</p>
+                    <button class="btn btn-connection" id="connectBtn"><span class="btn-emoji">🔗</span> Connect to
+                        Backend</button>
+                    <button class="btn btn-primary" id="startBtn" disabled><span class="btn-emoji">⏺️</span> Start
+                        Recording</button>
+                    <button class="btn btn-danger" id="stopBtn" disabled><span class="btn-emoji">⏹️</span> Stop
+                        Recording</button>
+                    <button class="btn btn-secondary" id="clearBtn"><span class="btn-emoji">🗑️</span> Clear
+                        Transcript</button>
+                    <div class="download-dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" id="downloadBtn">
+                            <span class="btn-emoji">📥</span> Download ▼
+                        </button>
+                        <div class="dropdown-menu" id="downloadMenu">
+                            <a href="#" class="dropdown-item" id="downloadTranscript">📄 Transcript (.txt)</a>
+                            <a href="#" class="dropdown-item" id="downloadSummary">✨ AI Summary (.txt)</a>
+                        </div>
+                    </div>
+                    <div class="status" id="status" style="display: none;">
+                        <div class="status-dot"></div>
+                        <span>Recording...</span>
                     </div>
                 </div>
             </div>
 
-            <!-- AI Summary Section -->
+            <div class="transcript-container" id="transcript">
+                <div class="transcript-empty">
+                    <div class="icon">🎙️</div>
+                    <p>Click "Start Recording" to begin capturing audio</p>
+                </div>
+            </div>
+
+            <!-- AI Summary Section (hidden by default) -->
             <div class="summary-container" id="summaryContainer" style="display: none;">
                 <div class="summary-header">
                     <h3>🤖 AI Summary</h3>
@@ -1145,68 +2200,635 @@
                         <div class="loading-dots">
                             <span>.</span><span>.</span><span>.</span>
                         </div>
-                        <span>Generating summary...</span>
+                        <span>Generating AI summary...</span>
                     </div>
                 </div>
                 <div class="summary-content" id="summaryContent"></div>
             </div>
+        </div>
+    </div>
 
-            <!-- Download Section -->
-            <div class="download-section">
-                <div class="download-btn-wrapper">
-                    <button class="download-btn" id="downloadBtn">
-                        <span class="icon">📥</span>
-                        <span>Download</span>
-                        <span class="arrow">▼</span>
-                    </button>
-                    <div class="download-menu" id="downloadMenu">
-                        <button class="download-menu-item" id="downloadTranscript">
-                            <span class="icon">📄</span>
-                            <span>Download Transcript</span>
-                        </button>
-                        <button class="download-menu-item" id="downloadSummary">
-                            <span class="icon">📝</span>
-                            <span>Download Summary</span>
-                        </button>
+    <!-- Floating System Check Button -->
+    <button class="system-check-fab" id="systemCheckFab" title="System Check">System Check</button>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal-content">
+            <h3>🚪 Confirm Logout</h3>
+            <p>Are you sure you want to logout?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="cancelLogout()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Check Modal -->
+    <div class="system-check-modal" id="systemCheckModal">
+        <div class="system-check-modal-content">
+            <div class="system-check-modal-header">
+                <h2>System Check</h2>
+                <button class="system-check-close" id="systemCheckClose">×</button>
+            </div>
+            <div class="system-check-content">
+                <div class="system-check-items" id="systemCheckItems">
+                    <div class="system-check-item">
+                        <div class="check-icon">📋</div>
+                        <div class="check-content">
+                            <div class="check-label">Ready</div>
+                        </div>
                     </div>
+                </div>
+                <button class="system-check-run-btn" id="runSystemCheckBtn">🔍 Run Check</button>
+                <div class="system-check-action-buttons" id="actionButtons" style="display: none;">
+                    <button class="system-check-ok-btn" id="okBtn">✓ OK</button>
+                    <button class="system-check-recheck-btn" id="recheckBtn">↻ Recheck</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Starfield background animation
-        function createStarfield() {
-            const starfield = document.getElementById('starfield');
-            for (let i = 0; i < 50; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.top = Math.random() * 100 + '%';
-                star.style.animationDuration = (2 + Math.random() * 3) + 's';
-                star.style.animationDelay = Math.random() * 2 + 's';
-                starfield.appendChild(star);
+        // User menu functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const userAvatar = document.getElementById('userAvatar');
+            const dropdown = document.getElementById('dropdown');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            // Toggle dropdown
+            if (userAvatar) {
+                userAvatar.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('active');
+                });
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                if (dropdown) {
+                    dropdown.classList.remove('active');
+                }
+            });
+
+            // Prevent dropdown from closing when clicking inside
+            if (dropdown) {
+                dropdown.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            }
+
+            // Logout functionality
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const logoutModal = document.getElementById('logoutModal');
+                    logoutModal.classList.add('show');
+                });
+            }
+
+            // Authentication check removed - page accessible without login
+        });
+
+        // Authentication System
+        function updateAuthenticationUI() {
+            const authArea = document.getElementById('auth-area');
+            if (!authArea) {
+                console.warn('auth-area element not found');
+                return;
+            }
+
+            const userData = localStorage.getItem('currentUser');
+
+            if (userData) {
+                // User is logged in - show avatar dropdown
+                const user = JSON.parse(userData);
+                authArea.innerHTML = `
+                    <div class="user-menu">
+                        <div class="user-avatar" onclick="toggleUserDropdown()" id="authUserAvatar">
+                            ${user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="user-dropdown" id="user-dropdown">
+                            <div class="dropdown-header">
+                                <div class="user-info">
+                                    <span class="user-name">${user.name || user.email}</span>
+                                    <span class="user-email">${user.email}</span>
+                                </div>
+                            </div>
+                            <hr>
+                            <!-- Profile Page Link (Dropdown) -->
+                            <a href="../profile.html" class="dropdown-item">
+                                <span>👤</span> Profile
+                            </a>
+                            <!-- Settings Page Link (Dropdown) -->
+                            <a href="../settings.html" class="dropdown-item">
+                                <span>⚙️</span> Settings
+                            </a>
+                            <hr>
+                            <a href="#" class="dropdown-item" onclick="logout()">
+                                <span>🚪</span> Logout
+                            </a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // User not logged in - show login/signup buttons
+                authArea.innerHTML = `
+                    <!-- Login and Sign Up Buttons -->
+                    <div class="auth-buttons">
+                        <button class="auth-btn login-btn" onclick="showAuthModal('login')">Login</button>
+                        <button class="auth-btn signup-btn" onclick="showAuthModal('signup')">Sign Up</button>
+                    </div>
+                `;
             }
         }
 
-        // Initialize starfield
-        createStarfield();
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
 
-        // User avatar dropdown
-        const userAvatar = document.getElementById('userAvatar');
-        const dropdown = document.getElementById('dropdown');
+        function showAuthModal(type) {
+            // Create modal if it doesn't exist
+            let modal = document.getElementById('authModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'authModal';
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <!-- Login/Sign Up Modal -->
+                    <div class="modal-content">
+                        <span class="close" onclick="closeAuthModal()">&times;</span>
+                        <h2 id="modalTitle">Login</h2>
+                        <form id="authForm">
+                            <input type="email" id="authEmail" placeholder="Email" required>
+                            <input type="password" id="authPassword" placeholder="Password" required>
+                            <button type="submit" id="authSubmitBtn">Login</button>
+                        </form>
+                        <p class="auth-switch">
+                            <span id="authSwitchText">Don't have an account?</span>
+                            <a href="#" id="authSwitchLink">Sign up</a>
+                        </p>
+                    </div>
+                `;
+                document.body.appendChild(modal);
 
-        if (userAvatar) {
-            userAvatar.addEventListener('click', () => {
-                dropdown.classList.toggle('show');
+                // Add form submission handler
+                document.getElementById('authForm').addEventListener('submit', handleAuth);
+                document.getElementById('authSwitchLink').addEventListener('click', switchAuthMode);
+            }
+
+            // Set modal type
+            const isLogin = type === 'login';
+            document.getElementById('modalTitle').textContent = isLogin ? 'Login' : 'Sign Up';
+            document.getElementById('authSubmitBtn').textContent = isLogin ? 'Login' : 'Sign Up';
+            document.getElementById('authSwitchText').textContent = isLogin ?
+                "Don't have an account?" : "Already have an account?";
+            document.getElementById('authSwitchLink').textContent = isLogin ? 'Sign up' : 'Login';
+            modal.dataset.mode = type;
+
+            modal.style.display = 'block';
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('authModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function switchAuthMode(e) {
+            e.preventDefault();
+            const modal = document.getElementById('authModal');
+            const currentMode = modal.dataset.mode;
+            showAuthModal(currentMode === 'login' ? 'signup' : 'login');
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const isLogin = document.getElementById('authModal').dataset.mode === 'login';
+
+            try {
+                if (isLogin) {
+                    await loginUser(email, password);
+                } else {
+                    await signupUser(email, password);
+                }
+                closeAuthModal();
+                updateAuthenticationUI();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        async function loginUser(email, password) {
+            // Demo authentication
+            if (email === 'admin@example.com' && password === 'admin123') {
+                const userData = {
+                    email: email,
+                    name: 'Admin User',
+                    avatar: null
+                };
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+                return userData;
+            }
+
+            // Check stored users
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.email === email);
+
+            if (!user) {
+                throw new Error('User not found');
+            }
+
+            // Simple password check (in real app, use proper hashing)
+            if (user.password !== btoa(password)) {
+                throw new Error('Invalid password');
+            }
+
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            return user;
+        }
+
+        async function signupUser(email, password) {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+
+            if (users.find(u => u.email === email)) {
+                throw new Error('User already exists');
+            }
+
+            const userData = {
+                email: email,
+                password: btoa(password), // Simple encoding (use proper hashing in real app)
+                name: email.split('@')[0],
+                avatar: null
+            };
+
+            users.push(userData);
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            return userData;
+        }
+
+        function logout() {
+            const logoutModal = document.getElementById('logoutModal');
+            logoutModal.classList.add('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (event) {
+            const userMenu = document.querySelector('.user-menu');
+            const dropdown = document.getElementById('user-dropdown');
+
+            if (userMenu && dropdown && !userMenu.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function (event) {
+            const modal = document.getElementById('authModal');
+            if (modal && event.target === modal) {
+                closeAuthModal();
+            }
+        });
+
+        // Initialize authentication UI on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            updateAuthenticationUI();
+        });
+
+        // REAL BACKEND INTEGRATION - Load realtime.js for actual WebSocket connection
+    </script>
+    <!-- Load the real backend integration -->
+    <script src="js/realtime.js"></script>
+    <script>
+        // Modal functions
+        function confirmLogout() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('userSession');
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+
+        function cancelLogout() {
+            const logoutModal = document.getElementById('logoutModal');
+            logoutModal.classList.remove('show');
+        }
+
+        // Close modal when clicking on overlay
+        document.addEventListener('DOMContentLoaded', function () {
+            const logoutModal = document.getElementById('logoutModal');
+            if (logoutModal) {
+                logoutModal.addEventListener('click', function (e) {
+                    if (e.target === this) {
+                        this.classList.remove('show');
+                    }
+                });
+            }
+        });
+
+        // System Check Functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const systemCheckFab = document.getElementById('systemCheckFab');
+            const systemCheckModal = document.getElementById('systemCheckModal');
+            const systemCheckClose = document.getElementById('systemCheckClose');
+            const runSystemCheckBtn = document.getElementById('runSystemCheckBtn');
+            const systemCheckItems = document.getElementById('systemCheckItems');
+            const actionButtons = document.getElementById('actionButtons');
+            const okBtn = document.getElementById('okBtn');
+            const recheckBtn = document.getElementById('recheckBtn');
+
+            // Open modal on FAB click
+            if (systemCheckFab) {
+                systemCheckFab.addEventListener('click', function () {
+                    systemCheckModal.classList.add('show');
+                    // Reset buttons view
+                    runSystemCheckBtn.style.display = 'block';
+                    actionButtons.style.display = 'none';
+                });
+            }
+
+            // Close modal on close button click
+            if (systemCheckClose) {
+                systemCheckClose.addEventListener('click', function () {
+                    systemCheckModal.classList.remove('show');
+                });
+            }
+
+            // Close modal when clicking outside
+            if (systemCheckModal) {
+                systemCheckModal.addEventListener('click', function (e) {
+                    if (e.target === systemCheckModal) {
+                        systemCheckModal.classList.remove('show');
+                    }
+                });
+            }
+
+            // Run system check on button click
+            if (runSystemCheckBtn) {
+                runSystemCheckBtn.addEventListener('click', async function () {
+                    runSystemCheckBtn.disabled = true;
+                    runSystemCheckBtn.classList.add('checking');
+                    runSystemCheckBtn.textContent = '⏳ Checking...';
+                    actionButtons.style.display = 'none';
+
+                    // Clear previous results
+                    systemCheckItems.innerHTML = '';
+
+                    // Run all checks
+                    await checkBrowserCompatibility(systemCheckItems);
+                    await checkMicrophone(systemCheckItems);
+                    await checkAudioQuality(systemCheckItems);
+                    await checkWebSocketSupport(systemCheckItems);
+
+                    // Hide Run Check button and show action buttons after completion
+                    runSystemCheckBtn.style.display = 'none';
+                    actionButtons.style.display = 'flex';
+                });
+            }
+
+            // OK button - close modal and reset view
+            if (okBtn) {
+                okBtn.addEventListener('click', function () {
+                    systemCheckModal.classList.remove('show');
+                    actionButtons.style.display = 'none';
+                    runSystemCheckBtn.style.display = 'block';
+                });
+            }
+
+            // Recheck button - run checks again
+            if (recheckBtn) {
+                recheckBtn.addEventListener('click', async function () {
+                    runSystemCheckBtn.disabled = true;
+                    runSystemCheckBtn.classList.add('checking');
+                    runSystemCheckBtn.textContent = '⏳ Checking...';
+                    actionButtons.style.display = 'none';
+
+                    // Clear previous results
+                    systemCheckItems.innerHTML = '';
+
+                    // Run all checks
+                    await checkBrowserCompatibility(systemCheckItems);
+                    await checkMicrophone(systemCheckItems);
+                    await checkAudioQuality(systemCheckItems);
+                    await checkWebSocketSupport(systemCheckItems);
+
+                    // Hide Run Check button and show action buttons after completion
+                    runSystemCheckBtn.style.display = 'none';
+                    actionButtons.style.display = 'flex';
+                });
+            }
+        });
+
+        async function checkBrowserCompatibility(container) {
+            const item = document.createElement('div');
+            item.className = 'system-check-item loading';
+            item.innerHTML = `
+                <div class="check-icon">⏳</div>
+                <div class="check-content">
+                    <div class="check-label">Browser</div>
+                    <div class="check-value">Checking...</div>
+                </div>
+            `;
+            container.appendChild(item);
+
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const browserInfo = getBrowserInfo();
+                    const isSupported = browserInfo.isSupported;
+
+                    item.className = `system-check-item ${isSupported ? 'success' : 'error'}`;
+                    item.innerHTML = `
+                        <div class="check-icon ${isSupported ? 'success' : 'error'}">${isSupported ? '✅' : '❌'}</div>
+                        <div class="check-content">
+                            <div class="check-label">Browser</div>
+                            <div class="check-value">${browserInfo.name}</div>
+                        </div>
+                    `;
+                    resolve();
+                }, 1000);
             });
         }
 
-        document.addEventListener('click', (e) => {
-            if (userAvatar && dropdown && !userAvatar.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.classList.remove('show');
+        async function checkMicrophone(container) {
+            const item = document.createElement('div');
+            item.className = 'system-check-item loading';
+            item.innerHTML = `
+                <div class="check-icon">⏳</div>
+                <div class="check-content">
+                    <div class="check-label">Microphone</div>
+                    <div class="check-value">Checking...</div>
+                </div>
+            `;
+            container.appendChild(item);
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const analyser = audioContext.createAnalyser();
+                const microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+
+                // Get device info
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                const deviceName = audioInputs[0]?.label?.substring(0, 20) || 'Default';
+
+                // Stop the stream
+                stream.getTracks().forEach(track => track.stop());
+                audioContext.close();
+
+                item.className = 'system-check-item success';
+                item.innerHTML = `
+                    <div class="check-icon success">✅</div>
+                    <div class="check-content">
+                        <div class="check-label">Microphone</div>
+                        <div class="check-value">${deviceName}</div>
+                    </div>
+                `;
+            } catch (error) {
+                item.className = 'system-check-item error';
+                item.innerHTML = `
+                    <div class="check-icon error">❌</div>
+                    <div class="check-content">
+                        <div class="check-label">Microphone</div>
+                        <div class="check-value">Access Denied</div>
+                    </div>
+                `;
             }
-        });
+        }
+
+        async function checkAudioQuality(container) {
+            const item = document.createElement('div');
+            item.className = 'system-check-item loading';
+            item.innerHTML = `
+                <div class="check-icon">⏳</div>
+                <div class="check-content">
+                    <div class="check-label">Audio</div>
+                    <div class="check-value">Testing...</div>
+                </div>
+            `;
+            container.appendChild(item);
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const analyser = audioContext.createAnalyser();
+                const microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+
+                analyser.fftSize = 256;
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                // Simulate audio level check
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                analyser.getByteFrequencyData(dataArray);
+                const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+
+                let quality = 'Excellent';
+                let qualityColor = 'success';
+
+                if (average < 10) {
+                    quality = 'Very Low';
+                    qualityColor = 'error';
+                } else if (average < 30) {
+                    quality = 'Low';
+                    qualityColor = 'error';
+                } else if (average < 50) {
+                    quality = 'Good';
+                    qualityColor = 'success';
+                }
+
+                // Stop the stream
+                stream.getTracks().forEach(track => track.stop());
+                audioContext.close();
+
+                item.className = `system-check-item ${qualityColor}`;
+                item.innerHTML = `
+                    <div class="check-icon ${qualityColor}">${qualityColor === 'success' ? '✅' : '⚠️'}</div>
+                    <div class="check-content">
+                        <div class="check-label">Audio Quality</div>
+                        <div class="check-value">${quality}</div>
+                    </div>
+                `;
+            } catch (error) {
+                item.className = 'system-check-item error';
+                item.innerHTML = `
+                    <div class="check-icon error">❌</div>
+                    <div class="check-content">
+                        <div class="check-label">Audio Quality</div>
+                        <div class="check-value">Failed</div>
+                    </div>
+                `;
+            }
+        }
+
+        async function checkWebSocketSupport(container) {
+            const item = document.createElement('div');
+            item.className = 'system-check-item loading';
+            item.innerHTML = `
+                <div class="check-icon">⏳</div>
+                <div class="check-content">
+                    <div class="check-label">WebSocket</div>
+                    <div class="check-value">Checking...</div>
+                </div>
+            `;
+            container.appendChild(item);
+
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const isSupported = 'WebSocket' in window || 'MozWebSocket' in window;
+
+                    item.className = `system-check-item ${isSupported ? 'success' : 'error'}`;
+                    item.innerHTML = `
+                        <div class="check-icon ${isSupported ? 'success' : 'error'}">${isSupported ? '✅' : '❌'}</div>
+                        <div class="check-content">
+                            <div class="check-label">WebSocket</div>
+                            <div class="check-value">${isSupported ? 'Supported' : 'Failed'}</div>
+                        </div>
+                    `;
+                    resolve();
+                }, 800);
+            });
+        }
+
+        function getBrowserInfo() {
+            const ua = navigator.userAgent;
+            let browserName = 'Unknown';
+            let version = 'Unknown';
+            let isSupported = true;
+
+            if (ua.indexOf('Firefox') > -1) {
+                browserName = 'Firefox';
+                version = ua.substring(ua.indexOf('Firefox') + 8, ua.indexOf('Firefox') + 11);
+            } else if (ua.indexOf('SamsungBrowser') > -1) {
+                browserName = 'Samsung Browser';
+                version = ua.substring(ua.indexOf('SamsungBrowser') + 15);
+            } else if (ua.indexOf('Opera') > -1 || ua.indexOf('OPR') > -1) {
+                browserName = 'Opera';
+                version = ua.substring(ua.indexOf('Opera') + 6);
+            } else if (ua.indexOf('Trident') > -1) {
+                browserName = 'Internet Explorer';
+                isSupported = false;
+                version = ua.substring(ua.indexOf('rv:') + 3, ua.indexOf('rv:') + 6);
+            } else if (ua.indexOf('Edge') > -1) {
+                browserName = 'Edge';
+                version = ua.substring(ua.indexOf('Edge') + 5);
+            } else if (ua.indexOf('Chrome') > -1) {
+                browserName = 'Chrome';
+                version = ua.substring(ua.indexOf('Chrome') + 7, ua.indexOf('Chrome') + 10);
+            } else if (ua.indexOf('Safari') > -1) {
+                browserName = 'Safari';
+                version = ua.substring(ua.indexOf('Version') + 8, ua.indexOf('Version') + 11);
+            }
+
+            return { name: browserName, version, isSupported };
+        }
     </script>
 </body>
 

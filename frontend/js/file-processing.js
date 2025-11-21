@@ -8,20 +8,52 @@ function processAudioFile(file, callbacks) {
         return;
     }
 
+    // Generate unique session ID for this processing session
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     // Create FormData for file upload
     const formData = new FormData();
     formData.append('file', file);
 
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        progress += 5;
-        if (progress <= 90) {
-            onProgress(progress);
-        }
-    }, 150);
+    // Open a WebSocket to receive backend progress updates
+    let progressSocket = null;
+    try {
+        progressSocket = new WebSocket('ws://localhost:8000/ws/progress');
+        progressSocket.onopen = () => {
+            try {
+                // Notify backend to start progress tracking with session ID
+                progressSocket.send(JSON.stringify({ 
+                    type: 'start_processing', 
+                    file_path: file.name,
+                    session_id: sessionId
+                }));
+            } catch (e) {
+                console.warn('Failed to initiate progress socket message:', e);
+            }
+        };
+        progressSocket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'progress') {
+                    // Forward structured progress to UI
+                    if (onProgress) onProgress({ percentage: data.percentage, message: data.message, step: data.step });
+                } else if (data.type === 'ready') {
+                    console.log('Progress WebSocket ready:', data.session_id);
+                }
+            } catch (e) {
+                console.warn('Progress socket parse error:', e);
+            }
+        };
+        progressSocket.onerror = () => {
+            // Non-fatal: UI can still continue without live progress
+            console.warn('Progress WebSocket error. Falling back to HTTP-only updates.');
+        };
+    } catch (e) {
+        console.warn('Progress WebSocket unavailable:', e);
+    }
 
-    // Upload to backend
-    fetch('http://localhost:8000/api/process-audio', {
+    // Upload to backend with session_id
+    fetch(`http://localhost:8000/api/process-audio?session_id=${sessionId}`, {
         method: 'POST',
         body: formData
     })
@@ -32,8 +64,7 @@ function processAudioFile(file, callbacks) {
             return response.json();
         })
         .then(data => {
-            clearInterval(progressInterval);
-            onProgress(100);
+            if (onProgress) onProgress({ percentage: 100, message: 'Processing complete' });
 
             console.log('Backend response:', data);
 
@@ -66,11 +97,19 @@ function processAudioFile(file, callbacks) {
             setTimeout(() => onComplete(result), 500);
         })
         .catch(error => {
-            clearInterval(progressInterval);
             console.error('Error processing file:', error);
             const errorMessage = error.message || 'An error occurred while processing the file';
             showAlert(errorMessage, 'error');
             onError(error);
+        })
+        .finally(() => {
+            try {
+                if (progressSocket && progressSocket.readyState === WebSocket.OPEN) {
+                    progressSocket.close();
+                }
+            } catch (e) {
+                // swallow
+            }
         });
 }
 

@@ -17,6 +17,25 @@ multi_processor = MultiAPIProcessor()
 audio_processor = AudioProcessor()
 user_profile_service = UserProfileService()
 
+# Store active progress WebSocket connections
+active_progress_connections = {}
+
+async def send_progress_update(session_id: str, percentage: int, message: str, step: int):
+    """Helper function to send progress updates to a specific session."""
+    if session_id in active_progress_connections:
+        try:
+            await active_progress_connections[session_id].send_json({
+                "type": "progress",
+                "percentage": percentage,
+                "message": message,
+                "step": step
+            })
+        except Exception as e:
+            logger.error(f"Failed to send progress update: {str(e)}")
+            # Remove dead connection
+            if session_id in active_progress_connections:
+                del active_progress_connections[session_id]
+
 @router.websocket("/ws/audio")
 async def websocket_audio(websocket: WebSocket):
     """
@@ -187,6 +206,7 @@ async def websocket_progress(websocket: WebSocket):
     WebSocket for processing progress updates.
     """
     await websocket.accept()
+    session_id = None
 
     try:
         while True:
@@ -195,26 +215,30 @@ async def websocket_progress(websocket: WebSocket):
 
             if data.get("type") == "start_processing":
                 file_path = data.get("file_path")
-
-                # Simulate progress updates
-                for progress in range(0, 101, 10):
-                    await websocket.send_json({
-                        "type": "progress",
-                        "percentage": progress,
-                        "message": f"Processing... {progress}%"
-                    })
-                    # In real implementation, this would be based on actual processing
-
+                session_id = data.get("session_id", "default")
+                
+                # Store the websocket connection for this session
+                active_progress_connections[session_id] = websocket
+                logger.info(f"Progress WebSocket registered for session: {session_id}")
+                
+                # Send initial acknowledgment
                 await websocket.send_json({
-                    "type": "complete",
-                    "message": "Processing completed"
+                    "type": "ready",
+                    "session_id": session_id,
+                    "message": "Ready to receive progress updates"
                 })
 
     except WebSocketDisconnect:
-        logger.info("Progress WebSocket closed by client")
+        logger.info(f"Progress WebSocket closed by client (session: {session_id})")
+        if session_id and session_id in active_progress_connections:
+            del active_progress_connections[session_id]
     except ConnectionClosedError:
-        logger.info("Progress WebSocket connection closed unexpectedly")
+        logger.info(f"Progress WebSocket connection closed unexpectedly (session: {session_id})")
+        if session_id and session_id in active_progress_connections:
+            del active_progress_connections[session_id]
     except Exception as e:
         logger.error(f"Progress WebSocket error: {str(e)}")
+        if session_id and session_id in active_progress_connections:
+            del active_progress_connections[session_id]
     finally:
-        logger.info("Progress WebSocket session ended")
+        logger.info(f"Progress WebSocket session ended (session: {session_id})")

@@ -12,6 +12,7 @@ from app.services.audio_processor import AudioProcessor
 from app.services.summarizer import Summarizer
 from app.models.schemas import ProcessResponse, AudioProcessRequest, UserProfile
 from app.services.user_profile import UserProfileService
+from app.api.websocket import send_progress_update
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +28,18 @@ user_profile_service = UserProfileService()
 async def process_audio_file(
     background_tasks: BackgroundTasks,
     file_path: Optional[str] = None,
-    file: Optional[UploadFile] = File(None)
+    file: Optional[UploadFile] = File(None),
+    session_id: Optional[str] = None
 ):
     """
     Process audio file using multi-API approach.
     Can accept either a file path or uploaded file.
     """
+    # Create progress callback if session_id provided
+    async def progress_callback(percentage: int, message: str, step: int):
+        if session_id:
+            await send_progress_update(session_id, percentage, message, step)
+    
     try:
         if file_path:
             # Process from file path
@@ -91,7 +98,7 @@ async def process_audio_file(
                 # Perform fast speaker diarization
                 diarization_result = audio_processor.perform_speaker_diarization_fast(audio_data, sample_rate)
 
-                transcription_result = await multi_processor.process_transcription_ultra_fast(audio_data)
+                transcription_result = await multi_processor.process_transcription_ultra_fast(audio_data, progress_callback)
                 
                 # Generate comprehensive summary
                 comprehensive_summary = await summarizer.generate_comprehensive_summary(transcription_result['transcription'])
