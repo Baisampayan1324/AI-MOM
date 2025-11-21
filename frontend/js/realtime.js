@@ -30,7 +30,7 @@
     let lastSpeaker = null;  // Track last speaker to append text
     let lastTranscriptElement = null;  // Track last transcript DOM element
     let summaryUpdateTimer = null;  // Timer for real-time summary updates
-    const BUFFER_THRESHOLD = 12000;  // ~0.75 seconds at 16kHz - balanced speed and accuracy
+    const BUFFER_THRESHOLD = 8000;  // ~0.5 seconds at 16kHz - faster response (reduced from 0.75s)
     const SUMMARY_UPDATE_INTERVAL = 10000;  // Update summary every 10 seconds during recording
 
     // Helper: convert Int16Array to base64 (safer than huge JSON arrays)
@@ -247,9 +247,9 @@
         // Start audio capture
         startAudioCapture();
         
-        // Start real-time summary updates
-        if (summaryUpdateTimer) clearInterval(summaryUpdateTimer);
-        summaryUpdateTimer = setInterval(updateRealtimeSummary, SUMMARY_UPDATE_INTERVAL);
+        // DO NOT start real-time summary updates - summary only after recording stops
+        // if (summaryUpdateTimer) clearInterval(summaryUpdateTimer);
+        // summaryUpdateTimer = setInterval(updateRealtimeSummary, SUMMARY_UPDATE_INTERVAL);
     }
 
     function stopRecording() {
@@ -270,7 +270,7 @@
         // Stop audio capture
         stopAudioCapture();
         
-        // Stop real-time summary updates
+        // Stop real-time summary updates (if any)
         if (summaryUpdateTimer) {
             clearInterval(summaryUpdateTimer);
             summaryUpdateTimer = null;
@@ -280,8 +280,8 @@
         // Show and generate AI summary if we have transcript data
         console.log('🛑 Recording stopped, transcript items:', transcriptData.length);
         if (transcriptData.length > 0) {
-            console.log('📊 Calling generateAISummary...');
-            setTimeout(() => generateAISummary(), 500);  // Small delay to ensure UI updates
+            console.log('📊 Calling generateAISummary with backend API...');
+            setTimeout(() => generateAISummaryWithBackend(), 500);  // Use backend for better summary
         } else {
             console.warn('⚠️ No transcript data to generate summary');
         }
@@ -612,6 +612,83 @@
                 showAlert('Summary complete! Connection closed. Ready for next session.', 'success');
             }
         }, 2000);  // 2 second delay to allow user to see summary
+    }
+
+    async function generateAISummaryWithBackend() {
+        console.log('📊 generateAISummaryWithBackend called with', transcriptData.length, 'transcript items');
+        
+        if (!summaryContainer || !summaryGenerating || !summaryContent) {
+            console.error('❌ Summary elements not found');
+            return;
+        }
+
+        if (transcriptData.length === 0) {
+            console.warn('⚠️ No transcript data to summarize');
+            showAlert('No transcript data available for summary', 'warning');
+            return;
+        }
+
+        // Show summary section with loading state
+        summaryContainer.style.display = 'block';
+        summaryGenerating.style.display = 'flex';
+        summaryContent.innerHTML = '';
+        summaryContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        // Prepare transcript text for backend
+        const transcriptText = transcriptData.map(item =>
+            `${item.speaker}: ${item.text}`
+        ).join('\\n');
+
+        console.log('📝 Sending transcript to backend for AI summary generation...');
+
+        try {
+            // Call backend summarization endpoint
+            const response = await fetch('http://localhost:8000/api/generate-summary', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    transcription: transcriptText
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Backend returned ${response.status}: ${response.statusText}`);
+            }
+
+            const summaryData = await response.json();
+            console.log('✅ Received summary from backend:', summaryData);
+
+            // Hide loading, show summary
+            summaryGenerating.style.display = 'none';
+
+            aiSummary = {
+                overview: summaryData.full_summary || summaryData.overview || 'Summary generated',
+                keyPoints: summaryData.key_points || [],
+                actionItems: summaryData.action_items || []
+            };
+
+            displaySummary();
+            
+            // Auto-disconnect after summary is generated
+            console.log('🔌 Auto-disconnecting after summary generation...');
+            setTimeout(() => {
+                if (isConnected && !isRecording) {
+                    console.log('✅ Disconnecting backend connection');
+                    disconnectFromBackend();
+                    showAlert('Summary complete! Connection closed. Ready for next session.', 'success');
+                }
+            }, 2000);
+
+        } catch (error) {
+            console.error('❌ Failed to generate summary with backend:', error);
+            summaryGenerating.style.display = 'none';
+            
+            // Fallback to local summary generation
+            console.log('⚠️ Falling back to local summary generation...');
+            generateAISummary();
+        }
     }
 
     function displaySummary() {

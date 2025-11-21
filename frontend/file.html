@@ -1614,8 +1614,8 @@
                             <div class="step" id="step1" role="status" aria-atomic="true">
                                 <div class="step-number">1</div>
                                 <div class="step-content">
-                                    <div class="step-title">Audio Upload & Preparation</div>
-                                    <div class="step-desc">Preparing your audio file for transcription...</div>
+                                    <div class="step-title">Whisper Transcription</div>
+                                    <div class="step-desc">Converting audio to text using Whisper AI...</div>
                                     <div class="step-meta">
                                         <div class="step-duration" id="step1-duration">~10s</div>
                                         <div class="step-progress-bg">
@@ -1627,8 +1627,8 @@
                             <div class="step" id="step2" role="status" aria-atomic="true">
                                 <div class="step-number">2</div>
                                 <div class="step-content">
-                                    <div class="step-title">Whisper Transcription</div>
-                                    <div class="step-desc">Converting audio to text using AI model...</div>
+                                    <div class="step-title">AI Enhancement</div>
+                                    <div class="step-desc">Improving transcription with multiple AI models...</div>
                                     <div class="step-meta">
                                         <div class="step-duration" id="step2-duration">~10s</div>
                                         <div class="step-progress-bg">
@@ -1640,10 +1640,10 @@
                             <div class="step" id="step3" role="status" aria-atomic="true">
                                 <div class="step-number">3</div>
                                 <div class="step-content">
-                                    <div class="step-title">LLM Enhancement</div>
-                                    <div class="step-desc">Improving transcription accuracy and clarity...</div>
+                                    <div class="step-title">Finalization</div>
+                                    <div class="step-desc">Combining and polishing final transcription...</div>
                                     <div class="step-meta">
-                                        <div class="step-duration" id="step3-duration">~10s</div>
+                                        <div class="step-duration" id="step3-duration">~5s</div>
                                         <div class="step-progress-bg">
                                             <div class="step-progress" id="step3-progress" style="width:0%"></div>
                                         </div>
@@ -1654,9 +1654,9 @@
                                 <div class="step-number">4</div>
                                 <div class="step-content">
                                     <div class="step-title">Summary Generation</div>
-                                    <div class="step-desc">Creating AI-powered meeting summary...</div>
+                                    <div class="step-desc">Creating comprehensive AI summary...</div>
                                     <div class="step-meta">
-                                        <div class="step-duration" id="step4-duration">~10s</div>
+                                        <div class="step-duration" id="step4-duration">~5s</div>
                                         <div class="step-progress-bg">
                                             <div class="step-progress" id="step4-progress" style="width:0%"></div>
                                         </div>
@@ -2048,21 +2048,53 @@
                 });
                 updateStep(1, 'active');
 
-                // Map progress percentage to step states
-                function syncStepsForPercentage(pct) {
+                // Map progress percentage to step states based on backend progress
+                function syncStepsForPercentage(pct, message, step) {
                     const percent = Math.max(0, Math.min(100, Math.floor(pct)));
                     // Update overall progress bar/text
                     if (progressBar) progressBar.style.width = percent + '%';
-                    if (progressText) progressText.textContent = `Processing: ${percent}%`;
+                    if (progressText) progressText.textContent = message || `Processing: ${percent}%`;
 
-                    // Determine current step based on percentage
-                    // 0-24: step 1, 25-49: step 2, 50-74: step 3, 75-99: step 4, 100: all done
-                    let currentStep = 1;
-                    if (percent >= 25) currentStep = 2;
-                    if (percent >= 50) currentStep = 3;
-                    if (percent >= 75) currentStep = 4;
+                    // Use backend step number if provided, otherwise infer from percentage
+                    let currentStep = step || 1;
+                    if (!step) {
+                        // Fallback: Determine current step based on percentage
+                        // 0-25: step 1, 26-50: step 2, 51-80: step 3, 81-100: step 4
+                        if (percent >= 81) currentStep = 4;
+                        else if (percent >= 51) currentStep = 3;
+                        else if (percent >= 26) currentStep = 2;
+                        else currentStep = 1;
+                    }
 
-                    // Apply classes
+                    // Update step descriptions based on backend message
+                    if (message && currentStep) {
+                        const stepDesc = document.querySelector(`#step${currentStep} .step-desc`);
+                        if (stepDesc) {
+                            stepDesc.textContent = message;
+                        }
+                    }
+
+                    // Update step progress bars
+                    for (let s = 1; s <= 4; s++) {
+                        const stepProgressBar = document.getElementById(`step${s}-progress`);
+                        if (stepProgressBar) {
+                            if (s < currentStep) {
+                                stepProgressBar.style.width = '100%';
+                            } else if (s === currentStep) {
+                                // Calculate progress within current step
+                                let stepProgress = 0;
+                                if (s === 1) stepProgress = Math.min(100, (percent / 25) * 100);
+                                else if (s === 2) stepProgress = Math.min(100, ((percent - 25) / 25) * 100);
+                                else if (s === 3) stepProgress = Math.min(100, ((percent - 50) / 30) * 100);
+                                else if (s === 4) stepProgress = Math.min(100, ((percent - 80) / 20) * 100);
+                                stepProgressBar.style.width = stepProgress + '%';
+                            } else {
+                                stepProgressBar.style.width = '0%';
+                            }
+                        }
+                    }
+
+                    // Apply classes for visual state
                     for (let s = 1; s <= 4; s++) {
                         const el = document.getElementById(`step${s}`);
                         if (!el) continue;
@@ -2080,8 +2112,11 @@
                 // REAL BACKEND INTEGRATION - Use file-processing.js + progress WebSocket
                 processAudioFile(selectedFile, {
                     onProgress: (progress) => {
+                        // Progress can be a number or object {percentage, message, step}
                         const pct = typeof progress === 'number' ? progress : (progress && progress.percentage) || 0;
-                        syncStepsForPercentage(pct);
+                        const message = progress && progress.message;
+                        const step = progress && progress.step;
+                        syncStepsForPercentage(pct, message, step);
                     },
                     onComplete: (result) => {
                         console.log('Processing complete:', result);

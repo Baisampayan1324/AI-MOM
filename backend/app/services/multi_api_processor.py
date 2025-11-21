@@ -26,7 +26,7 @@ try:
     logger.info("✅ pyannote.audio is available for speaker diarization")
 except ImportError:
     PYANNOTE_AVAILABLE = False
-    logger.warning("⚠️ pyannote.audio not available, using simple speaker detection")
+    logger.warning("⚠️ pyannote.audio not available - will default to Speaker 1 for all speech. Install pyannote.audio and set HUGGINGFACE_TOKEN for multi-speaker detection.")
 
 class MultiAPIProcessor:
     def __init__(self):
@@ -162,12 +162,18 @@ class MultiAPIProcessor:
 
         # Step 1: Get Whisper transcription first (fast baseline)
         logger.info("🎯 Step 1: Fast Whisper transcription")
+        if progress_callback:
+            await progress_callback(10, "Starting Whisper transcription", 1)
         whisper_result = self.whisper_model.transcribe(audio_data, fp16=True, language="en")
         whisper_text = str(whisper_result.get("text", "")).strip()
         logger.info(f"📝 Whisper transcription: {len(whisper_text)} characters")
+        if progress_callback:
+            await progress_callback(40, "Whisper transcription complete", 1)
 
         # Step 2: Run 2 LLM improvements in parallel on the Whisper text
         logger.info("🚀 Step 2: Parallel 2-model LLM improvements")
+        if progress_callback:
+            await progress_callback(50, "Enhancing transcription with AI models", 2)
 
         improvement_tasks = [
             self._improve_with_groq_llama33(whisper_text),
@@ -175,6 +181,8 @@ class MultiAPIProcessor:
         ]
 
         improvement_results = await asyncio.gather(*improvement_tasks, return_exceptions=True)
+        if progress_callback:
+            await progress_callback(80, "AI enhancement complete", 2)
 
         # Extract successful results
         successful_results = []
@@ -186,6 +194,8 @@ class MultiAPIProcessor:
                 logger.warning(f"❌ Model {i+1} failed: {str(result) if not isinstance(result, Exception) else str(result)}")
 
         # Step 3: Combine results
+        if progress_callback:
+            await progress_callback(90, "Finalizing transcription", 3)
         if successful_results:
             if len(successful_results) == 1:
                 # Only one successful result
@@ -197,6 +207,8 @@ class MultiAPIProcessor:
             # Fallback to Whisper only
             logger.warning("⚠️ All LLM improvements failed, using Whisper only")
             final_transcription = whisper_text
+        if progress_callback:
+            await progress_callback(100, "Transcription complete", 3)
 
         processing_time = time.time() - start_time
         logger.info(".2f")
@@ -249,20 +261,22 @@ class MultiAPIProcessor:
 
         # Step 3: Combine all chunk transcriptions
         if progress_callback:
-            await progress_callback(60, "Combining transcriptions", 2)
+            await progress_callback(60, "Combining transcriptions", 3)
             
         full_transcription = self._combine_chunk_transcriptions(chunk_transcriptions)
         logger.info(f"📋 Combined transcription length: {len(full_transcription)} characters")
+        if progress_callback:
+            await progress_callback(70, "Transcription combined", 3)
 
         # Step 4: Single ultra-fast LLM improvement (instead of chunked)
         logger.info("⚡ Step 4: Single LLM improvement for speed")
         if progress_callback:
-            await progress_callback(80, "LLM enhancement in progress", 3)
+            await progress_callback(80, "Enhancing with AI", 4)
             
         improved_transcription = await self._ultra_fast_improve_transcription(full_transcription)
 
         if progress_callback:
-            await progress_callback(95, "Finalizing results", 4)
+            await progress_callback(95, "Finalizing transcription", 4)
 
         processing_time = time.time() - start_time
         logger.info(f"✅ Ultra-fast processing completed in {processing_time:.2f} seconds")
@@ -858,8 +872,8 @@ Rules:
                 full_audio,
                 fp16=use_fp16,
                 language=None,  # Auto-detect language
-                beam_size=2,  # Increased for better accuracy
-                best_of=2,  # Consider multiple candidates
+                beam_size=1,  # Reduced from 2 for faster processing
+                best_of=1,  # Reduced from 2 for faster processing
                 temperature=0.0,
                 condition_on_previous_text=True,  # Use context for better accuracy
                 word_timestamps=False,
@@ -871,11 +885,12 @@ Rules:
             text = str(result.get('text', '')).strip()
             energy_val = locals().get('energy', overall_energy)
             
-            # Speaker detection - use pyannote if available, otherwise simple
+            # Speaker detection - use pyannote if available, otherwise default to Speaker 1
             self.total_audio_duration += duration
             if self.diarization_pipeline:
                 speaker_id = self._detect_speaker_pyannote(full_audio, self.total_audio_duration)
             else:
+                # Use simple fallback (always Speaker 1) when pyannote not available
                 speaker_id = self._detect_speaker_simple(full_audio)
             
             logger.debug(f"Realtime flush {duration:.2f}s energy={overall_energy:.2e} speaker={speaker_id} -> transcribed {len(text)} chars in {elapsed:.3f}s")
@@ -1034,53 +1049,9 @@ Rules:
             return self._detect_speaker_simple(audio)
     
     def _detect_speaker_simple(self, audio: np.ndarray) -> int:
-        """Simple speaker detection based on audio characteristics (pitch, energy patterns)."""
-        try:
-            # Extract basic audio features for speaker identification
-            energy = float(np.mean(audio ** 2))
-            zero_crossings = np.sum(np.abs(np.diff(np.sign(audio)))) / (2 * len(audio))
-            
-            # Calculate spectral centroid (rough pitch indicator)
-            fft_vals = np.abs(np.fft.rfft(audio))
-            freqs = np.fft.rfftfreq(len(audio), 1/self.rt_sample_rate)
-            spectral_centroid = np.sum(freqs * fft_vals) / (np.sum(fft_vals) + 1e-10)
-            
-            # Create voice signature
-            signature = (energy * 1000, zero_crossings * 100, spectral_centroid / 100)
-            
-            if not self.speaker_embeddings:
-                self.speaker_embeddings.append(signature)
-                self.speaker_count = 1
-                self.last_speaker_id = 1
-                logger.info("New speaker detected: Speaker 1")
-                return 1
-            
-            # Find closest matching speaker
-            min_distance = float('inf')
-            best_speaker = self.last_speaker_id or 1
-            
-            for idx, known_sig in enumerate(self.speaker_embeddings):
-                distance = np.sqrt(
-                    (signature[0] - known_sig[0])**2 + 
-                    (signature[1] - known_sig[1])**2 +
-                    (signature[2] - known_sig[2])**2
-                )
-                if distance < min_distance:
-                    min_distance = distance
-                    best_speaker = idx + 1
-            
-            # Threshold for new speaker detection
-            threshold = 1.5
-            
-            if min_distance > threshold and self.speaker_count < 10:
-                self.speaker_embeddings.append(signature)
-                self.speaker_count += 1
-                best_speaker = self.speaker_count
-                logger.info(f"New speaker detected: Speaker {best_speaker}")
-            
-            self.last_speaker_id = best_speaker
-            return best_speaker
-            
-        except Exception as e:
-            logger.error(f"Speaker detection error: {e}")
-            return self.last_speaker_id or 1
+        """Simple speaker detection fallback - just returns Speaker 1 consistently.
+        This prevents false detection of multiple speakers when pyannote is not available.
+        """
+        # Always return Speaker 1 when pyannote is not available
+        # This prevents the system from creating fake speaker detections (Speaker 2-10)
+        return 1

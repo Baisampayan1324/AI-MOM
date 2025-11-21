@@ -176,6 +176,38 @@ async def create_or_update_user_profile(profile: UserProfile):
         logger.error(f"Error updating profile: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Profile update failed: {str(e)}")
 
+@router.post("/generate-summary")
+async def generate_summary(request: dict):
+    """
+    Generate AI summary from transcription text.
+    Used by real-time recording to create comprehensive summaries after recording stops.
+    """
+    try:
+        transcription = request.get("transcription", "")
+        
+        if not transcription or len(transcription.strip()) < 10:
+            raise HTTPException(status_code=400, detail="Transcription text is required and must be at least 10 characters")
+        
+        logger.info(f"Generating summary for transcription ({len(transcription)} chars)")
+        
+        # Generate comprehensive summary using the summarizer service
+        comprehensive_summary = await summarizer.generate_comprehensive_summary(transcription)
+        
+        logger.info("Summary generated successfully")
+        
+        return {
+            "full_summary": comprehensive_summary.get('full_summary'),
+            "key_points": comprehensive_summary.get('key_points', []),
+            "action_items": comprehensive_summary.get('action_items', []),
+            "conclusion": comprehensive_summary.get('conclusion')
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating summary: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Summary generation failed: {str(e)}")
+
 @router.get("/user-profile")
 async def get_user_profile():
     """
