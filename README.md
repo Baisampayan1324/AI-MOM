@@ -862,7 +862,10 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ### Contributors
 
-- **Baisampayan1324**
+- **Baisampayan Dey**
+- **Sanjit Vinod Pandey**
+- **Dhruv Motovall**
+- **Aryan Patil**
 
 ---
 
