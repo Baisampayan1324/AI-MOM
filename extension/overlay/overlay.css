@@ -2,25 +2,25 @@
 
 /* CSS Variables matching frontend theme */
 :root {
-  --bg-dark: #0a0a0a;
-  --bg-gradient: #1a1a2e;
-  --card-bg: rgba(255, 255, 255, 0.05);
-  --card-border: rgba(255, 255, 255, 0.1);
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --text-muted: rgba(255, 255, 255, 0.5);
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --secondary: #8b5cf6;
-  --accent: #a855f7;
-  --success: #22c55e;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.4);
-  --border-radius: 16px;
-  --border-radius-sm: 12px;
-  --transition: all 0.15s ease;
+    --bg-dark: #0a0a0a;
+    --bg-gradient: #1a1a2e;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-muted: rgba(255, 255, 255, 0.5);
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --secondary: #8b5cf6;
+    --accent: #a855f7;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.4);
+    --border-radius: 16px;
+    --border-radius-sm: 12px;
+    --transition: all 0.15s ease;
 }
 
 /* Recording Status Overlay */
@@ -47,6 +47,7 @@
         transform: translateX(100%);
         opacity: 0;
     }
+
     to {
         transform: translateX(0);
         opacity: 1;
@@ -77,8 +78,17 @@
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.2); }
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(1.2);
+    }
 }
 
 .recording-text {
@@ -606,9 +616,12 @@
 }
 
 @keyframes float {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0) scale(1);
     }
+
     50% {
         transform: translateY(-20px) scale(1.1);
     }
@@ -620,6 +633,7 @@
         opacity: 0;
         transform: translate(-50%, -50%) scale(0.9);
     }
+
     to {
         opacity: 1;
         transform: translate(-50%, -50%) scale(1);
@@ -631,6 +645,7 @@
         opacity: 0;
         transform: translateX(100%);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -642,6 +657,7 @@
         opacity: 0;
         transform: translateX(100%);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -649,18 +665,24 @@
 }
 
 @keyframes iconPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: var(--shadow-lg);
     }
+
     50% {
         box-shadow: 0 20px 60px rgba(99, 102, 241, 0.6);
     }
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
     }
+
     50% {
         opacity: 0.7;
     }
@@ -673,12 +695,12 @@
         max-width: 350px;
         right: 5vw;
     }
-    
+
     .unified-start-dialog {
         width: 90vw;
         max-width: 380px;
     }
-    
+
     .unified-floating-icon {
         width: 48px;
         height: 48px;
@@ -715,12 +737,12 @@
         background: rgba(0, 0, 0, 1);
         border: 2px solid white;
     }
-    
+
     .overlay-header {
         background: #000;
         border-bottom: 2px solid white;
     }
-    
+
     .transcription-text {
         background: #000;
         border: 1px solid white;
@@ -729,16 +751,17 @@
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+
     .unified-transcription-overlay,
     .unified-start-dialog,
     .unified-notification {
         animation: none;
     }
-    
+
     .unified-floating-icon {
         animation: none;
     }
-    
+
     .overlay-btn,
     .dialog-btn {
         transition: none;
@@ -832,6 +855,7 @@
         transform: translateX(100%);
         opacity: 0;
     }
+
     to {
         transform: translateX(0);
         opacity: 1;
@@ -935,6 +959,7 @@
         transform: translateX(120%) scale(0.9);
         opacity: 0;
     }
+
     to {
         transform: translateX(0) scale(1);
         opacity: 1;
@@ -946,8 +971,316 @@
         transform: translateX(0) scale(1);
         opacity: 1;
     }
+
     to {
         transform: translateX(120%) scale(0.9);
         opacity: 0;
     }
+}
+
+/* ────────────────────────────────────────────────
+   Bug Fix #4: .control-btn was missing from overlay.css
+   These are the Start / Pause / Stop buttons inside the overlay audio controls
+   ──────────────────────────────────────────────── */
+.audio-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(26, 26, 46, 0.6);
+    border-top: 1px solid var(--card-border);
+    backdrop-filter: blur(10px);
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--card-border);
+    border-radius: var(--border-radius-sm);
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    white-space: nowrap;
+}
+
+.control-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.control-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.control-btn.start {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.2));
+    border-color: rgba(34, 197, 94, 0.4);
+    color: var(--success);
+}
+
+.control-btn.start:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(22, 163, 74, 0.3));
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+}
+
+.control-btn.pause {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.2));
+    border-color: rgba(245, 158, 11, 0.4);
+    color: var(--warning);
+}
+
+.control-btn.pause:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(217, 119, 6, 0.3));
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+}
+
+.control-btn.stop {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+    border-color: rgba(239, 68, 68, 0.4);
+    color: var(--danger);
+}
+
+.control-btn.stop:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.3));
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+/* Volume Control */
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 70px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--card-border);
+    outline: none;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+    background: var(--secondary);
+    transform: scale(1.2);
+}
+
+/* ─── Improved Audio Level Bars: CSS waveform animation ─── */
+@keyframes waveformBar1 {
+
+    0%,
+    100% {
+        height: 15%
+    }
+
+    50% {
+        height: 65%
+    }
+}
+
+@keyframes waveformBar2 {
+
+    0%,
+    100% {
+        height: 30%
+    }
+
+    33% {
+        height: 85%
+    }
+
+    66% {
+        height: 20%
+    }
+}
+
+@keyframes waveformBar3 {
+
+    0%,
+    100% {
+        height: 50%
+    }
+
+    25% {
+        height: 90%
+    }
+
+    75% {
+        height: 25%
+    }
+}
+
+@keyframes waveformBar4 {
+
+    0%,
+    100% {
+        height: 20%
+    }
+
+    40% {
+        height: 75%
+    }
+
+    80% {
+        height: 40%
+    }
+}
+
+@keyframes waveformBar5 {
+
+    0%,
+    100% {
+        height: 40%
+    }
+
+    60% {
+        height: 60%
+    }
+}
+
+.audio-bar.active:nth-child(1) {
+    animation: waveformBar1 0.8s ease-in-out infinite;
+}
+
+.audio-bar.active:nth-child(2) {
+    animation: waveformBar2 0.9s ease-in-out infinite 0.1s;
+}
+
+.audio-bar.active:nth-child(3) {
+    animation: waveformBar3 0.7s ease-in-out infinite 0.05s;
+}
+
+.audio-bar.active:nth-child(4) {
+    animation: waveformBar4 1.0s ease-in-out infinite 0.15s;
+}
+
+.audio-bar.active:nth-child(5) {
+    animation: waveformBar5 0.85s ease-in-out infinite 0.2s;
+}
+
+/* ─── Recording dot glow pulse ─── */
+.recording-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--danger);
+    border-radius: 50%;
+    animation: recordingGlow 1.5s ease-in-out infinite;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+}
+
+@keyframes recordingGlow {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+
+    50% {
+        transform: scale(1.2);
+        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+    }
+}
+
+/* ─── Improved transcription entry with speaker chip ─── */
+.transcription-entry {
+    margin: 8px 0;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: var(--border-radius-sm);
+    border-left: 3px solid var(--primary);
+    backdrop-filter: blur(3px);
+    transition: background 0.15s ease;
+}
+
+.transcription-entry:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.entry-speaker-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* ─── Minimized recording pill ─── */
+.ai-mom-minimized-indicator {
+    animation: minimizedPulse 2s ease-in-out infinite;
+}
+
+@keyframes minimizedPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6);
+    }
+}
+
+/* ─── Empty state for transcription area ─── */
+.transcription-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    text-align: center;
+    gap: 8px;
+}
+
+.empty-icon {
+    font-size: 36px;
+    opacity: 0.6;
+    animation: float 3s ease-in-out infinite;
+}
+
+.empty-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.empty-description {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 260px;
 }

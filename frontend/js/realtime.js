@@ -603,7 +603,9 @@
         console.log('✅ Summary created:', aiSummary);
         displaySummary();
         
-        // Auto-disconnect after summary is generated
+        // DISABLED: Auto-disconnect removed - user controls connection manually
+        // This was causing disconnections during active meetings
+        /*
         console.log('🔌 Auto-disconnecting after summary generation...');
         setTimeout(() => {
             if (isConnected && !isRecording) {
@@ -612,6 +614,7 @@
                 showAlert('Summary complete! Connection closed. Ready for next session.', 'success');
             }
         }, 2000);  // 2 second delay to allow user to see summary
+        */
     }
 
     async function generateAISummaryWithBackend() {

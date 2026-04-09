@@ -5,7 +5,10 @@ class UnifiedPopupController {
     constructor() {
         this.backendUrl = 'http://localhost:8000';
         this.isCapturing = false;
+        this.isPaused = false;
         this.captureStartTime = null;
+        this.pausedDuration = 0;
+        this.pauseStartTime = null;
         this.wordCount = 0;
         this.connectionStatus = 'offline';
         this.durationTimer = null;
@@ -13,35 +16,35 @@ class UnifiedPopupController {
         this.transcriptData = [];
         this.currentPlatform = 'unknown';
         this.screenCaptureEnabled = false; // Track screen capture state
-        
+
         this.init();
     }
-    
+
     async init() {
         console.log('✅ Initializing unified popup controller...');
-        
+
         // Load saved settings
         await this.loadSettings();
-        
+
         // Setup event listeners
         this.setupEventListeners();
-        
+
         // Test backend connection
         await this.testConnection();
-        
+
         // Check current tab platform
         await this.checkCurrentPlatform();
-        
+
         // Check if already capturing
         await this.checkCaptureStatus();
-        
+
         // Update UI
         this.updateUI();
         this.updateModeUI();
-        
+
         console.log('✅ Unified popup controller initialized');
     }
-    
+
     async loadSettings() {
         try {
             const result = await chrome.storage.sync.get({
@@ -52,17 +55,17 @@ class UnifiedPopupController {
                 speakerAlerts: true,
                 recordingMode: 'screen-capture' // Default to screen-capture mode
             });
-            
+
             this.backendUrl = result.backendUrl;
             this.recordingMode = result.recordingMode; // Load saved recording mode
-            
+
             // Update UI with loaded settings
             document.getElementById('backend-url').value = result.backendUrl;
             document.getElementById('language-select').value = result.language;
             document.getElementById('show-overlay').checked = result.showOverlay;
             document.getElementById('auto-summary').checked = result.autoSummary;
             document.getElementById('speaker-alerts').checked = result.speakerAlerts;
-            
+
             // Update mode selector to reflect loaded mode
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 if (btn.dataset.mode === this.recordingMode) {
@@ -71,14 +74,14 @@ class UnifiedPopupController {
                     btn.classList.remove('active');
                 }
             });
-            
+
             console.log('💾 Settings loaded:', result);
-            
+
         } catch (error) {
             console.error('❌ Failed to load settings:', error);
         }
     }
-    
+
     async saveSettings() {
         try {
             const settings = {
@@ -89,18 +92,18 @@ class UnifiedPopupController {
                 speakerAlerts: document.getElementById('speaker-alerts').checked,
                 recordingMode: this.recordingMode // Save current recording mode
             };
-            
+
             await chrome.storage.sync.set(settings);
             this.backendUrl = settings.backendUrl;
-            
+
             console.log('💾 Settings saved:', settings);
             this.updatePerformanceInfo('Settings saved');
-            
+
         } catch (error) {
             console.error('❌ Failed to save settings:', error);
         }
     }
-    
+
     setupEventListeners() {
         // Mode selector
         document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -108,13 +111,13 @@ class UnifiedPopupController {
                 document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.recordingMode = btn.dataset.mode;
-                
+
                 // Save the new mode to settings
                 this.saveSettings();
-                
+
                 // Show/hide sections based on mode
                 this.updateModeUI();
-                
+
                 console.log('📊 Recording mode changed to:', this.recordingMode);
             });
         });
@@ -123,20 +126,28 @@ class UnifiedPopupController {
         document.getElementById('start-recording')?.addEventListener('click', () => {
             this.startRecording();
         });
-        
+
         document.getElementById('stop-recording')?.addEventListener('click', () => {
             this.stopRecording();
+        });
+
+        document.getElementById('pause-recording')?.addEventListener('click', () => {
+            this.pauseRecording();
+        });
+
+        document.getElementById('resume-recording')?.addEventListener('click', () => {
+            this.resumeRecording();
         });
 
         // Transcript actions
         document.getElementById('export-transcript')?.addEventListener('click', () => {
             this.exportTranscript();
         });
-        
+
         document.getElementById('generate-summary')?.addEventListener('click', () => {
             this.generateSummary();
         });
-        
+
         document.getElementById('copy-text')?.addEventListener('click', () => {
             this.copyTranscript();
         });
@@ -145,20 +156,20 @@ class UnifiedPopupController {
         document.getElementById('settings-toggle')?.addEventListener('click', () => {
             this.toggleSettings();
         });
-        
+
         // Settings changes
         document.getElementById('backend-url')?.addEventListener('change', () => {
             this.saveSettings();
         });
-        
+
         document.getElementById('language-select')?.addEventListener('change', () => {
             this.saveSettings();
         });
-        
+
         document.getElementById('show-overlay')?.addEventListener('change', () => {
             this.saveSettings();
         });
-        
+
         document.getElementById('auto-summary')?.addEventListener('change', () => {
             this.saveSettings();
         });
@@ -172,21 +183,21 @@ class UnifiedPopupController {
         const audioFileInput = document.getElementById('audio-file-input');
         const fileRemoveBtn = document.getElementById('file-remove');
         const processAudioBtn = document.getElementById('process-audio');
-        
+
         if (fileUploadArea) {
             fileUploadArea.addEventListener('click', () => {
                 audioFileInput.click();
             });
-            
+
             fileUploadArea.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 fileUploadArea.classList.add('drag-over');
             });
-            
+
             fileUploadArea.addEventListener('dragleave', () => {
                 fileUploadArea.classList.remove('drag-over');
             });
-            
+
             fileUploadArea.addEventListener('drop', (e) => {
                 e.preventDefault();
                 fileUploadArea.classList.remove('drag-over');
@@ -196,7 +207,7 @@ class UnifiedPopupController {
                 }
             });
         }
-        
+
         if (audioFileInput) {
             audioFileInput.addEventListener('change', (e) => {
                 if (e.target.files.length > 0) {
@@ -204,13 +215,13 @@ class UnifiedPopupController {
                 }
             });
         }
-        
+
         if (fileRemoveBtn) {
             fileRemoveBtn.addEventListener('click', () => {
                 this.clearSelectedFile();
             });
         }
-        
+
         if (processAudioBtn) {
             processAudioBtn.addEventListener('click', () => {
                 this.processAudioFile();
@@ -222,7 +233,7 @@ class UnifiedPopupController {
             e.preventDefault();
             this.showHelp();
         });
-        
+
         // Diagnostics link
         document.getElementById('diagnostics-link')?.addEventListener('click', (e) => {
             e.preventDefault();
@@ -236,124 +247,127 @@ class UnifiedPopupController {
 
         console.log('📋 Event listeners setup complete');
     }
-    
+
     updateModeUI() {
         const audioUploadSection = document.getElementById('audio-upload-section');
         const recordingControls = document.getElementById('recording-controls');
         const modeSelector = document.querySelector('.mode-selector');
-        
+
         if (!audioUploadSection || !recordingControls || !modeSelector) {
             console.warn('⚠️ Some UI elements not found');
             return;
         }
-        
+
         if (this.recordingMode === 'audio-upload') {
             // Show audio upload UI
             audioUploadSection.style.display = 'block';
             recordingControls.style.display = 'none';
-            
+
             // Keep mode selector visible so user can switch back
             modeSelector.style.display = 'flex';
         } else {
             // Show recording controls
             audioUploadSection.style.display = 'none';
             recordingControls.style.display = 'block';
-            
+
             // Mode selector always visible
             modeSelector.style.display = 'flex';
-            
+
             // Reset screen capture state when switching away from screen-capture mode
             if (this.recordingMode !== 'screen-capture' && this.screenCaptureEnabled) {
                 this.resetScreenCapture();
             }
         }
-        
+
         // Update UI based on new mode
         this.updateUI();
     }
-    
+
     resetScreenCapture() {
         if (this.screenStream) {
             this.screenStream.getTracks().forEach(track => track.stop());
             this.screenStream = null;
         }
         this.screenCaptureEnabled = false;
-        
+
         const captureStatus = document.getElementById('capture-status');
         if (captureStatus) {
             captureStatus.style.display = 'none';
         }
-        
+
         // Update UI to reflect the reset
         this.updateUI();
     }
-    
+
     onScreenCaptureEnded() {
         console.log('🛑 Screen capture ended by user');
         this.screenCaptureEnabled = false;
-        
+
         // Stop recording if it's active
         if (this.isCapturing) {
             this.stopRecording();
         }
-        
+
         // Reset UI - no need to show trigger button, just reset start button
         const startBtn = document.getElementById('start-recording');
         const captureStatus = document.getElementById('capture-status');
-        
+
         if (startBtn && !this.isCapturing) {
             startBtn.disabled = false;
             startBtn.innerHTML = '<span class="btn-icon">⏺️</span><span>Start Recording</span>';
         }
-        
+
         if (captureStatus) {
             captureStatus.style.display = 'none';
         }
-        
+
         this.showWarning('Screen sharing stopped. Click "Start Recording" to share again.');
     }
-    
+
     async startRecording() {
         try {
             console.log('🎬 Starting recording in mode:', this.recordingMode);
-            
+
             this.updateStatus('Starting...', 'recording');
-            
+
             if (this.recordingMode === 'screen-capture') {
                 // For screen capture mode, use the simplified one-step process
                 await this.enableScreenCaptureAndStart();
-            } else if (this.recordingMode === 'tab-audio') {
-                await this.startTabAudioCapture();
+            } else if (this.recordingMode === 'audio-upload') {
+                // Audio upload mode - trigger file selection
+                const audioFileInput = document.getElementById('audio-file-input');
+                if (audioFileInput) audioFileInput.click();
+                this.updateStatus('Select an audio file to process', 'idle');
             } else {
                 await this.startMicrophoneCapture();
             }
-            
+
         } catch (error) {
             console.error('❌ Failed to start recording:', error);
             this.showError('Failed to start recording: ' + error.message);
         }
     }
-    
+
     async enableScreenCaptureAndStart() {
         try {
             console.log('🖥️ Starting screen capture and recording in one step...');
-            
+
             // Update button to show we're requesting permissions
             const startBtn = document.getElementById('start-recording');
             if (startBtn) {
                 startBtn.disabled = true;
                 startBtn.innerHTML = '<span class="btn-icon">⏳</span><span>Grant Screen Permission...</span>';
             }
-            
+
             // Get current active tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            
+
             if (!tab) {
                 throw new Error('No active tab found');
             }
-            
+
             console.log('� Current tab:', tab.url);
-            
+
             // Try to inject content script if not already present
             try {
                 await this.ensureContentScriptLoaded(tab.id);
@@ -361,7 +375,7 @@ class UnifiedPopupController {
                 console.warn('⚠️ Content script injection failed:', injectionError);
                 // Continue anyway, might already be loaded
             }
-            
+
             // Send message to content script to start screen capture (it will handle permission request)
             let response;
             try {
@@ -376,17 +390,17 @@ class UnifiedPopupController {
                 });
             } catch (messageError) {
                 console.error('❌ Content script communication failed:', messageError);
-                
+
                 // Show helpful error message with reload option
                 this.showContentScriptError();
                 throw new Error('Content script not available. Please reload the page and try again.');
             }
-            
+
             if (response && response.success) {
                 this.isCapturing = true;
                 this.captureStartTime = Date.now();
                 this.screenCaptureEnabled = true;
-                
+
                 // Show capture status
                 const captureStatus = document.getElementById('capture-status');
                 if (captureStatus) {
@@ -400,7 +414,7 @@ class UnifiedPopupController {
                         statusDot.className = 'status-dot recording';
                     }
                 }
-                
+
                 this.updateUI();
                 this.startDurationTimer();
                 this.updateStatus('Recording with screen capture...', 'recording');
@@ -408,20 +422,20 @@ class UnifiedPopupController {
             } else {
                 throw new Error(response?.error || 'Failed to start screen capture');
             }
-            
+
         } catch (error) {
             console.error('❌ Failed to enable screen capture for recording:', error);
-            
+
             // Reset button state
             const startBtn = document.getElementById('start-recording');
             if (startBtn) {
                 startBtn.disabled = false;
                 startBtn.innerHTML = '<span class="btn-icon">⏺️</span><span>Start Recording</span>';
             }
-            
+
             // Provide user-friendly error messages - handle DOMException properly
             let errorMessage = 'Unknown error occurred';
-            
+
             if (error.name === 'NotAllowedError') {
                 errorMessage = 'Screen sharing permission denied. Please allow screen sharing and try again.';
             } else if (error.name === 'NotSupportedError') {
@@ -442,23 +456,23 @@ class UnifiedPopupController {
                 // Last resort for DOMException objects
                 errorMessage = `Screen sharing failed (${error.constructor?.name || 'Unknown error'})`;
             }
-            
+
             // Add helpful tips for common issues
             if (!window.isSecureContext && window.location.protocol !== 'chrome-extension:') {
                 errorMessage += '\n\nTip: Screen sharing requires HTTPS or localhost. Make sure you\'re on a secure site.';
             }
-            
+
             throw new Error(errorMessage);
         }
     }
-    
+
     async startTabAudioCapture() {
         try {
             console.log('🌐 Starting tab audio capture...');
-            
+
             // Get current tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            
+
             // Start tab capture using callback (not Promise)
             const stream = await new Promise((resolve, reject) => {
                 chrome.tabCapture.capture({
@@ -474,11 +488,11 @@ class UnifiedPopupController {
                     }
                 });
             });
-            
+
             this.mediaStream = stream;
             this.isCapturing = true;
             this.captureStartTime = Date.now();
-            
+
             // Send stream to background for processing
             chrome.runtime.sendMessage({
                 action: 'startCapture',
@@ -488,32 +502,32 @@ class UnifiedPopupController {
                     showOverlay: document.getElementById('show-overlay').checked
                 }
             });
-            
+
             this.updateUI();
             this.startDurationTimer();
             this.updateStatus('Recording tab audio...', 'recording');
-            
+
             console.log('✅ Tab audio capture started');
-            
+
         } catch (error) {
             console.error('❌ Failed to start tab audio capture:', error);
             this.showError('Failed to start tab audio capture: ' + error.message);
         }
     }
-    
+
     async startScreenCapture() {
         try {
             console.log('🖥️ Starting screen capture from popup...');
-            
+
             // Get current active tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            
+
             if (!tab) {
                 throw new Error('No active tab found');
             }
-            
+
             console.log('📍 Current tab:', tab.url);
-            
+
             // Try to inject content script if not already present
             try {
                 await this.ensureContentScriptLoaded(tab.id);
@@ -521,7 +535,7 @@ class UnifiedPopupController {
                 console.warn('⚠️ Content script injection failed:', injectionError);
                 // Continue anyway, might already be loaded
             }
-            
+
             // Send message to content script on the tab to start screen capture
             let response;
             try {
@@ -536,12 +550,12 @@ class UnifiedPopupController {
                 });
             } catch (messageError) {
                 console.error('❌ Content script communication failed:', messageError);
-                
+
                 // Show helpful error message with reload option
                 this.showContentScriptError();
                 throw new Error('Content script not available. Please reload the page and try again.');
             }
-            
+
             if (response && response.success) {
                 this.isCapturing = true;
                 this.captureStartTime = Date.now();
@@ -552,51 +566,51 @@ class UnifiedPopupController {
             } else {
                 throw new Error(response?.error || 'Failed to start screen capture');
             }
-            
+
             console.log('✅ Screen capture command sent');
-            
+
         } catch (error) {
             console.error('❌ Failed to start screen capture:', error);
             this.showError('Failed to start screen capture: ' + error.message);
         }
     }
-    
+
     async ensureContentScriptLoaded(tabId) {
         try {
             console.log('🔧 Ensuring content script is loaded...');
-            
+
             // Try to inject the content scripts manually
             await chrome.scripting.executeScript({
                 target: { tabId: tabId },
                 files: ['content/common.js', 'content/screen-capture.js']
             });
-            
+
             // Inject CSS as well
             await chrome.scripting.insertCSS({
                 target: { tabId: tabId },
                 files: ['overlay/overlay.css']
             });
-            
+
             console.log('✅ Content script injected successfully');
-            
+
             // Wait a bit for script to initialize
             await new Promise(resolve => setTimeout(resolve, 500));
-            
+
         } catch (error) {
             console.warn('⚠️ Manual content script injection failed:', error);
             throw error;
         }
     }
-    
+
     async startMicrophoneCapture() {
         try {
             console.log('🎤 Starting microphone capture...');
-            
+
             // Check if microphone permission is available
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 throw new Error('Microphone API not supported in this browser');
             }
-            
+
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     echoCancellation: true,
@@ -605,11 +619,11 @@ class UnifiedPopupController {
                 },
                 video: false
             });
-            
+
             this.mediaStream = stream;
             this.isCapturing = true;
             this.captureStartTime = Date.now();
-            
+
             // Send to background for processing
             chrome.runtime.sendMessage({
                 action: 'startCapture',
@@ -619,19 +633,19 @@ class UnifiedPopupController {
                     showOverlay: document.getElementById('show-overlay').checked
                 }
             });
-            
+
             this.updateUI();
             this.startDurationTimer();
             this.updateStatus('Recording microphone...', 'recording');
-            
+
             console.log('✅ Microphone capture started');
-            
+
         } catch (error) {
             console.error('❌ Failed to start microphone capture:', error);
-            
+
             // Provide user-friendly error messages
             let errorMessage = 'Unknown error occurred';
-            
+
             if (error.name === 'NotAllowedError') {
                 errorMessage = 'Permission dismissed. Please allow microphone access and try again.';
             } else if (error.name === 'NotFoundError') {
@@ -646,7 +660,7 @@ class UnifiedPopupController {
                 // Handle DOMException objects that don't convert to string properly
                 errorMessage = `Microphone access error: ${error.name || 'Unknown error'}`;
             }
-            
+
             this.showError('Failed to start microphone capture: ' + errorMessage);
             this.updateStatus('Microphone access denied', 'error');
         }
@@ -655,46 +669,46 @@ class UnifiedPopupController {
     async processAudioChunk(audioBlob) {
         try {
             console.log('🎵 Processing audio chunk:', audioBlob.size, 'bytes');
-            
+
             // Validate audio blob
             if (!audioBlob || audioBlob.size === 0) {
                 console.warn('⚠️ Empty audio blob received');
                 return;
             }
-            
+
             // Initialize AudioContext if not already done
             if (!this.audioContext) {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
                     sampleRate: 16000
                 });
             }
-            
+
             // Resume AudioContext if suspended
             if (this.audioContext.state === 'suspended') {
                 await this.audioContext.resume();
             }
-            
+
             try {
                 // Decode the compressed audio data to raw PCM
                 const arrayBuffer = await audioBlob.arrayBuffer();
-                
+
                 // Check if arrayBuffer is valid
                 if (arrayBuffer.byteLength === 0) {
                     console.warn('⚠️ Empty audio buffer');
                     return;
                 }
-                
+
                 const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-                
+
                 // Convert to Int16Array (mono channel, 16-bit PCM)
                 const channelData = audioBuffer.getChannelData(0); // Get first channel
                 const audioData = new Int16Array(channelData.length);
-                
+
                 // Convert float32 samples to int16
                 for (let i = 0; i < channelData.length; i++) {
                     audioData[i] = Math.max(-32768, Math.min(32767, channelData[i] * 32768));
                 }
-                
+
                 // Send directly to WebSocket if connected
                 if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
                     this.websocket.send(JSON.stringify({
@@ -705,22 +719,22 @@ class UnifiedPopupController {
                         meeting_id: this.meetingId,
                         platform: this.currentPlatform
                     }));
-                    
+
                     console.log('📨 Sent audio chunk to backend:', audioData.length, 'samples');
                 } else {
                     console.warn('⚠️ WebSocket not connected, skipping audio chunk');
                 }
-                
+
             } catch (decodeError) {
                 console.error('❌ Audio decoding failed:', decodeError);
-                
+
                 // Try alternative processing
                 await this.processAudioChunkFallback(audioBlob);
             }
-            
+
         } catch (error) {
             console.error('❌ Failed to process audio chunk:', error);
-            
+
             // More detailed error logging
             if (error.name === 'DOMException') {
                 console.error('🔍 DOMException details:', {
@@ -729,7 +743,7 @@ class UnifiedPopupController {
                     code: error.code
                 });
             }
-            
+
             // Don't throw error to prevent breaking the recording
         }
     }
@@ -737,10 +751,10 @@ class UnifiedPopupController {
     async processAudioChunkFallback(audioBlob) {
         try {
             console.log('🔄 Using fallback audio processing...');
-            
+
             // Convert blob to base64 as fallback
             const reader = new FileReader();
-            
+
             return new Promise((resolve, reject) => {
                 reader.onload = () => {
                     try {
@@ -752,7 +766,7 @@ class UnifiedPopupController {
                                     (data, byte) => data + String.fromCharCode(byte), ''
                                 )
                             );
-                            
+
                             this.websocket.send(JSON.stringify({
                                 type: 'audio_chunk_base64',
                                 data: base64Audio,
@@ -762,7 +776,7 @@ class UnifiedPopupController {
                                 meeting_id: this.meetingId,
                                 platform: this.currentPlatform
                             }));
-                            
+
                             console.log('📨 Sent fallback audio chunk to backend:', base64Audio.length, 'chars');
                         }
                         resolve();
@@ -770,29 +784,29 @@ class UnifiedPopupController {
                         reject(sendError);
                     }
                 };
-                
+
                 reader.onerror = (error) => {
                     console.error('❌ FileReader error:', error);
                     reject(error);
                 };
-                
+
                 // Read the blob as ArrayBuffer
                 reader.readAsArrayBuffer(audioBlob);
             });
-            
+
         } catch (error) {
             console.error('❌ Fallback audio processing failed:', error);
             this.updateStatus('Microphone access denied', 'error');
         }
     }
-    
+
     async stopRecording() {
         try {
             console.log('⏹️ Stopping recording...');
-            
+
             // Get current active tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            
+
             if (tab) {
                 // Send message to content script to stop capture
                 try {
@@ -805,31 +819,105 @@ class UnifiedPopupController {
                     // Don't throw error, continue with cleanup
                 }
             }
-            
+
             // Also stop any local media stream
             if (this.mediaStream) {
                 this.mediaStream.getTracks().forEach(track => track.stop());
                 this.mediaStream = null;
             }
-            
+
             this.isCapturing = false;
+            this.isPaused = false;
+            this.pausedDuration = 0;
+            this.pauseStartTime = null;
             this.stopDurationTimer();
-            
+
             this.updateUI();
             this.updateStatus('Recording stopped', 'ready');
-            
+
             console.log('✅ Recording stopped');
-            
+
         } catch (error) {
             console.error('❌ Failed to stop recording:', error);
             this.showError('Failed to stop: ' + error.message);
         }
     }
-    
+
+    async pauseRecording() {
+        try {
+            console.log('⏸️ Pausing recording...');
+
+            // Get current active tab
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+            if (tab) {
+                try {
+                    const response = await chrome.tabs.sendMessage(tab.id, {
+                        action: 'PAUSE_RECORDING'
+                    });
+                    console.log('Pause response:', response);
+                } catch (error) {
+                    console.warn('Content script not responding:', error.message);
+                }
+            }
+
+            this.isPaused = true;
+            this.pauseStartTime = Date.now();
+            this.stopDurationTimer();
+
+            this.updateUI();
+            this.updateStatus('Recording paused', 'paused');
+
+            console.log('✅ Recording paused');
+
+        } catch (error) {
+            console.error('❌ Failed to pause recording:', error);
+            this.showError('Failed to pause: ' + error.message);
+        }
+    }
+
+    async resumeRecording() {
+        try {
+            console.log('▶️ Resuming recording...');
+
+            // Get current active tab
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+            if (tab) {
+                try {
+                    const response = await chrome.tabs.sendMessage(tab.id, {
+                        action: 'RESUME_RECORDING'
+                    });
+                    console.log('Resume response:', response);
+                } catch (error) {
+                    console.warn('Content script not responding:', error.message);
+                }
+            }
+
+            // Calculate paused duration
+            if (this.pauseStartTime) {
+                this.pausedDuration += Date.now() - this.pauseStartTime;
+            }
+
+            this.isPaused = false;
+            this.pauseStartTime = null;
+            this.startDurationTimer();
+
+            this.updateUI();
+            this.updateStatus('Recording resumed', 'recording');
+
+            console.log('✅ Recording resumed');
+
+        } catch (error) {
+            console.error('❌ Failed to resume recording:', error);
+            this.showError('Failed to resume: ' + error.message);
+        }
+    }
+
     async checkCaptureStatus() {
         try {
             const response = await chrome.runtime.sendMessage({ action: 'getCaptureStatus' });
-            
+
             if (response && response.isCapturing) {
                 this.isCapturing = true;
                 this.captureStartTime = response.startTime;
@@ -837,23 +925,23 @@ class UnifiedPopupController {
                 this.startDurationTimer();
                 this.updateStatus('Recording in progress...', 'recording');
             }
-            
+
         } catch (error) {
             console.error('❌ Failed to check capture status:', error);
         }
     }
-    
+
     async testConnection() {
         try {
             // Add timeout and retry logic
             let attempt = 0;
             const maxAttempts = 3;
-            
+
             while (attempt < maxAttempts) {
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-                    
+
                     const response = await fetch(`${this.backendUrl}/health`, {
                         method: 'GET',
                         signal: controller.signal,
@@ -861,62 +949,121 @@ class UnifiedPopupController {
                             'Content-Type': 'application/json'
                         }
                     });
-                    
+
                     clearTimeout(timeoutId);
-                    
+
                     if (response.ok) {
                         const data = await response.json();
                         this.connectionStatus = 'online';
                         this.updateBackendStatus('Connected ✅');
+                        this.updateConnectionBadge(true);
                         console.log('✅ Backend connection successful:', data);
                         return true;
                     } else {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
-                    
+
                 } catch (attemptError) {
                     attempt++;
                     console.warn(`⚠️ Connection attempt ${attempt} failed:`, attemptError.message);
-                    
+
                     if (attempt >= maxAttempts) {
                         throw attemptError;
                     }
-                    
+
                     // Wait before retry
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
-            
+
         } catch (error) {
             this.connectionStatus = 'offline';
             this.updateBackendStatus('Offline ⚠️');
-            
+            this.updateConnectionBadge(false);
+
             console.error('❌ Backend connection failed:', error);
-            
+
             // Don't show notification here, let caller handle it
             return false;
         }
     }
-    
+
     updateBackendStatus(text) {
         const backendStatus = document.getElementById('backend-status');
         if (backendStatus) {
             backendStatus.textContent = `Backend: ${text}`;
         }
     }
-    
+
+    updateConnectionBadge(connected) {
+        const badge = document.getElementById('connection-badge');
+        if (badge) {
+            if (connected) {
+                badge.classList.add('connected');
+                badge.querySelector('.connection-text').textContent = 'Connected';
+            } else {
+                badge.classList.remove('connected');
+                badge.querySelector('.connection-text').textContent = 'Offline';
+            }
+        }
+        // Also update the mini HTTP chip
+        this.updateConnectionChip('http-chip', connected);
+    }
+
+    updateConnectionChip(chipId, connected) {
+        const chip = document.getElementById(chipId);
+        if (chip) {
+            if (connected) {
+                chip.classList.add('connected');
+            } else {
+                chip.classList.remove('connected');
+            }
+        }
+    }
+
+    updateStatusCard(status, title, detail) {
+        const card = document.getElementById('status-card');
+        const icon = document.getElementById('status-icon');
+        const titleEl = document.getElementById('status-title');
+        const detailEl = document.getElementById('status-detail');
+        const timer = document.getElementById('recording-timer');
+        const visualizer = document.getElementById('audio-visualizer');
+
+        if (card) {
+            card.className = 'status-card';
+            if (status === 'recording') {
+                card.classList.add('recording');
+                if (icon) icon.textContent = '🔴';
+                if (timer) timer.style.display = 'flex';
+                if (visualizer) visualizer.style.display = 'flex';
+            } else if (status === 'paused') {
+                card.classList.add('paused');
+                if (icon) icon.textContent = '⏸️';
+                if (timer) timer.style.display = 'flex';
+                if (visualizer) visualizer.style.display = 'none';
+            } else {
+                if (icon) icon.textContent = '⏹️';
+                if (timer) timer.style.display = 'none';
+                if (visualizer) visualizer.style.display = 'none';
+            }
+        }
+
+        if (titleEl && title) titleEl.textContent = title;
+        if (detailEl && detail) detailEl.textContent = detail;
+    }
+
     async testConnectionManual() {
         const btn = document.getElementById('test-connection');
         if (btn) {
             btn.disabled = true;
             btn.innerHTML = '<span class="btn-icon">⏳</span><span>Testing...</span>';
         }
-        
+
         try {
             // Add timeout and better error handling
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-            
+
             const response = await fetch(`${this.backendUrl}/health`, {
                 method: 'GET',
                 signal: controller.signal,
@@ -924,9 +1071,9 @@ class UnifiedPopupController {
                     'Content-Type': 'application/json'
                 }
             });
-            
+
             clearTimeout(timeoutId);
-            
+
             if (response.ok) {
                 const data = await response.json();
                 this.connectionStatus = 'online';
@@ -935,13 +1082,13 @@ class UnifiedPopupController {
             } else {
                 throw new Error(`Backend returned status: ${response.status}`);
             }
-            
+
         } catch (error) {
             this.connectionStatus = 'offline';
             this.updateBackendStatus('Offline ⚠️');
-            
+
             let errorMessage = '❌ Cannot connect to backend. ';
-            
+
             if (error.name === 'AbortError') {
                 errorMessage += 'Connection timed out. ';
             } else if (error.message.includes('fetch')) {
@@ -949,9 +1096,9 @@ class UnifiedPopupController {
             } else {
                 errorMessage += `Error: ${error.message}. `;
             }
-            
+
             errorMessage += `Make sure the backend is running on ${this.backendUrl}`;
-            
+
             this.showNotification(errorMessage, 'error');
         } finally {
             if (btn) {
@@ -960,12 +1107,12 @@ class UnifiedPopupController {
             }
         }
     }
-    
+
     async checkCurrentPlatform() {
         try {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             const url = new URL(tab.url);
-            
+
             let platform = 'unknown';
             if (url.hostname.includes('meet.google.com')) {
                 platform = 'google-meet';
@@ -980,86 +1127,115 @@ class UnifiedPopupController {
             } else if (url.protocol === 'file:' || url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
                 platform = 'development';
             }
-            
+
             this.currentPlatform = platform;
             this.updatePlatformInfo();
-            
+
             console.log('🌐 Current platform:', platform, 'URL:', url.href);
-            
+
         } catch (error) {
             console.error('❌ Failed to check platform:', error);
             this.currentPlatform = 'unknown';
             this.updatePlatformInfo();
         }
     }
-    
+
     startDurationTimer() {
         this.durationTimer = setInterval(() => {
-            const elapsed = Date.now() - this.captureStartTime;
+            const elapsed = Date.now() - this.captureStartTime - this.pausedDuration;
             const seconds = Math.floor(elapsed / 1000);
             const minutes = Math.floor(seconds / 60);
             const hours = Math.floor(minutes / 60);
-            
+
             const timeString = `${hours.toString().padStart(2, '0')}:${(minutes % 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
-            
+
+            // Update progress text
             const progressText = document.getElementById('progress-text');
             if (progressText) {
                 progressText.textContent = `Recording: ${timeString}`;
             }
+
+            // Update timer value in status card
+            const timerValue = document.getElementById('timer-value');
+            if (timerValue) {
+                timerValue.textContent = timeString;
+            }
         }, 1000);
     }
-    
+
     stopDurationTimer() {
         if (this.durationTimer) {
             clearInterval(this.durationTimer);
             this.durationTimer = null;
         }
     }
-    
+
     updateProgress(percentage, text) {
         const progressFill = document.getElementById('progress-fill');
         const progressText = document.getElementById('progress-text');
-        
+
         if (progressFill) {
             progressFill.style.width = `${percentage}%`;
         }
-        
+
         if (progressText && text) {
             progressText.textContent = text;
         }
     }
-    
+
     updateUI() {
         const triggerBtn = document.getElementById('trigger-screen-capture');
         const startBtn = document.getElementById('start-recording');
+        const recordingButtons = document.getElementById('recording-buttons');
+        const pauseBtn = document.getElementById('pause-recording');
+        const resumeBtn = document.getElementById('resume-recording');
         const stopBtn = document.getElementById('stop-recording');
         const progressSection = document.getElementById('progress-section');
         const transcriptPreview = document.getElementById('transcript-preview');
         const captureStatus = document.getElementById('capture-status');
-        
+
         if (this.isCapturing) {
             // Recording is active
             if (triggerBtn) triggerBtn.style.display = 'none';
             if (startBtn) startBtn.style.display = 'none';
-            if (stopBtn) stopBtn.style.display = 'block';
+            if (recordingButtons) recordingButtons.style.display = 'flex';
             if (progressSection) progressSection.style.display = 'block';
             if (transcriptPreview) transcriptPreview.style.display = 'block';
-            
+
+            // Handle pause/resume button visibility and status card
+            if (this.isPaused) {
+                if (pauseBtn) pauseBtn.style.display = 'none';
+                if (resumeBtn) resumeBtn.style.display = 'flex';
+                this.updateStatusCard('paused', 'Recording Paused', 'Click Resume to continue');
+            } else {
+                if (pauseBtn) pauseBtn.style.display = 'flex';
+                if (resumeBtn) resumeBtn.style.display = 'none';
+                this.updateStatusCard('recording', 'Recording in Progress', 'Capturing meeting audio...');
+            }
+
             // Update capture status for recording
             if (captureStatus && this.screenCaptureEnabled) {
                 captureStatus.style.display = 'block';
                 const statusText = captureStatus.querySelector('.status-text');
                 const statusDot = captureStatus.querySelector('.status-dot');
-                if (statusText) statusText.textContent = 'Recording in progress...';
-                if (statusDot) {
-                    statusDot.className = 'status-dot recording';
+                if (this.isPaused) {
+                    if (statusText) statusText.textContent = 'Recording paused';
+                    if (statusDot) {
+                        statusDot.className = 'status-dot paused';
+                    }
+                } else {
+                    if (statusText) statusText.textContent = 'Recording in progress...';
+                    if (statusDot) {
+                        statusDot.className = 'status-dot recording';
+                    }
                 }
             }
         } else {
             // Not recording
-            if (stopBtn) stopBtn.style.display = 'none';
+            if (recordingButtons) recordingButtons.style.display = 'none';
             if (progressSection) progressSection.style.display = 'none';
-            
+            this.updateStatusCard('ready', 'Ready to Record', 'Select a mode and start capturing');
+
             // Show appropriate buttons based on screen capture state
             if (this.recordingMode === 'screen-capture') {
                 // Always show Start Recording button for screen capture mode
@@ -1070,7 +1246,7 @@ class UnifiedPopupController {
                     startBtn.disabled = false;
                     startBtn.innerHTML = '<span class="btn-icon">⏺️</span><span>Start Recording</span>';
                 }
-                
+
                 // Show status if screen capture is already enabled
                 if (this.screenCaptureEnabled && captureStatus) {
                     captureStatus.style.display = 'block';
@@ -1096,7 +1272,7 @@ class UnifiedPopupController {
             }
         }
     }
-    
+
     updatePlatformInfo() {
         const platformText = document.getElementById('platform-text');
         if (platformText) {
@@ -1104,7 +1280,7 @@ class UnifiedPopupController {
             platformText.textContent = platformName;
         }
     }
-    
+
     formatPlatformName(platform) {
         switch (platform) {
             case 'google-meet':
@@ -1123,35 +1299,35 @@ class UnifiedPopupController {
                 return 'Unknown Platform';
         }
     }
-    
+
     updateStatus(text, status = 'ready') {
         const statusText = document.querySelector('.status-text');
         const statusDot = document.querySelector('.status-dot');
-        
+
         if (statusText) statusText.textContent = text;
         if (statusDot) {
             statusDot.className = `status-dot ${status}`;
         }
     }
-    
+
     updatePerformanceInfo(text) {
         const performanceInfo = document.getElementById('performance-info');
         if (performanceInfo) {
             performanceInfo.textContent = text;
         }
     }
-    
+
     toggleSettings() {
         const content = document.getElementById('settings-content');
         const toggle = document.getElementById('settings-toggle');
-        
+
         if (!content || !toggle) {
             console.warn('⚠️ Settings elements not found');
             return;
         }
-        
+
         const arrow = toggle.querySelector('.toggle-arrow');
-        
+
         if (content.style.display === 'none' || content.style.display === '') {
             content.style.display = 'block';
             if (arrow) arrow.textContent = '▲';
@@ -1160,37 +1336,37 @@ class UnifiedPopupController {
             if (arrow) arrow.textContent = '▼';
         }
     }
-    
+
     async exportTranscript() {
         try {
-            const transcript = this.transcriptData.map(item => 
+            const transcript = this.transcriptData.map(item =>
                 `[${item.timestamp}] ${item.speaker || 'Speaker'}: ${item.text}`
             ).join('\n');
-            
+
             const blob = new Blob([transcript], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
-            
+
             const a = document.createElement('a');
             a.href = url;
             a.download = `transcript-${new Date().toISOString().slice(0, 10)}.txt`;
             a.click();
-            
+
             URL.revokeObjectURL(url);
-            
+
             console.log('📄 Transcript exported');
             this.updatePerformanceInfo('Transcript exported successfully');
-            
+
         } catch (error) {
             console.error('❌ Failed to export transcript:', error);
             this.showError('Failed to export transcript');
         }
     }
-    
+
     async generateSummary() {
         try {
             console.log('📝 Generating summary...');
             this.updatePerformanceInfo('Generating summary...');
-            
+
             const response = await fetch(`${this.backendUrl}/summary`, {
                 method: 'POST',
                 headers: {
@@ -1200,42 +1376,42 @@ class UnifiedPopupController {
                     transcript: this.transcriptData
                 })
             });
-            
+
             if (response.ok) {
                 const summary = await response.json();
                 console.log('✅ Summary generated:', summary);
                 this.updatePerformanceInfo('Summary generated successfully');
-                
+
                 // Show summary in a new window or modal
                 // This could be enhanced with a modal dialog
                 alert(`Summary:\n\n${summary.summary}`);
             } else {
                 throw new Error('Failed to generate summary');
             }
-            
+
         } catch (error) {
             console.error('❌ Failed to generate summary:', error);
             this.showError('Failed to generate summary');
         }
     }
-    
+
     async copyTranscript() {
         try {
-            const transcript = this.transcriptData.map(item => 
+            const transcript = this.transcriptData.map(item =>
                 `${item.speaker || 'Speaker'}: ${item.text}`
             ).join('\n');
-            
+
             await navigator.clipboard.writeText(transcript);
-            
+
             console.log('📋 Transcript copied to clipboard');
             this.updatePerformanceInfo('Transcript copied to clipboard');
-            
+
         } catch (error) {
             console.error('❌ Failed to copy transcript:', error);
             this.showError('Failed to copy transcript');
         }
     }
-    
+
     showNotification(message, type = 'info', duration = 5000) {
         // Log appropriate message based on type
         if (type === 'error') {
@@ -1251,12 +1427,12 @@ class UnifiedPopupController {
             console.info('ℹ️', message);
             this.updatePerformanceInfo(message);
         }
-        
+
         // Create styled notification
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
         notification.textContent = message;
-        
+
         // Apply styles based on type
         const colors = {
             error: '#ef4444',
@@ -1264,7 +1440,7 @@ class UnifiedPopupController {
             success: '#22c55e',
             info: '#6366f1'
         };
-        
+
         notification.style.cssText = `
             position: fixed;
             top: 10px;
@@ -1280,9 +1456,9 @@ class UnifiedPopupController {
             animation: slideIn 0.3s ease;
             font-weight: 500;
         `;
-        
+
         document.body.appendChild(notification);
-        
+
         // Auto-remove after specified duration
         setTimeout(() => {
             notification.style.animation = 'slideOut 0.3s ease';
@@ -1293,19 +1469,19 @@ class UnifiedPopupController {
             }, 300);
         }, duration);
     }
-    
+
     showError(message) {
         this.showNotification(message, 'error');
     }
-    
+
     showSuccess(message) {
         this.showNotification(message, 'success', 3000); // Shorter duration for success messages
     }
-    
+
     showWarning(message) {
         this.showNotification(message, 'warning');
     }
-    
+
     showContentScriptError() {
         // Create a more detailed error notification with reload button
         const notification = document.createElement('div');
@@ -1320,7 +1496,7 @@ class UnifiedPopupController {
                 </div>
             </div>
         `;
-        
+
         notification.style.cssText = `
             position: fixed;
             top: 10px;
@@ -1336,7 +1512,7 @@ class UnifiedPopupController {
             animation: slideIn 0.3s ease;
             font-weight: 500;
         `;
-        
+
         // Add styles for the enhanced error content
         const style = document.createElement('style');
         style.textContent = `
@@ -1384,10 +1560,10 @@ class UnifiedPopupController {
                 background: rgba(255,255,255,0.1);
             }
         `;
-        
+
         document.head.appendChild(style);
         document.body.appendChild(notification);
-        
+
         // Auto-remove after 10 seconds
         setTimeout(() => {
             if (notification.parentNode) {
@@ -1400,7 +1576,7 @@ class UnifiedPopupController {
             }
         }, 10000);
     }
-    
+
     handleFileSelect(file) {
         // Validate file type
         const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/m4a', 'audio/flac', 'audio/mp4', 'audio/x-m4a'];
@@ -1408,26 +1584,26 @@ class UnifiedPopupController {
             this.showError('Please select a valid audio file (MP3, WAV, M4A, FLAC)');
             return;
         }
-        
+
         // Validate file size (500MB limit)
         const maxSize = 500 * 1024 * 1024; // 500MB in bytes
         if (file.size > maxSize) {
             this.showError('File size must be less than 500MB');
             return;
         }
-        
+
         this.selectedFile = file;
         this.updateFileInfo();
-        
+
         console.log('📁 File selected:', file.name, `(${this.formatFileSize(file.size)})`);
     }
-    
+
     updateFileInfo() {
         const fileInfo = document.getElementById('file-info');
         const fileName = document.getElementById('file-name');
         const fileSize = document.getElementById('file-size');
         const processBtn = document.getElementById('process-audio');
-        
+
         if (this.selectedFile) {
             fileName.textContent = this.selectedFile.name;
             fileSize.textContent = this.formatFileSize(this.selectedFile.size);
@@ -1438,14 +1614,14 @@ class UnifiedPopupController {
             processBtn.disabled = true;
         }
     }
-    
+
     clearSelectedFile() {
         this.selectedFile = null;
         document.getElementById('audio-file-input').value = '';
         this.updateFileInfo();
         console.log('🗑️ File cleared');
     }
-    
+
     formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -1453,72 +1629,72 @@ class UnifiedPopupController {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
-    
+
     async processAudioFile() {
         if (!this.selectedFile) {
             this.showError('No audio file selected');
             return;
         }
-        
+
         // Validate file size (max 500MB)
         const maxSize = 500 * 1024 * 1024; // 500MB in bytes
         if (this.selectedFile.size > maxSize) {
             this.showError('File too large. Maximum size is 500MB.');
             return;
         }
-        
+
         try {
             this.updateStatus('Processing audio file...', 'processing');
             this.updatePerformanceInfo('Uploading and processing audio...');
-            
+
             // Show progress
             const progressSection = document.getElementById('progress-section');
             if (progressSection) {
                 progressSection.style.display = 'block';
                 this.updateProgress(0, 'Preparing upload...');
             }
-            
+
             // Create FormData for file upload
             const formData = new FormData();
             formData.append('file', this.selectedFile); // Changed from 'audio_file' to 'file'
-            
+
             // Send to backend using the correct endpoint
             const response = await fetch(`${this.backendUrl}/api/process-audio`, {
                 method: 'POST',
                 body: formData
             });
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Upload failed: ${response.status} - ${errorText}`);
             }
-            
+
             this.updateProgress(90, 'Processing results...');
-            
+
             const result = await response.json();
-            
+
             this.updateProgress(100, 'Complete!');
-            
+
             // Show transcript results
             this.displayTranscriptResults(result);
-            
+
             this.updateStatus('Audio processed successfully', 'ready');
             this.updatePerformanceInfo('Audio processing complete');
-            
+
             // Hide progress after 2 seconds
             setTimeout(() => {
                 if (progressSection) {
                     progressSection.style.display = 'none';
                 }
             }, 2000);
-            
+
             console.log('✅ Audio processed successfully:', result);
-            
+
         } catch (error) {
             console.error('❌ Failed to process audio:', error);
             this.showError('Failed to process audio: ' + error.message);
             this.updateStatus('Processing failed', 'error');
-            
+
             // Hide progress
             const progressSection = document.getElementById('progress-section');
             if (progressSection) {
@@ -1526,35 +1702,35 @@ class UnifiedPopupController {
             }
         }
     }
-    
+
     displayTranscriptResults(result) {
         const transcriptPreview = document.getElementById('transcript-preview');
         const transcriptContent = document.getElementById('transcript-content');
         const quickActions = document.getElementById('quick-actions');
-        
+
         if (!transcriptPreview || !transcriptContent) {
             console.warn('⚠️ Transcript display elements not found');
             return;
         }
-        
+
         // Show transcript section
         transcriptPreview.style.display = 'block';
         if (quickActions) {
             quickActions.style.display = 'flex';
         }
-        
+
         // Clear existing content
         transcriptContent.innerHTML = '';
-        
+
         // Handle the backend's response format
         if (result.transcription) {
             // Store the transcript data
             this.transcriptData = result;
-            
+
             // Display the transcription text
             const transcriptItem = document.createElement('div');
             transcriptItem.className = 'transcript-item';
-            
+
             // If there are speakers, display them
             if (result.speakers && result.speakers.length > 0) {
                 result.speakers.forEach(segment => {
@@ -1574,7 +1750,7 @@ class UnifiedPopupController {
                 `;
                 transcriptContent.appendChild(transcriptItem);
             }
-            
+
             // Update word count
             const wordCount = result.transcription.split(/\s+/).filter(w => w.length > 0).length;
             const wordCountElement = document.getElementById('word-count');
@@ -1582,7 +1758,7 @@ class UnifiedPopupController {
                 wordCountElement.textContent = `${wordCount} words`;
             }
             this.wordCount = wordCount;
-            
+
             // Display summary if available
             if (result.full_summary || result.key_points || result.action_items) {
                 const summaryDiv = document.createElement('div');
@@ -1611,21 +1787,21 @@ class UnifiedPopupController {
                 `;
                 transcriptContent.appendChild(summaryDiv);
             }
-            
+
         } else {
             // Fallback for unexpected format
             transcriptContent.innerHTML = '<div class="transcript-placeholder">No transcription available</div>';
         }
-        
+
         console.log('✅ Transcript results displayed');
     }
-    
+
     formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
-    
+
     showHelp() {
         const helpMessage = `
 🎯 AI MOM - Meeting Intelligence Help
@@ -1677,13 +1853,13 @@ class UnifiedPopupController {
 
 Need more help? Check the documentation or contact support.
         `.trim();
-        
+
         alert(helpMessage);
     }
-    
+
     async runDiagnostics() {
         console.log('🔍 Running diagnostics...');
-        
+
         const diagnostics = {
             timestamp: new Date().toISOString(),
             userAgent: navigator.userAgent,
@@ -1702,9 +1878,9 @@ Need more help? Check the documentation or contact support.
             backendUrl: this.backendUrl,
             connectionStatus: this.connectionStatus
         };
-        
+
         console.log('📊 Diagnostics Report:', diagnostics);
-        
+
         // Show condensed diagnostics to user
         const report = `
 🔍 AI MOM Diagnostics Report
@@ -1718,9 +1894,9 @@ Backend: ${diagnostics.connectionStatus}
 ${!diagnostics.isSecureContext ? '⚠️ Warning: Screen sharing requires HTTPS' : ''}
 ${!diagnostics.getDisplayMedia ? '⚠️ Warning: Browser doesn\'t support screen capture' : ''}
         `.trim();
-        
+
         alert(report);
-        
+
         return diagnostics;
     }
 }

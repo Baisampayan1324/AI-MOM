@@ -2,7 +2,8 @@ import asyncio
 import time
 import logging
 import os
-from typing import Dict, Any, List, Optional
+import sys
+from typing import Dict, Any, List, Optional, Callable, Awaitable
 import aiohttp
 from groq import Groq
 import openai
@@ -19,14 +20,8 @@ from app.services.audio_processor import AudioProcessor
 
 logger = logging.getLogger(__name__)
 
-# Try to import pyannote.audio for advanced speaker diarization
-try:
-    from pyannote.audio import Pipeline
-    PYANNOTE_AVAILABLE = True
-    logger.info("✅ pyannote.audio is available for speaker diarization")
-except ImportError:
-    PYANNOTE_AVAILABLE = False
-    logger.warning("⚠️ pyannote.audio not available - will default to Speaker 1 for all speech. Install pyannote.audio and set HUGGINGFACE_TOKEN for multi-speaker detection.")
+# Speaker diarization functionality has been removed for better real-time performance
+# All audio is processed as single-speaker by default
 
 class MultiAPIProcessor:
     def __init__(self):
@@ -65,50 +60,20 @@ class MultiAPIProcessor:
         self.min_audio_length = 0.5  # Minimum 0.5 seconds of audio before processing
         self.audio_buffer = []  # Buffer for accumulating audio chunks
 
-        # Initialize pyannote.audio diarization pipeline if available
-        self.diarization_pipeline = None
-        if PYANNOTE_AVAILABLE:
-            hf_token = os.getenv("HUGGINGFACE_TOKEN")
-            if hf_token:
-                try:
-                    logger.info("🔄 Loading pyannote speaker diarization pipeline...")
-                    self.diarization_pipeline = Pipeline.from_pretrained(
-                        "pyannote/speaker-diarization-3.1",
-                        use_auth_token=hf_token
-                    )
-                    # Move to GPU if available for faster processing
-                    if torch.cuda.is_available():
-                        self.diarization_pipeline.to(torch.device("cuda"))
-                        logger.info("✅ Diarization pipeline loaded on GPU")
-                    else:
-                        logger.info("✅ Diarization pipeline loaded on CPU")
-                except Exception as e:
-                    logger.error(f"❌ Failed to load pyannote pipeline: {e}")
-                    self.diarization_pipeline = None
-            else:
-                logger.warning("⚠️ HUGGINGFACE_TOKEN not set - pyannote diarization disabled")
-
         # Realtime buffering state
         self.rt_buffer: List[np.ndarray] = []
         self.rt_total_samples: int = 0
         self.rt_last_text: str = ""  # last full transcription sent to client
         self.rt_sample_rate: int = 16000
-        # Speaker diarization state - simple voice characteristics tracking (fallback)
-        self.speaker_embeddings = []  # List of known speaker voice signatures
-        self.speaker_count = 0
-        self.last_speaker_id = None
-        # Diarization buffer for pyannote (accumulate longer audio for better accuracy)
-        self.diarization_buffer: List[np.ndarray] = []
-        self.diarization_segments = []  # Store speaker segments from pyannote
-        self.total_audio_duration = 0.0  # Track total audio duration for segment mapping
+        
         # Tunable parameters via environment
         self.rt_min_secs: float = float(os.getenv("REALTIME_MIN_SECONDS", "1.0"))  # minimum buffered audio before first decode
         self.rt_max_secs: float = float(os.getenv("REALTIME_MAX_SECONDS", "3.5"))  # force flush upper bound
         self.rt_silence_threshold: float = float(os.getenv("REALTIME_SILENCE_THRESHOLD", "4e-5"))  # energy threshold for silence
         self.rt_silence_tail_secs: float = float(os.getenv("REALTIME_SILENCE_TAIL", "0.3"))  # tail length to test for silence
-        self.diarization_min_secs: float = float(os.getenv("DIARIZATION_MIN_SECONDS", "10.0"))  # min audio for pyannote
+        
         logger.info(f"Realtime params: min={self.rt_min_secs}s max={self.rt_max_secs}s silence_thr={self.rt_silence_threshold} tail={self.rt_silence_tail_secs}s")
-        logger.info(f"Diarization: {'pyannote enabled' if self.diarization_pipeline else 'simple fallback'}, min_buffer={self.diarization_min_secs}s")
+        logger.info("ℹ️ Single-speaker mode active (Speaker 1 for all speech)")
 
     async def check_apis(self) -> Dict[str, bool]:
         """Check if all APIs and models are accessible."""
@@ -153,7 +118,11 @@ class MultiAPIProcessor:
 
         return results
 
-    async def process_transcription_2_model(self, audio_data: np.ndarray) -> Dict[str, Any]:
+    async def process_transcription_2_model(
+        self,
+        audio_data: np.ndarray,
+        progress_callback: Optional[Callable[[int, str, int], Awaitable[None]]] = None,
+    ) -> Dict[str, Any]:
         """
         2-model parallel processing: Run Groq Llama 3.3 and OpenRouter GPT-4o Mini in parallel.
         Target: ~20 seconds processing time with improved accuracy.
@@ -211,7 +180,7 @@ class MultiAPIProcessor:
             await progress_callback(100, "Transcription complete", 3)
 
         processing_time = time.time() - start_time
-        logger.info(".2f")
+        logger.info(f"✅ 2-model processing completed in {processing_time:.2f}s")
 
         return {
             "transcription": final_transcription,
@@ -312,7 +281,7 @@ class MultiAPIProcessor:
         logger.info("🚀 Step 2: Skipping LLM improvement for speed")
 
         processing_time = time.time() - start_time
-        logger.info(".2f")
+        logger.info(f"✅ Ultra-fast v3 completed in {processing_time:.2f}s")
 
         return {
             "transcription": full_transcription,
@@ -829,9 +798,15 @@ Rules:
         return min(avg_similarity * (0.8 + 0.2 * agreement_bonus), 1.0)
 
     async def process_realtime_chunk(self, audio_data: bytes, sample_rate: int = 16000, language: Optional[str] = None) -> Dict[str, Any]:
-        """Accumulate audio for realtime; flush on duration or trailing silence for higher accuracy with fewer fragment artifacts."""
+        """Process real-time audio chunks with simple single-speaker mode."""
         try:
             array = self.audio_processor.process_audio_chunk(audio_data, sample_rate)
+            
+            # Skip empty arrays (decode failures or invalid data)
+            if array is None or len(array) == 0:
+                logger.debug("Skipping empty audio array")
+                return {"transcription": "", "confidence": 0.0, "speaker_id": 1}
+            
             self.rt_buffer.append(array)
             self.rt_total_samples += len(array)
             duration = self.rt_total_samples / self.rt_sample_rate
@@ -851,18 +826,18 @@ Rules:
                     flush = True
 
             if not flush:
-                return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+                return {"transcription": "", "confidence": 0.0, "speaker_id": 1}
 
             # Concatenate buffered audio and check OVERALL energy to prevent hallucinations on silence
             full_audio = np.concatenate(self.rt_buffer)
             overall_energy = float(np.mean(full_audio ** 2))
             
             # If buffer is mostly silence, skip transcription to prevent Whisper hallucinations
-            if overall_energy < self.rt_silence_threshold * 2:  # 2x threshold for safety
+            if overall_energy < self.rt_silence_threshold * 2:  # 2x threshold - balanced detection
                 logger.debug(f"Skipping transcription - buffer energy too low: {overall_energy:.2e}")
                 self.rt_buffer.clear()
                 self.rt_total_samples = 0
-                return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+                return {"transcription": "", "confidence": 0.0, "speaker_id": 1}
             
             model_for_realtime = getattr(self, 'realtime_whisper_model', self.whisper_model)
             use_fp16 = os.getenv('REALTIME_WHISPER_FP16', '0') == '1'
@@ -872,38 +847,30 @@ Rules:
                 full_audio,
                 fp16=use_fp16,
                 language=None,  # Auto-detect language
-                beam_size=1,  # Reduced from 2 for faster processing
-                best_of=1,  # Reduced from 2 for faster processing
+                beam_size=1,
+                best_of=1,
                 temperature=0.0,
-                condition_on_previous_text=True,  # Use context for better accuracy
+                condition_on_previous_text=True,
                 word_timestamps=False,
-                no_speech_threshold=0.4,  # Lower threshold for better speech detection
-                logprob_threshold=-0.7,  # More lenient for real words
-                compression_ratio_threshold=2.0  # Detect hallucination loops
+                no_speech_threshold=0.4,  # Back to original - better accuracy
+                logprob_threshold=-0.7,  # Back to original - more lenient
+                compression_ratio_threshold=2.4  # Keep this - catches hallucination loops
             )
             elapsed = time.time() - start
             text = str(result.get('text', '')).strip()
-            energy_val = locals().get('energy', overall_energy)
             
-            # Speaker detection - use pyannote if available, otherwise default to Speaker 1
-            self.total_audio_duration += duration
-            if self.diarization_pipeline:
-                speaker_id = self._detect_speaker_pyannote(full_audio, self.total_audio_duration)
-            else:
-                # Use simple fallback (always Speaker 1) when pyannote not available
-                speaker_id = self._detect_speaker_simple(full_audio)
+            # Always use Speaker 1 (single-speaker mode)
+            speaker_id = 1
             
             logger.debug(f"Realtime flush {duration:.2f}s energy={overall_energy:.2e} speaker={speaker_id} -> transcribed {len(text)} chars in {elapsed:.3f}s")
 
-            # SMART hallucination filtering - only block obvious false outputs
+            # Minimal hallucination filtering - only block extreme obvious false outputs
             if text:
                 text_lower = text.lower()
                 words = text_lower.split()
-                clean_words = [w.strip('.,!?') for w in words]
                 
-                # Check compression ratio - Whisper provides this to detect loops
+                # Only filter if compression ratio is EXTREMELY high (Whisper's built-in check)
                 compression_ratio = result.get('compression_ratio', 0)
-                # Safely convert to float for comparison
                 try:
                     if isinstance(compression_ratio, (int, float, str)):
                         compression_ratio = float(compression_ratio)
@@ -911,48 +878,55 @@ Rules:
                         compression_ratio = 0.0
                 except (ValueError, TypeError):
                     compression_ratio = 0.0
-                if compression_ratio > 2.4:
+                    
+                # Only filter if compression ratio is above 2.8 (hallucination loops)
+                if compression_ratio > 2.8:
                     logger.warning(f"Filtering hallucination (high compression ratio {compression_ratio:.2f}): {text[:80]}...")
                     self.rt_buffer.clear()
                     self.rt_total_samples = 0
-                    return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+                    return {"transcription": "", "confidence": 0.0, "speaker_id": 1}
                 
-                # Filter profanity/bad words (common Whisper hallucinations when silent)
-                profanity_list = ['fuck', 'shit', 'damn', 'bitch', 'ass', 'bastard', 'hell', 'crap']
-                # Check if text contains ONLY profanity (hallucination pattern)
-                profanity_only = all(any(prof in w for prof in profanity_list) for w in clean_words)
-                if profanity_only and len(clean_words) <= 3:
-                    logger.warning(f"Filtering profanity hallucination: {text}")
-                    self.rt_buffer.clear()
-                    self.rt_total_samples = 0
-                    return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+                # Check for common phrase repetition patterns (Whisper hallucinations)
+                # Look for 2-4 word phrases repeated many times
+                if len(words) > 20:  # Only check longer texts
+                    for phrase_len in [2, 3, 4]:
+                        if len(words) >= phrase_len * 8:  # Need at least 8 repetitions
+                            for i in range(len(words) - phrase_len + 1):
+                                phrase = ' '.join(words[i:i+phrase_len])
+                                phrase_count = text_lower.count(phrase)
+                                # If phrase appears 8+ times, it's likely a hallucination
+                                if phrase_count >= 8:
+                                    logger.warning(f"Filtering hallucination (phrase loop: '{phrase}' x{phrase_count}): {text[:80]}...")
+                                    self.rt_buffer.clear()
+                                    self.rt_total_samples = 0
+                                    return {"transcription": "", "confidence": 0.0, "speaker_id": 1}
                 
-                # Check for extreme repetitive patterns (like 'a little bit of' repeated)
-                # Look for 3+ word phrases repeated multiple times
-                if len(words) > 15:
-                    # Check for repeated 3-word sequences
-                    for i in range(len(words) - 2):
-                        phrase = ' '.join(words[i:i+3])
-                        phrase_count = text_lower.count(phrase)
-                        # If same 3-word phrase appears 5+ times, it's a hallucination
-                        if phrase_count >= 5:
-                            logger.warning(f"Filtering hallucination (phrase loop: '{phrase}' x{phrase_count}): {text[:80]}...")
-                            self.rt_buffer.clear()
-                            self.rt_total_samples = 0
-                            return {"transcription": "", "confidence": 0.0, "speaker_id": None}
-                
-                # Check for extreme repetitive patterns (word level - very strict)
-                # Only filter if >85% of words are identical (looser than before)
-                if len(words) > 8:
+                # Only filter if >98% of words are identical AND text is long (extreme repetition)
+                # This prevents filtering legitimate uses of "OK OK" or "yes yes"
+                if len(words) > 15:  # Only check for long texts
                     word_counts = {}
                     for w in words:
                         word_counts[w] = word_counts.get(w, 0) + 1
-                    max_count = max(word_counts.values())
-                    if max_count / len(words) > 0.85:
-                        logger.warning(f"Filtering hallucination (extreme repetition): {text[:50]}")
+                    max_count = max(word_counts.values()) if word_counts else 0
+                    if max_count / len(words) > 0.98:  # 98% threshold - almost impossible in real speech
+                        logger.warning(f"Filtering hallucination (extreme word repetition {max_count}/{len(words)}): {text[:80]}...")
                         self.rt_buffer.clear()
                         self.rt_total_samples = 0
-                        return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+                        return {"transcription": "", "confidence": 0.0, "speaker_id": 1}
+                
+                # Profanity filter - replace bad words with asterisks instead of blocking entire text
+                profanity_list = [
+                    'fuck', 'shit', 'damn', 'bitch', 'ass', 'bastard', 'hell', 'crap',
+                    'fucking', 'fucked', 'bullshit', 'asshole', 'dick', 'pussy', 'cock',
+                    'motherfucker', 'whore', 'slut', 'nigger', 'fag', 'faggot', 'retard'
+                ]
+                
+                # Replace profanity with asterisks (preserve word length for context)
+                import re
+                for profanity in profanity_list:
+                    # Use word boundaries to avoid replacing parts of legitimate words
+                    pattern = re.compile(r'\b' + re.escape(profanity) + r'\b', re.IGNORECASE)
+                    text = pattern.sub('***', text)
 
             # Delta: only send new part beyond last_sent
             if text.startswith(self.rt_last_text):
@@ -966,92 +940,15 @@ Rules:
             self.rt_total_samples = 0
 
             if not new_part:
-                return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+                return {"transcription": "", "confidence": 0.0, "speaker_id": 1}
 
             # Final check: skip if new_part is too short or only punctuation
             if len(new_part) < 3 or new_part in ['.', ',', '!', '?', '...']:
-                return {"transcription": "", "confidence": 0.0, "speaker_id": None}
+                return {"transcription": "", "confidence": 0.0, "speaker_id": 1}
 
-            return {"transcription": new_part, "confidence": 0.85, "speaker_id": 0}
+            return {"transcription": new_part, "confidence": 0.85, "speaker_id": 1}
         except Exception as e:
             logger.error(f"Realtime processing error: {str(e)}", exc_info=True)
             self.rt_buffer.clear()
             self.rt_total_samples = 0
-            return {"transcription": "", "confidence": 0.0, "speaker_id": None}
-
-    def _detect_speaker_pyannote(self, audio: np.ndarray, current_time: float) -> int:
-        """Detect speaker using pyannote.audio pipeline for better accuracy."""
-        try:
-            # Add audio to diarization buffer
-            self.diarization_buffer.append(audio)
-            buffer_duration = sum(len(chunk) for chunk in self.diarization_buffer) / self.rt_sample_rate
-            
-            # Only run diarization when we have enough audio
-            if buffer_duration >= self.diarization_min_secs:
-                logger.info(f"🎤 Running pyannote diarization on {buffer_duration:.1f}s of audio...")
-                
-                # Concatenate buffer
-                full_audio = np.concatenate(self.diarization_buffer)
-                
-                # Normalize audio to [-1, 1] range for pyannote
-                audio_float = full_audio.astype(np.float32) / 32768.0
-                
-                # Create temporary audio dict for pyannote
-                import tempfile
-                import soundfile as sf
-                
-                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
-                    sf.write(tmp_file.name, audio_float, self.rt_sample_rate)
-                    tmp_path = tmp_file.name
-                
-                try:
-                    # Run diarization
-                    diarization_result = self.diarization_pipeline(tmp_path)
-                    
-                    # Convert diarization result to segments
-                    self.diarization_segments = []
-                    for turn, _, speaker in diarization_result.itertracks(yield_label=True):
-                        self.diarization_segments.append({
-                            'start': turn.start,
-                            'end': turn.end,
-                            'speaker': speaker
-                        })
-                    
-                    logger.info(f"✅ Diarization complete: {len(self.diarization_segments)} segments, {len(set(s['speaker'] for s in self.diarization_segments))} speakers")
-                    
-                    # Clear buffer after processing
-                    self.diarization_buffer.clear()
-                    
-                finally:
-                    # Clean up temp file
-                    import os as os_module
-                    try:
-                        os_module.unlink(tmp_path)
-                    except:
-                        pass
-            
-            # Find speaker for current time based on stored segments
-            if self.diarization_segments:
-                for segment in self.diarization_segments:
-                    if segment['start'] <= current_time <= segment['end']:
-                        # Extract speaker number from label (e.g., "SPEAKER_00" -> 1)
-                        speaker_label = segment['speaker']
-                        speaker_num = int(speaker_label.split('_')[-1]) + 1
-                        self.last_speaker_id = speaker_num
-                        return speaker_num
-            
-            # Fallback to last known speaker or 1
-            return self.last_speaker_id or 1
-            
-        except Exception as e:
-            logger.error(f"❌ Pyannote speaker detection error: {e}")
-            # Fallback to simple detection
-            return self._detect_speaker_simple(audio)
-    
-    def _detect_speaker_simple(self, audio: np.ndarray) -> int:
-        """Simple speaker detection fallback - just returns Speaker 1 consistently.
-        This prevents false detection of multiple speakers when pyannote is not available.
-        """
-        # Always return Speaker 1 when pyannote is not available
-        # This prevents the system from creating fake speaker detections (Speaker 2-10)
-        return 1
+            return {"transcription": "", "confidence": 0.0, "speaker_id": 1}

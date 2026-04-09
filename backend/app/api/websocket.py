@@ -43,11 +43,64 @@ async def websocket_audio(websocket: WebSocket):
     """
     await websocket.accept()
     logger.info("WebSocket connection established")
+    
+    # Track session state
+    session_paused = False
+    meeting_id = None
 
     try:
         while True:
             # Receive audio data
             data = await websocket.receive_json()
+            
+            # Handle control messages (pause, resume, stop, ping)
+            if data.get("type") == "control":
+                action = data.get("action")
+                meeting_id = data.get("meetingId", meeting_id)
+                
+                if action == "pause":
+                    session_paused = True
+                    logger.info(f"Session paused for meeting: {meeting_id}")
+                    await websocket.send_json({
+                        "type": "control_ack",
+                        "action": "pause",
+                        "status": "paused",
+                        "timestamp": data.get("timestamp")
+                    })
+                    continue
+                    
+                elif action == "resume":
+                    session_paused = False
+                    logger.info(f"Session resumed for meeting: {meeting_id}")
+                    await websocket.send_json({
+                        "type": "control_ack",
+                        "action": "resume",
+                        "status": "recording",
+                        "timestamp": data.get("timestamp")
+                    })
+                    continue
+                    
+                elif action == "stop":
+                    logger.info(f"Session stopped for meeting: {meeting_id}")
+                    await websocket.send_json({
+                        "type": "control_ack",
+                        "action": "stop",
+                        "status": "stopped",
+                        "timestamp": data.get("timestamp")
+                    })
+                    break  # Close connection gracefully
+                    
+            # Handle keepalive ping
+            elif data.get("type") == "ping":
+                await websocket.send_json({
+                    "type": "pong",
+                    "timestamp": data.get("timestamp")
+                })
+                continue
+            
+            # Skip audio processing if session is paused
+            if session_paused:
+                continue
 
             if data.get("type") == "audio_chunk":
                 audio_data_list = data.get("audio_data")

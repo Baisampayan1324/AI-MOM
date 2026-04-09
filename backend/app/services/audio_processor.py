@@ -59,9 +59,34 @@ class AudioProcessor:
     def process_audio_chunk(self, audio_data: bytes, sample_rate: int = 16000) -> np.ndarray:
         """
         Process raw audio chunk data with optimizations for real-time processing.
+        Handles both raw PCM and encoded formats (webm, ogg, etc.)
         """
-        # Convert bytes to numpy array - optimized for speed
-        audio_array = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32, copy=False) / 32768.0
+        # First, try to detect if this is encoded audio (webm, ogg, etc.)
+        # by checking for common file signatures
+        if self._is_encoded_audio(audio_data):
+            try:
+                audio_array = self._decode_encoded_audio(audio_data, sample_rate)
+                if audio_array is not None and len(audio_array) > 0:
+                    return audio_array
+            except Exception as decode_err:
+                logger.debug(f"Encoded audio decode failed, trying raw PCM: {decode_err}")
+        
+        # Ensure buffer size is valid for int16 (2 bytes per sample)
+        if len(audio_data) % 2 != 0:
+            # Pad with zero byte if odd length
+            audio_data = audio_data + b'\x00'
+        
+        # Skip empty or too small buffers
+        if len(audio_data) < 2:
+            logger.debug("Audio buffer too small, skipping")
+            return np.array([], dtype=np.float32)
+        
+        try:
+            # Convert bytes to numpy array - optimized for speed
+            audio_array = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32, copy=False) / 32768.0
+        except ValueError as e:
+            logger.warning(f"Buffer conversion failed: {e}, buffer size: {len(audio_data)}")
+            return np.array([], dtype=np.float32)
 
         # Skip resampling if already at target rate for speed
         if sample_rate == 16000:
@@ -73,6 +98,78 @@ class AudioProcessor:
             audio_array = self._fast_resample_audio(audio_array, sample_rate, 16000)
 
         return audio_array
+
+    def _is_encoded_audio(self, audio_data: bytes) -> bool:
+        """
+        Check if audio data is in an encoded format (webm, ogg, etc.)
+        by looking for common file signatures.
+        """
+        if len(audio_data) < 4:
+            return False
+        
+        # WebM/Matroska signature: 0x1A 0x45 0xDF 0xA3
+        if audio_data[:4] == b'\x1a\x45\xdf\xa3':
+            return True
+        
+        # OGG signature: 'OggS'
+        if audio_data[:4] == b'OggS':
+            return True
+        
+        # RIFF/WAV signature
+        if audio_data[:4] == b'RIFF':
+            return True
+        
+        # MP3 frame sync: 0xFF 0xFB, 0xFF 0xFA, 0xFF 0xF3, 0xFF 0xF2
+        if len(audio_data) >= 2 and audio_data[0] == 0xFF and (audio_data[1] & 0xE0) == 0xE0:
+            return True
+        
+        # Check for ID3 header (MP3 with ID3 tag)
+        if audio_data[:3] == b'ID3':
+            return True
+        
+        return False
+
+    def _decode_encoded_audio(self, audio_data: bytes, target_sample_rate: int = 16000) -> Optional[np.ndarray]:
+        """
+        Decode encoded audio (webm, ogg, mp3, etc.) to raw PCM samples.
+        """
+        try:
+            # Use pydub to decode the audio
+            audio_io = io.BytesIO(audio_data)
+            
+            # Try to detect format and decode
+            try:
+                audio_segment = pydub.AudioSegment.from_file(audio_io)
+            except Exception:
+                # Try specific formats
+                audio_io.seek(0)
+                try:
+                    audio_segment = pydub.AudioSegment.from_file(audio_io, format="webm")
+                except Exception:
+                    audio_io.seek(0)
+                    try:
+                        audio_segment = pydub.AudioSegment.from_file(audio_io, format="ogg")
+                    except Exception:
+                        logger.debug("Could not decode audio with pydub")
+                        return None
+            
+            # Convert to mono if stereo
+            if audio_segment.channels > 1:
+                audio_segment = audio_segment.set_channels(1)
+            
+            # Resample to target rate
+            audio_segment = audio_segment.set_frame_rate(target_sample_rate)
+            
+            # Get raw samples
+            samples = np.frombuffer(audio_segment.raw_data, dtype=np.int16)
+            audio_array = samples.astype(np.float32) / 32768.0
+            
+            logger.debug(f"Decoded {len(audio_data)} bytes to {len(audio_array)} samples")
+            return audio_array
+            
+        except Exception as e:
+            logger.debug(f"Audio decode failed: {e}")
+            return None
 
     def _fast_resample_audio(self, audio: np.ndarray, orig_sr: int, target_sr: int) -> np.ndarray:
         """Fast audio resampling optimized for real-time processing."""

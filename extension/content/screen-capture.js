@@ -11,6 +11,7 @@ if (window.unifiedScreenCaptureInstance) {
 class UnifiedScreenCapture {
     constructor() {
         this.isActive = false;
+        this.isPaused = false;
         this.mediaRecorder = null;
         this.audioContext = null;
         this.stream = null;
@@ -133,6 +134,22 @@ class UnifiedScreenCapture {
                     sendResponse({ success: false, error: error.message });
                 });
                 return true;
+
+            case 'PAUSE_RECORDING':
+                this.pauseRecording().then(result => {
+                    sendResponse(result);
+                }).catch(error => {
+                    sendResponse({ success: false, error: error.message });
+                });
+                return true;
+
+            case 'RESUME_RECORDING':
+                this.resumeRecording().then(result => {
+                    sendResponse(result);
+                }).catch(error => {
+                    sendResponse({ success: false, error: error.message });
+                });
+                return true;
                 
             case 'SHOW_START_DIALOG':
                 this.showAutoStartDialog();
@@ -233,6 +250,10 @@ class UnifiedScreenCapture {
             console.log('⏹️ Stopping unified screen capture...');
             
             this.isActive = false;
+            this.isPaused = false;
+            
+            // Stop keepalive pings
+            this.stopKeepAlive();
             
             // Stop hybrid router if active
             if (this.hybridRouter) {
@@ -261,8 +282,16 @@ class UnifiedScreenCapture {
                 this.stream = null;
             }
             
-            // Close WebSocket
+            // Send stop notification before closing WebSocket
             if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                this.websocket.send(JSON.stringify({
+                    type: 'control',
+                    action: 'stop',
+                    timestamp: Date.now(),
+                    meetingId: this.meetingId
+                }));
+                // Give time for message to send before closing
+                await new Promise(resolve => setTimeout(resolve, 100));
                 this.websocket.close();
                 this.websocket = null;
             }
@@ -292,6 +321,141 @@ class UnifiedScreenCapture {
         } catch (error) {
             console.error('❌ Error stopping screen capture:', error);
             return { success: false, error: error.message };
+        }
+    }
+
+    async pauseRecording() {
+        try {
+            console.log('⏸️ Pausing recording...');
+            
+            this.isPaused = true;
+            
+            // Pause hybrid router if active
+            if (this.hybridRouter && this.hybridRouter.pauseRecording) {
+                this.hybridRouter.pauseRecording();
+            }
+            
+            // Pause media recorder
+            if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+                this.mediaRecorder.pause();
+            }
+            
+            // Send pause notification to backend (keeps connection alive)
+            if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                this.websocket.send(JSON.stringify({
+                    type: 'control',
+                    action: 'pause',
+                    timestamp: Date.now(),
+                    meetingId: this.meetingId
+                }));
+            }
+            
+            // Start keepalive ping to maintain connection
+            this.startKeepAlive();
+            
+            // Update overlay status
+            this.updateOverlayStatus('paused');
+            
+            // Update badge
+            chrome.runtime.sendMessage({ 
+                action: 'UPDATE_BADGE', 
+                status: '⏸️' 
+            });
+            
+            console.log('✅ Recording paused (WebSocket connection maintained)');
+            return { success: true };
+            
+        } catch (error) {
+            console.error('❌ Error pausing recording:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async resumeRecording() {
+        try {
+            console.log('▶️ Resuming recording...');
+            
+            this.isPaused = false;
+            
+            // Stop keepalive pings
+            this.stopKeepAlive();
+            
+            // Resume hybrid router if active
+            if (this.hybridRouter && this.hybridRouter.resumeRecording) {
+                this.hybridRouter.resumeRecording();
+            }
+            
+            // Resume media recorder
+            if (this.mediaRecorder && this.mediaRecorder.state === 'paused') {
+                this.mediaRecorder.resume();
+            }
+            
+            // Send resume notification to backend
+            if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                this.websocket.send(JSON.stringify({
+                    type: 'control',
+                    action: 'resume',
+                    timestamp: Date.now(),
+                    meetingId: this.meetingId
+                }));
+            }
+            
+            // Update overlay status
+            this.updateOverlayStatus('recording');
+            
+            // Update badge
+            chrome.runtime.sendMessage({ 
+                action: 'UPDATE_BADGE', 
+                status: '●' 
+            });
+            
+            console.log('✅ Recording resumed');
+            return { success: true };
+            
+        } catch (error) {
+            console.error('❌ Error resuming recording:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    startKeepAlive() {
+        // Send periodic ping to keep WebSocket connection alive during pause
+        this.keepAliveInterval = setInterval(() => {
+            if (this.websocket && this.websocket.readyState === WebSocket.OPEN && this.isPaused) {
+                this.websocket.send(JSON.stringify({
+                    type: 'ping',
+                    timestamp: Date.now()
+                }));
+                console.log('💓 Keepalive ping sent');
+            }
+        }, 15000); // Ping every 15 seconds
+    }
+
+    stopKeepAlive() {
+        if (this.keepAliveInterval) {
+            clearInterval(this.keepAliveInterval);
+            this.keepAliveInterval = null;
+        }
+    }
+
+    updateOverlayStatus(status) {
+        if (!this.overlayElement) return;
+        
+        const recordingText = this.overlayElement.querySelector('.recording-text');
+        const recordingDot = this.overlayElement.querySelector('.recording-dot');
+        
+        if (status === 'paused') {
+            if (recordingText) recordingText.textContent = 'AI MOM Paused';
+            if (recordingDot) {
+                recordingDot.style.background = '#f59e0b';
+                recordingDot.style.animation = 'pulse-warning 1s infinite';
+            }
+        } else {
+            if (recordingText) recordingText.textContent = 'AI MOM Recording';
+            if (recordingDot) {
+                recordingDot.style.background = '#ef4444';
+                recordingDot.style.animation = 'pulse 1.5s infinite';
+            }
         }
     }
     
@@ -487,7 +651,7 @@ class UnifiedScreenCapture {
             }
             
             console.log('✅ Hybrid audio router initialized successfully');
-            this.updateOverlayStatus('Hybrid audio router active');
+            this.updateOverlayStatus('recording');
             
         } catch (error) {
             console.warn('⚠️ Hybrid router failed, falling back to legacy audio processing:', error);
