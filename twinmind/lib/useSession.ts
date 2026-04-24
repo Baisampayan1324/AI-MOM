@@ -25,7 +25,7 @@ const DEFAULT_SETTINGS: Settings = {
   chatPrompt: DEFAULT_CHAT_PROMPT,
   suggestionContextWindow: 5,
   chatContextWindow: 10,
-  refreshInterval: 10,
+  refreshInterval: 5,
 };
 
 function genId(): string {
