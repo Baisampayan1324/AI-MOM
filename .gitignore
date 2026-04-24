@@ -258,3 +258,5 @@ coverage/
 *.lock
 .pnpm-store/
 bun.lockb
+
+.agent

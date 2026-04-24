@@ -1,0 +1,28 @@
+{
+  "name": "ai-mom",
+  "version": "1.0.0",
+  "description": "<div align=\"center\">",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Baisampayan1324/https---github.com-Baisampayan1324--AI_MOM.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Baisampayan1324/https---github.com-Baisampayan1324--AI_MOM/issues"
+  },
+  "homepage": "https://github.com/Baisampayan1324/https---github.com-Baisampayan1324--AI_MOM#readme",
+  "dependencies": {
+    "@gsd-build/sdk": "file:node_modules/get-shit-done-cc/sdk",
+    "get-shit-done-cc": "^1.38.3"
+  }
+}
