@@ -6,7 +6,6 @@ groq
 openai
 python-multipart
 websockets
-pyaudio
 torch
 numpy
 pydub

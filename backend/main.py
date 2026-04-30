@@ -2,6 +2,7 @@ import uvicorn
 import os
 import sys
 import signal
+import asyncio
 from dotenv import load_dotenv
 
 # Add the backend directory to Python path
@@ -24,11 +25,8 @@ if __name__ == "__main__":
     
     # Detect if running as a PyInstaller bundle (frozen)
     is_frozen = getattr(sys, "frozen", False)
-    environment = os.getenv("ENVIRONMENT", "development").strip().lower()
-    is_production = environment in ("production", "prod") or bool(os.getenv("RENDER"))
-
-    # Default: reload enabled in dev, disabled in production or when frozen. Allow override via RELOAD env.
-    default_reload = "0" if is_frozen or is_production else "1"
+    # Default: reload enabled in dev, disabled when frozen. Allow override via RELOAD env.
+    default_reload = "0" if is_frozen else "1"
     reload_env = os.getenv("RELOAD", default_reload).strip().lower()
     reload_enabled = reload_env in ("1", "true", "yes", "on")
 

@@ -54,7 +54,7 @@ def _parse_bool_env(key: str, default: str = "false") -> bool:
 
 FRONTEND_ORIGINS = _parse_csv_env(
     "FRONTEND_ORIGINS",
-    "null,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5500,https://ai-mom-five.vercel.app",
+    "null,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5500,https://ai-mom-five.vercel.app,https://ai-e9m7ogsb7-baisampayan1324s-projects.vercel.app",
 )
 FRONTEND_ORIGIN_REGEX = os.getenv("FRONTEND_ORIGIN_REGEX", r"^https://.*\.vercel\.app$")
 
