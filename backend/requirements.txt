@@ -10,7 +10,6 @@ torch
 numpy
 pydub
 ffmpeg-python
-pyaudioop
 psutil
 slowapi
 aiohttp
