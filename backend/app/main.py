@@ -6,6 +6,12 @@ import os
 import asyncio
 import signal
 import sys
+
+if __package__ is None or __package__ == "":
+    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if backend_dir not in sys.path:
+        sys.path.insert(0, backend_dir)
+
 try:
     from slowapi import Limiter, _rate_limit_exceeded_handler  # type: ignore
     from slowapi.util import get_remote_address  # type: ignore

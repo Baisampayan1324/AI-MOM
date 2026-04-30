@@ -22,6 +22,17 @@ class AudioProcessor:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         logger.info(f"Using device: {self.device}")
 
+    @staticmethod
+    def _build_speaker_segments(speaker_count: int) -> List[Dict[str, object]]:
+        speaker_count = max(0, min(5, int(speaker_count)))
+        return [
+            {
+                "speaker_id": speaker_id,
+                "speaker_label": f"Speaker {speaker_id}",
+            }
+            for speaker_id in range(1, speaker_count + 1)
+        ]
+
     def check_gpu(self) -> bool:
         """Check if GPU is available."""
         return torch.cuda.is_available()
@@ -309,16 +320,19 @@ class AudioProcessor:
             else:
                 # Rough estimation: more voice activity suggests more speakers
                 # In practice, this would be much more sophisticated
-                speaker_count = min(3, max(1, int((voice_frames / total_frames) * 2)))
+                speaker_count = min(5, max(1, int((voice_frames / total_frames) * 5)))
+
+            if speaker_count > 0:
+                speaker_count = min(5, speaker_count)
 
             logger.info(f"Estimated {speaker_count} speakers")
 
             return {
                 "speaker_count": speaker_count,
-                "segments": [],  # Skip detailed segments for speed
+                "segments": self._build_speaker_segments(speaker_count),
                 "method": "fast_estimation"
             }
 
         except Exception as e:
             logger.error(f"Fast speaker diarization failed: {str(e)}")
-            return {"speaker_count": 1, "segments": [], "method": "fallback"}
+            return {"speaker_count": 1, "segments": self._build_speaker_segments(1), "method": "fallback"}

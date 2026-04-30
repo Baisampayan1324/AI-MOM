@@ -443,19 +443,6 @@
                     <li><a href="file.html">Upload</a></li>
                     <li><a href="real.html">Live</a></li>
                 </ul>
-                
-                <div class="user-menu">
-                    <div class="user-avatar" id="userAvatar" onclick="toggleUserDropdown()">
-                        <img src="" alt="User Avatar" id="avatarImage" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none;">
-                        <span id="avatarInitials">U</span>
-                    </div>
-                    <div class="dropdown" id="dropdown">
-                        <a href="profile.html" class="dropdown-item">Profile</a>
-                        <a href="setting.html" class="dropdown-item">Settings</a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
-                    </div>
-                </div>
             </div>
         </nav>
 
@@ -606,72 +593,15 @@
         }
 
         function goBackToSignup() {
-            window.location.href = 'signin.html';
+            window.location.href = 'index.html';
         }
 
         function acceptPrivacy() {
-            // Mark privacy policy as accepted
-            sessionStorage.setItem('privacyAccepted', 'true');
-            
-            // Check if terms were also accepted
-            const termsAccepted = sessionStorage.getItem('termsAccepted') === 'true';
-            
-            if (termsAccepted) {
-                // Both accepted, go back to signup
-                window.location.href = 'signin.html';
-            } else {
-                // Redirect to terms of service
-                window.location.href = 'terms.html';
-            }
+            window.location.href = 'index.html';
         }
 
-        // User dropdown functionality
-        function toggleUserDropdown() {
-            const dropdown = document.getElementById('dropdown');
-            dropdown.classList.toggle('show');
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            const userMenu = document.querySelector('.user-menu');
-            const dropdown = document.getElementById('dropdown');
-            
-            if (!userMenu.contains(event.target)) {
-                dropdown.classList.remove('show');
-            }
-        });
-
-        // Logout functionality
-        document.getElementById('logoutBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            const logoutModal = document.getElementById('logoutModal');
-            logoutModal.classList.add('show');
-        });
-
-        function cancelLogout() {
-            const logoutModal = document.getElementById('logoutModal');
-            logoutModal.classList.remove('show');
-        }
-
-        function confirmLogout() {
-            // Clear user data
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('currentUser');
-            
-            // Redirect to signin page
-            window.location.href = 'signin.html';
-        }
-
-        // Close modal when clicking outside
-        const logoutModal = document.getElementById('logoutModal');
-        if (logoutModal) {
-            logoutModal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.classList.remove('show');
-                }
-            });
-        }
-    </script>
+        // User menu and authentication removed
+        
 
     <!-- Initialize Avatar Manager -->
     <script>

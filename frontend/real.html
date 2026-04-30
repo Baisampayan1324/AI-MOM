@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-time Capture - AI MOM</title>
     <script src="js/avatar-manager.js"></script>
+    <script src="js/deployment-config.js"></script>
     <script src="js/runtime-config.js"></script>
     <style>
         * {
@@ -2106,26 +2107,6 @@
                     <li><a href="index.html">Home</a></li>
                     <li><a href="file.html">Upload</a></li>
                 </ul>
-
-                <!-- User menu -->
-                <div class="user-menu">
-                    <div class="user-avatar" id="userAvatar">
-                        JD
-                    </div>
-                    <div class="dropdown" id="dropdown">
-                        <!-- Profile Page Link -->
-                        <a href="profile.html" class="dropdown-item">Profile</a>
-                        <!-- Settings Page Link -->
-                        <a href="setting.html" class="dropdown-item">Settings</a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Authentication Area (hidden when logged in) -->
-            <div class="auth-area" id="auth-area" style="display: none;">
-                <!-- Will be populated by JavaScript -->
             </div>
         </nav>
 
@@ -2212,18 +2193,6 @@
     <!-- Floating System Check Button -->
     <button class="system-check-fab" id="systemCheckFab" title="System Check">System Check</button>
 
-    <!-- Logout Confirmation Modal -->
-    <div class="modal-overlay" id="logoutModal">
-        <div class="modal-content">
-            <h3>🚪 Confirm Logout</h3>
-            <p>Are you sure you want to logout?</p>
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="cancelLogout()">Cancel</button>
-                <button class="btn btn-primary" onclick="confirmLogout()">Logout</button>
-            </div>
-        </div>
-    </div>
-
     <!-- System Check Modal -->
     <div class="system-check-modal" id="systemCheckModal">
         <div class="system-check-modal-content">
@@ -2250,266 +2219,13 @@
     </div>
 
     <script>
-        // User menu functionality
-        document.addEventListener('DOMContentLoaded', () => {
-            const userAvatar = document.getElementById('userAvatar');
-            const dropdown = document.getElementById('dropdown');
-            const logoutBtn = document.getElementById('logoutBtn');
-
-            // Toggle dropdown
-            if (userAvatar) {
-                userAvatar.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    dropdown.classList.toggle('active');
-                });
-            }
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', () => {
-                if (dropdown) {
-                    dropdown.classList.remove('active');
-                }
-            });
-
-            // Prevent dropdown from closing when clicking inside
-            if (dropdown) {
-                dropdown.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                });
-            }
-
-            // Logout functionality
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const logoutModal = document.getElementById('logoutModal');
-                    logoutModal.classList.add('show');
-                });
-            }
-
-            // Authentication check removed - page accessible without login
-        });
-
-        // Authentication System
-        function updateAuthenticationUI() {
-            const authArea = document.getElementById('auth-area');
-            if (!authArea) {
-                console.warn('auth-area element not found');
-                return;
-            }
-
-            const userData = localStorage.getItem('currentUser');
-
-            if (userData) {
-                // User is logged in - show avatar dropdown
-                const user = JSON.parse(userData);
-                authArea.innerHTML = `
-                    <div class="user-menu">
-                        <div class="user-avatar" onclick="toggleUserDropdown()" id="authUserAvatar">
-                            ${user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-                        </div>
-                        <div class="user-dropdown" id="user-dropdown">
-                            <div class="dropdown-header">
-                                <div class="user-info">
-                                    <span class="user-name">${user.name || user.email}</span>
-                                    <span class="user-email">${user.email}</span>
-                                </div>
-                            </div>
-                            <hr>
-                            <!-- Profile Page Link (Dropdown) -->
-                            <a href="../profile.html" class="dropdown-item">
-                                <span>👤</span> Profile
-                            </a>
-                            <!-- Settings Page Link (Dropdown) -->
-                            <a href="../settings.html" class="dropdown-item">
-                                <span>⚙️</span> Settings
-                            </a>
-                            <hr>
-                            <a href="#" class="dropdown-item" onclick="logout()">
-                                <span>🚪</span> Logout
-                            </a>
-                        </div>
-                    </div>
-                `;
-            } else {
-                // User not logged in - show login/signup buttons
-                authArea.innerHTML = `
-                    <!-- Login and Sign Up Buttons -->
-                    <div class="auth-buttons">
-                        <button class="auth-btn login-btn" onclick="showAuthModal('login')">Login</button>
-                        <button class="auth-btn signup-btn" onclick="showAuthModal('signup')">Sign Up</button>
-                    </div>
-                `;
-            }
-        }
-
-        function toggleUserDropdown() {
-            const dropdown = document.getElementById('user-dropdown');
-            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function showAuthModal(type) {
-            // Create modal if it doesn't exist
-            let modal = document.getElementById('authModal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'authModal';
-                modal.className = 'modal';
-                modal.innerHTML = `
-                    <!-- Login/Sign Up Modal -->
-                    <div class="modal-content">
-                        <span class="close" onclick="closeAuthModal()">&times;</span>
-                        <h2 id="modalTitle">Login</h2>
-                        <form id="authForm">
-                            <input type="email" id="authEmail" placeholder="Email" required>
-                            <input type="password" id="authPassword" placeholder="Password" required>
-                            <button type="submit" id="authSubmitBtn">Login</button>
-                        </form>
-                        <p class="auth-switch">
-                            <span id="authSwitchText">Don't have an account?</span>
-                            <a href="#" id="authSwitchLink">Sign up</a>
-                        </p>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-
-                // Add form submission handler
-                document.getElementById('authForm').addEventListener('submit', handleAuth);
-                document.getElementById('authSwitchLink').addEventListener('click', switchAuthMode);
-            }
-
-            // Set modal type
-            const isLogin = type === 'login';
-            document.getElementById('modalTitle').textContent = isLogin ? 'Login' : 'Sign Up';
-            document.getElementById('authSubmitBtn').textContent = isLogin ? 'Login' : 'Sign Up';
-            document.getElementById('authSwitchText').textContent = isLogin ?
-                "Don't have an account?" : "Already have an account?";
-            document.getElementById('authSwitchLink').textContent = isLogin ? 'Sign up' : 'Login';
-            modal.dataset.mode = type;
-
-            modal.style.display = 'block';
-        }
-
-        function closeAuthModal() {
-            const modal = document.getElementById('authModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        function switchAuthMode(e) {
-            e.preventDefault();
-            const modal = document.getElementById('authModal');
-            const currentMode = modal.dataset.mode;
-            showAuthModal(currentMode === 'login' ? 'signup' : 'login');
-        }
-
-        async function handleAuth(e) {
-            e.preventDefault();
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            const isLogin = document.getElementById('authModal').dataset.mode === 'login';
-
-            try {
-                if (isLogin) {
-                    await loginUser(email, password);
-                } else {
-                    await signupUser(email, password);
-                }
-                closeAuthModal();
-                updateAuthenticationUI();
-            } catch (error) {
-                alert(error.message);
-            }
-        }
-
-        async function loginUser(email, password) {
-            // Demo authentication
-            if (email === 'admin@example.com' && password === 'admin123') {
-                const userData = {
-                    email: email,
-                    name: 'Admin User',
-                    avatar: null
-                };
-                localStorage.setItem('currentUser', JSON.stringify(userData));
-                return userData;
-            }
-
-            // Check stored users
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = users.find(u => u.email === email);
-
-            if (!user) {
-                throw new Error('User not found');
-            }
-
-            // Simple password check (in real app, use proper hashing)
-            if (user.password !== btoa(password)) {
-                throw new Error('Invalid password');
-            }
-
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            return user;
-        }
-
-        async function signupUser(email, password) {
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-
-            if (users.find(u => u.email === email)) {
-                throw new Error('User already exists');
-            }
-
-            const userData = {
-                email: email,
-                password: btoa(password), // Simple encoding (use proper hashing in real app)
-                name: email.split('@')[0],
-                avatar: null
-            };
-
-            users.push(userData);
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.setItem('currentUser', JSON.stringify(userData));
-            return userData;
-        }
-
-        function logout() {
-            const logoutModal = document.getElementById('logoutModal');
-            logoutModal.classList.add('show');
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function (event) {
-            const userMenu = document.querySelector('.user-menu');
-            const dropdown = document.getElementById('user-dropdown');
-
-            if (userMenu && dropdown && !userMenu.contains(event.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
-
-        // Close modal when clicking outside
-        window.addEventListener('click', function (event) {
-            const modal = document.getElementById('authModal');
-            if (modal && event.target === modal) {
-                closeAuthModal();
-            }
-        });
-
-        // Initialize authentication UI on page load
-        document.addEventListener('DOMContentLoaded', function () {
-            updateAuthenticationUI();
-        });
-
-        // REAL BACKEND INTEGRATION - Load realtime.js for actual WebSocket connection
+        // Authentication and profile menu removed - using realtime.js for core functionality
     </script>
     <!-- Load the real backend integration -->
     <script src="js/realtime.js"></script>
     <script>
         // Modal functions
         function confirmLogout() {
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('userEmail');
-            localStorage.removeItem('userName');
             localStorage.removeItem('userSession');
             localStorage.removeItem('currentUser');
             window.location.href = 'index.html';

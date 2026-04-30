@@ -1824,24 +1824,6 @@
                     <li><a href="file.html">Upload</a></li>
                 </ul>
 
-                <!-- Authentication buttons (shown when not logged in) -->
-                <div class="auth-buttons" id="authButtons">
-                    <a href="signin.html" class="btn-nav btn-login">Sign In</a>
-                    <a href="signin.html" class="btn-nav btn-signup">Sign Up</a>
-                </div>
-
-                <!-- User menu (shown when logged in) -->
-                <div class="user-menu" id="userMenu" style="display: none;">
-                    <div class="user-avatar" id="userAvatar">
-                        JD
-                    </div>
-                    <div class="dropdown" id="dropdown">
-                        <a href="profile.html" class="dropdown-item">Profile</a>
-                        <a href="setting.html" class="dropdown-item">Settings</a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
-                    </div>
-                </div>
             </div>
         </nav>
 
@@ -2177,64 +2159,8 @@
     </div>
 
     <script>
-        // Check authentication state
-        function checkAuthState() {
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            const authButtons = document.getElementById('authButtons');
-            const userMenu = document.getElementById('userMenu');
-
-            if (isLoggedIn) {
-                authButtons.style.display = 'none';
-                userMenu.style.display = 'block';
-            } else {
-                authButtons.style.display = 'flex';
-                userMenu.style.display = 'none';
-            }
-        }
-
-        // User avatar dropdown
-        document.addEventListener('DOMContentLoaded', () => {
-            const userAvatar = document.getElementById('userAvatar');
-            const dropdown = document.getElementById('dropdown');
-            const logoutBtn = document.getElementById('logoutBtn');
-
-            // Toggle dropdown
-            if (userAvatar) {
-                userAvatar.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    dropdown.classList.toggle('active');
-                });
-            }
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', () => {
-                if (dropdown) {
-                    dropdown.classList.remove('active');
-                }
-            });
-
-            // Prevent dropdown from closing when clicking inside
-            if (dropdown) {
-                dropdown.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                });
-            }
-
-            // Logout functionality
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    localStorage.removeItem('isLoggedIn');
-                    localStorage.removeItem('userEmail');
-                    localStorage.removeItem('userName');
-                    checkAuthState();
-                    window.location.href = 'index.html';
-                });
-            }
-
-            // Check auth state on page load
-            checkAuthState();
-        });
+        // Authentication was removed from the landing page.
+        document.addEventListener('DOMContentLoaded', () => {});
 
         // Scroll animations
         const observerOptions = {
@@ -2386,78 +2312,6 @@
                     }
                 });
             });
-
-            // Authentication management functions
-            function updateAuthUI() {
-                const userSession = localStorage.getItem('userSession');
-                const signInButton = document.getElementById('signInButton');
-                const userMenu = document.getElementById('userMenu');
-
-                if (!signInButton || !userMenu) {
-                    console.warn('Auth UI elements not found');
-                    return;
-                }
-
-                if (userSession) {
-                    const userData = JSON.parse(userSession);
-                    signInButton.style.display = 'none';
-                    userMenu.style.display = 'block';
-                    const userNameElement = userMenu.querySelector('.user-name');
-                    if (userNameElement) {
-                        userNameElement.textContent = userData.name || 'User';
-                    }
-                } else {
-                    signInButton.style.display = 'inline-flex';
-                    userMenu.style.display = 'none';
-                }
-            }
-
-            // User menu toggle functionality
-            window.toggleUserMenu = function () {
-                const dropdown = document.querySelector('.user-dropdown');
-                dropdown.classList.toggle('show');
-            };
-
-            // Close user menu when clicking outside
-            document.addEventListener('click', function (e) {
-                const userMenu = document.getElementById('userMenu');
-                const dropdown = document.querySelector('.user-dropdown');
-
-                if (userMenu && !userMenu.contains(e.target)) {
-                    dropdown.classList.remove('show');
-                }
-            });
-
-            // Handle logout click
-            window.handleLogout = function (e) {
-                e.preventDefault();
-                const logoutModal = document.getElementById('logoutModal');
-                logoutModal.classList.add('show');
-            };
-
-            // Handle logout confirmation
-            window.confirmLogout = function () {
-                localStorage.removeItem('userSession');
-                updateAuthUI();
-                const logoutModal = document.getElementById('logoutModal');
-                logoutModal.classList.remove('show');
-            };
-
-            // Handle logout cancellation
-            window.cancelLogout = function () {
-                const logoutModal = document.getElementById('logoutModal');
-                logoutModal.classList.remove('show');
-            };
-
-            // Close modal when clicking on overlay
-            document.getElementById('logoutModal').addEventListener('click', function (e) {
-                if (e.target === this) {
-                    this.classList.remove('show');
-                }
-            });
-
-            // Check authentication status on page load
-            updateAuthUI();
 
             // Dynamic color changing based on scroll position
             const observerOptions = {

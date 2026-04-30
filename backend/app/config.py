@@ -48,8 +48,20 @@ def _parse_csv_env(key: str, default: str) -> list[str]:
     return [item.strip() for item in raw_value.split(",") if item.strip()]
 
 
+def _parse_bool_env(key: str, default: str = "false") -> bool:
+    return os.getenv(key, default).strip().lower() in {"1", "true", "yes", "on"}
+
+
 FRONTEND_ORIGINS = _parse_csv_env(
     "FRONTEND_ORIGINS",
-    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5500,https://ai-mom-five.vercel.app",
+    "null,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5500,https://ai-mom-five.vercel.app",
 )
 FRONTEND_ORIGIN_REGEX = os.getenv("FRONTEND_ORIGIN_REGEX", r"^https://.*\.vercel\.app$")
+
+# ===================================
+# MongoDB Speaker Diarization Storage
+# ===================================
+MONGODB_URI = os.getenv("MONGODB_URI", "")
+MONGODB_DATABASE = os.getenv("MONGODB_DATABASE", "ai_mom")
+MONGODB_DIARIZATION_COLLECTION = os.getenv("MONGODB_DIARIZATION_COLLECTION", "speaker_diarization")
+ENABLE_MONGODB_DIARIZATION_STORAGE = _parse_bool_env("ENABLE_MONGODB_DIARIZATION_STORAGE", "false")

@@ -344,7 +344,6 @@ python main.py
    ```
 
 2. **Test Frontend**:
-
    - Open `frontend/index.html` in your browser
    - Click "Test Connection" - should show "Connected ✅"
 
@@ -596,6 +595,8 @@ pytest test/ -v --cov=app
 
 #### Backend Deployment
 
+This repo now includes a Render blueprint at [render.yaml](render.yaml).
+
 **Using Uvicorn (recommended for production):**
 
 ```bash
@@ -620,14 +621,13 @@ docker run -d \
 
 #### Frontend Deployment
 
-1. **Static Hosting**: Upload `frontend/` to any static host (Netlify, Vercel, GitHub Pages)
-2. **Update Backend URL**: Modify WebSocket and API URLs in JavaScript files
-3. **CORS Configuration**: Ensure backend allows your domain
+1. **Static Hosting**: Upload `frontend/` to Vercel or another static host.
+2. **Set the backend URL once**: Update [frontend/js/deployment-config.js](frontend/js/deployment-config.js) with your Render backend URL.
+3. **CORS Configuration**: Ensure the backend allows your Vercel domain.
 
 #### Extension Distribution
 
 1. **Chrome Web Store**:
-
    - Create developer account
    - Package extension as ZIP
    - Submit for review

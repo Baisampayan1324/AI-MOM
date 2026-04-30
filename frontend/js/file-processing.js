@@ -1,4 +1,55 @@
 // File processing with real backend integration
+function splitTranscriptForSpeakers(text) {
+    const cleaned = String(text || '').replace(/\s+/g, ' ').trim();
+
+    if (!cleaned) {
+        return [];
+    }
+
+    const sentenceParts = cleaned
+        .split(/(?<=[.!?])\s+|[\r\n]+/)
+        .map(part => part.trim())
+        .filter(Boolean);
+
+    if (sentenceParts.length > 1) {
+        return sentenceParts;
+    }
+
+    const clauseParts = cleaned
+        .split(/(?<=[,;:])\s+/)
+        .map(part => part.trim())
+        .filter(Boolean);
+
+    return clauseParts.length > 1 ? clauseParts : [cleaned];
+}
+
+function buildSpeakerTranscript(text, speakerCount, speakers = []) {
+    const count = Math.max(1, Math.min(5, Number(speakerCount) || 1));
+    const speakerLabels = speakers.length
+        ? speakers.map((speaker, index) => speaker.speaker_label || speaker.speaker_name || `Speaker ${index + 1}`)
+        : Array.from({ length: count }, (_, index) => `Speaker ${index + 1}`);
+    const segments = splitTranscriptForSpeakers(text);
+    const segmentGroups = Math.max(1, Math.min(count, segments.length));
+
+    if (segmentGroups === 1) {
+        return [{ speaker: speakerLabels[0], text: segments.join(' ') }];
+    }
+
+    const chunkSize = Math.ceil(segments.length / segmentGroups);
+    const result = [];
+
+    for (let index = 0; index < segments.length; index += chunkSize) {
+        const chunkIndex = Math.floor(index / chunkSize);
+        const speakerLabel = speakerLabels[chunkIndex % speakerLabels.length];
+        result.push({
+            speaker: speakerLabel,
+            text: segments.slice(index, index + chunkSize).join(' ')
+        });
+    }
+
+    return result;
+}
+
 // Function to process audio file and return results
 function processAudioFile(file, callbacks) {
     const { onProgress, onComplete, onError } = callbacks;
@@ -71,30 +122,21 @@ function processAudioFile(file, callbacks) {
             console.log('Backend response:', data);
 
             // Process backend response
+            const speakerCount = Number(data.speaker_count || 1);
+            const transcriptText = data.transcription || '';
+            const speakerTranscript = buildSpeakerTranscript(transcriptText, speakerCount, data.speakers || []);
+
             const result = {
-                transcription: [],
-                transcript: data.transcription || '',
+                transcription: speakerTranscript,
+                transcript: transcriptText,
                 summary: data.full_summary || '',
                 key_points: data.key_points || [],
                 action_items: data.action_items || [],
                 conclusions: data.conclusions || [data.conclusion || ''],
-                participants: `Speaker count: ${data.speaker_count || 1}`,
+                participants: `Speaker count: ${speakerCount}`,
                 processing_time: data.processing_time,
                 api_used: data.api_used
             };
-
-            // Parse transcription into speaker format if it's a string
-            if (typeof result.transcript === 'string') {
-                const lines = result.transcript.split('\n').filter(l => l.trim());
-                result.transcription = lines.map((line, index) => {
-                    const speakerMatch = line.match(/^(Speaker \d+):\s*(.+)$/);
-                    if (speakerMatch) {
-                        return { speaker: speakerMatch[1], text: speakerMatch[2] };
-                    } else {
-                        return { speaker: `Speaker ${(index % 2) + 1}`, text: line };
-                    }
-                });
-            }
 
             setTimeout(() => onComplete(result), 500);
         })

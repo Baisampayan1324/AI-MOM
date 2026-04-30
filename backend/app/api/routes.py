@@ -10,6 +10,7 @@ from datetime import datetime
 from app.services.multi_api_processor import MultiAPIProcessor
 from app.services.audio_processor import AudioProcessor
 from app.services.summarizer import Summarizer
+from app.services.mongo_store import MongoDiarizationStore
 from app.models.schemas import ProcessResponse, AudioProcessRequest, UserProfile
 from app.services.user_profile import UserProfileService
 from app.api.websocket import send_progress_update
@@ -23,6 +24,7 @@ multi_processor = MultiAPIProcessor()
 audio_processor = AudioProcessor()
 summarizer = Summarizer()
 user_profile_service = UserProfileService()
+mongo_diarization_store = MongoDiarizationStore()
 
 @router.post("/process-audio", response_model=ProcessResponse)
 async def process_audio_file(
@@ -41,6 +43,8 @@ async def process_audio_file(
             await send_progress_update(session_id, percentage, message, step)
     
     try:
+        session_record_id = session_id or uuid.uuid4().hex
+
         if file_path:
             # Process from file path
             if not os.path.exists(file_path):
@@ -60,7 +64,7 @@ async def process_audio_file(
             # Generate comprehensive summary with key points, action items, and conclusion
             comprehensive_summary = await summarizer.generate_comprehensive_summary(transcription_result['transcription'])
 
-            return ProcessResponse(
+            response = ProcessResponse(
                 transcription=transcription_result['transcription'],
                 full_summary=comprehensive_summary.get('full_summary'),
                 key_points=comprehensive_summary.get('key_points', []),
@@ -71,6 +75,17 @@ async def process_audio_file(
                 speaker_count=diarization_result.get('speaker_count', 1),
                 speakers=diarization_result.get('segments', [])
             )
+
+            mongo_diarization_store.save_session(
+                session_id=session_record_id,
+                transcript=transcription_result['transcription'],
+                speaker_count=diarization_result.get('speaker_count', 1),
+                segments=diarization_result.get('segments', []),
+                source=file_path,
+                metadata={"filename": os.path.basename(file_path), "mode": "file_path"},
+            )
+
+            return response
 
         elif file:
             # Process uploaded file
@@ -111,7 +126,7 @@ async def process_audio_file(
                 except Exception as cleanup_error:
                     logger.warning(f"Failed to cleanup temp file: {cleanup_error}")
 
-                return ProcessResponse(
+                response = ProcessResponse(
                     transcription=transcription_result['transcription'],
                     full_summary=comprehensive_summary.get('full_summary'),
                     key_points=comprehensive_summary.get('key_points', []),
@@ -122,6 +137,17 @@ async def process_audio_file(
                     speaker_count=diarization_result.get('speaker_count', 1),
                     speakers=diarization_result.get('segments', [])
                 )
+
+                mongo_diarization_store.save_session(
+                    session_id=session_record_id,
+                    transcript=transcription_result['transcription'],
+                    speaker_count=diarization_result.get('speaker_count', 1),
+                    segments=diarization_result.get('segments', []),
+                    source=filename,
+                    metadata={"temp_path": temp_path, "mode": "upload"},
+                )
+
+                return response
             
             except Exception as file_error:
                 # Cleanup on error

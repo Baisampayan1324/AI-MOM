@@ -4,15 +4,17 @@
     }
 
     function getConfiguredBackendBaseUrl() {
+        const deploymentConfig = window.AI_MOM_RUNTIME_CONFIG || window.AI_MOM_DEPLOYMENT_CONFIG || {};
         const explicitConfig = window.AI_MOM_RUNTIME_CONFIG && window.AI_MOM_RUNTIME_CONFIG.backendBaseUrl;
         const storedConfig = window.localStorage ? window.localStorage.getItem('AI_MOM_BACKEND_BASE_URL') : '';
-        const override = window.__AI_MOM_BACKEND_BASE_URL__ || explicitConfig || storedConfig;
+        const override = window.__AI_MOM_BACKEND_BASE_URL__ || deploymentConfig.backendBaseUrl || explicitConfig || storedConfig;
 
         if (override) {
             return normalizeUrl(override);
         }
 
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // Check if running on localhost or via file:// protocol (local development)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || !window.location.hostname) {
             return 'http://localhost:8000';
         }
 

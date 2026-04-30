@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Processing - AI MOM</title>
     <script src="js/avatar-manager.js"></script>
+    <script src="js/deployment-config.js"></script>
     <script src="js/runtime-config.js"></script>
     <script src="js/file-processing.js"></script>
     <style>
@@ -1533,19 +1534,6 @@
                     <li><a href="index.html">Home</a></li>
                     <li><a href="real.html">Live</a></li>
                 </ul>
-
-                <!-- User menu (assuming user is logged in) -->
-                <div class="user-menu">
-                    <div class="user-avatar" id="userAvatar">
-                        JD
-                    </div>
-                    <div class="dropdown" id="dropdown">
-                        <a href="profile.html" class="dropdown-item">Profile</a>
-                        <a href="setting.html" class="dropdown-item">Settings</a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
-                    </div>
-                </div>
             </div>
         </nav>
 
@@ -1778,47 +1766,10 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM fully loaded, initializing...');
 
-            // User menu functionality
-            const userAvatar = document.getElementById('userAvatar');
-            const dropdown = document.getElementById('dropdown');
-            const logoutBtn = document.getElementById('logoutBtn');
-
-            // Toggle dropdown
-            if (userAvatar) {
-                userAvatar.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    dropdown.classList.toggle('active');
-                });
-            }
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', () => {
-                if (dropdown) {
-                    dropdown.classList.remove('active');
-                }
-            });
-
-            // Prevent dropdown from closing when clicking inside
-            if (dropdown) {
-                dropdown.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                });
-            }
-
-            // Logout functionality
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const logoutModal = document.getElementById('logoutModal');
-                    logoutModal.classList.add('show');
-                });
-            }
+            // Page is minimal - no authentication UI
 
             // Modal functions
             window.confirmLogout = function () {
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('userEmail');
-                localStorage.removeItem('userName');
                 localStorage.removeItem('userSession');
                 window.location.href = 'index.html';
             };

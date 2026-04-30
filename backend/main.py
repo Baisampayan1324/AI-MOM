@@ -2,7 +2,6 @@ import uvicorn
 import os
 import sys
 import signal
-import asyncio
 from dotenv import load_dotenv
 
 # Add the backend directory to Python path
@@ -12,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 load_dotenv()
 
 def signal_handler(signum, frame):
-    print("\n🛑 Received shutdown signal. Shutting down gracefully...")
+    print("Received shutdown signal. Shutting down gracefully...")
     sys.exit(0)
 
 if __name__ == "__main__":
@@ -25,22 +24,25 @@ if __name__ == "__main__":
     
     # Detect if running as a PyInstaller bundle (frozen)
     is_frozen = getattr(sys, "frozen", False)
-    # Default: reload enabled in dev, disabled when frozen. Allow override via RELOAD env.
-    default_reload = "0" if is_frozen else "1"
+    environment = os.getenv("ENVIRONMENT", "development").strip().lower()
+    is_production = environment in ("production", "prod") or bool(os.getenv("RENDER"))
+
+    # Default: reload enabled in dev, disabled in production or when frozen. Allow override via RELOAD env.
+    default_reload = "0" if is_frozen or is_production else "1"
     reload_env = os.getenv("RELOAD", default_reload).strip().lower()
     reload_enabled = reload_env in ("1", "true", "yes", "on")
 
     print("=" * 60)
-    print("🚀 AI MOM Backend Server Starting...")
+    print("AI MOM Backend Server Starting...")
     print("=" * 60)
-    print(f"📡 Host: {host}")
-    print(f"🔌 Port: {port}")
-    print(f"🌐 Access at: http://localhost:{port}")
-    print(f"📚 API Docs: http://localhost:{port}/docs")
-    print(f"🔧 Health Check: http://localhost:{port}/health")
+    print(f"Host: {host}")
+    print(f"Port: {port}")
+    print(f"Access at: http://localhost:{port}")
+    print(f"API Docs: http://localhost:{port}/docs")
+    print(f"Health Check: http://localhost:{port}/health")
     print("=" * 60)
-    print("\n💡 The server is now running. It will stay active until you press CTRL+C")
-    print("   This is NORMAL behavior - the server is waiting for requests.\n")
+    print("The server is now running. It will stay active until you press CTRL+C")
+    print("This is NORMAL behavior - the server is waiting for requests.")
     
     try:
         uvicorn.run(
@@ -55,7 +57,7 @@ if __name__ == "__main__":
             access_log=False,  # Reduce log noise
         )
     except KeyboardInterrupt:
-        print("\n✅ Server stopped gracefully")
+        print("Server stopped gracefully")
     except Exception as e:
-        print(f"\n❌ Server error: {e}")
+        print(f"Server error: {e}")
         sys.exit(1)
