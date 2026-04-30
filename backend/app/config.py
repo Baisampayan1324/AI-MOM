@@ -41,3 +41,15 @@ HOST = os.getenv("HOST", "localhost")
 PORT = int(os.getenv("PORT", "8000"))
 # Default transcription language used by real-time processing (e.g. 'en')
 TRANSCRIPTION_LANGUAGE = os.getenv("TRANSCRIPTION_LANGUAGE", "en")
+
+
+def _parse_csv_env(key: str, default: str) -> list[str]:
+    raw_value = os.getenv(key, default)
+    return [item.strip() for item in raw_value.split(",") if item.strip()]
+
+
+FRONTEND_ORIGINS = _parse_csv_env(
+    "FRONTEND_ORIGINS",
+    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5500,https://ai-mom-five.vercel.app",
+)
+FRONTEND_ORIGIN_REGEX = os.getenv("FRONTEND_ORIGIN_REGEX", r"^https://.*\.vercel\.app$")

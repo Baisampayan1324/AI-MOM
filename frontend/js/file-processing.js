@@ -18,7 +18,8 @@ function processAudioFile(file, callbacks) {
     // Open a WebSocket to receive backend progress updates
     let progressSocket = null;
     try {
-        progressSocket = new WebSocket('ws://localhost:8000/ws/progress');
+        const progressSocketUrl = (window.AI_MOM_RUNTIME && window.AI_MOM_RUNTIME.buildWsUrl('/ws/progress')) || 'ws://localhost:8000/ws/progress';
+        progressSocket = new WebSocket(progressSocketUrl);
         progressSocket.onopen = () => {
             try {
                 // Notify backend to start progress tracking with session ID
@@ -53,7 +54,8 @@ function processAudioFile(file, callbacks) {
     }
 
     // Upload to backend with session_id
-    fetch(`http://localhost:8000/api/process-audio?session_id=${sessionId}`, {
+    const processAudioUrl = (window.AI_MOM_RUNTIME && window.AI_MOM_RUNTIME.buildApiUrl('/process-audio')) || 'http://localhost:8000/api/process-audio';
+    fetch(`${processAudioUrl}?session_id=${sessionId}`, {
         method: 'POST',
         body: formData
     })

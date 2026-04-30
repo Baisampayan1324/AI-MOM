@@ -655,6 +655,28 @@ services:
 
 ### Cloud Deployment
 
+#### Render + Vercel
+
+Recommended production layout for this project:
+
+- Frontend: Vercel static deployment for the contents of the `frontend/` folder.
+- Backend: Render web service running `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
+
+Render environment variables:
+
+```env
+GROQ_API_KEY=your_production_key
+OPENROUTER_API_KEY=your_production_key
+FRONTEND_ORIGINS=https://ai-mom-five.vercel.app
+PORT=10000
+```
+
+Frontend configuration:
+
+- Update [frontend/js/runtime-config.js](../frontend/js/runtime-config.js) with the Render backend URL.
+- Redeploy the Vercel project after the backend URL is set.
+- The frontend now builds API and WebSocket URLs from shared runtime config instead of hardcoded localhost values.
+
 #### AWS/GCP/Azure
 - **Container Registry**: Push Docker image
 - **Cloud Run/Functions**: Serverless deployment

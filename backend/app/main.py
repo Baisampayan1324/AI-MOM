@@ -22,6 +22,7 @@ import logging
 from contextlib import asynccontextmanager
 from app.api.routes import router as api_router
 from app.api.websocket import router as websocket_router
+from app.config import FRONTEND_ORIGINS, FRONTEND_ORIGIN_REGEX
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -75,12 +76,12 @@ if limiter:
 # Add CORS middleware with WebSocket support
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
-    allow_credentials=True,
+    allow_origins=FRONTEND_ORIGINS,
+    allow_origin_regex=FRONTEND_ORIGIN_REGEX,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],  # Expose all headers for CORS detection
-    allow_origin_regex="https?://.*",  # Allow WebSocket connections from any origin
 )
 
 # Add request/response logging middleware

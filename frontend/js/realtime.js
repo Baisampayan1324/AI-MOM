@@ -44,7 +44,7 @@
         return btoa(binary);
     }
 
-    const BACKEND_URL = 'ws://localhost:8000/ws/audio';
+    const BACKEND_URL = (window.AI_MOM_RUNTIME && window.AI_MOM_RUNTIME.buildWsUrl('/ws/audio')) || 'ws://localhost:8000/ws/audio';
 
     // Initialize button states
     if (startBtn) startBtn.disabled = true;
@@ -646,7 +646,7 @@
 
         try {
             // Call backend summarization endpoint
-            const response = await fetch('http://localhost:8000/api/generate-summary', {
+            const response = await fetch((window.AI_MOM_RUNTIME && window.AI_MOM_RUNTIME.buildApiUrl('/generate-summary')) || 'http://localhost:8000/api/generate-summary', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

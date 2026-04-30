@@ -1120,8 +1120,10 @@
         </div>
     </div>
 
+    <script src="js/runtime-config.js"></script>
     <script>
-        const API_URL = 'http://localhost:8000/api';
+        const BACKEND_BASE_URL = (window.AI_MOM_RUNTIME && window.AI_MOM_RUNTIME.backendBaseUrl) || 'http://localhost:8000';
+        const API_URL = (window.AI_MOM_RUNTIME && window.AI_MOM_RUNTIME.apiBaseUrl) || `${BACKEND_BASE_URL}/api`;
 
         function generateStarfield() {
             const starfield = document.getElementById('starfield');
@@ -1252,7 +1254,7 @@
                     } catch (error) {
                         console.error('Login error:', error);
                         console.error('Error type:', error.message);
-                        emailError.textContent = `Login failed: ${error.message}. Make sure the backend server is running on http://localhost:8000`;
+                        emailError.textContent = `Login failed: ${error.message}. Make sure the backend server is running on ${BACKEND_BASE_URL}`;
                         emailError.classList.add('show');
                     } finally {
                         submitButton.disabled = false;
@@ -1358,7 +1360,7 @@
                     } catch (error) {
                         console.error('Registration error:', error);
                         console.error('Error type:', error.message);
-                        emailError.textContent = `Registration failed: ${error.message}. Make sure the backend server is running on http://localhost:8000`;
+                        emailError.textContent = `Registration failed: ${error.message}. Make sure the backend server is running on ${BACKEND_BASE_URL}`;
                         emailError.classList.add('show');
                     } finally {
                         submitButton.disabled = false;
