@@ -2,8 +2,6 @@ services:
   - type: web
     name: ai-mom-backend
     runtime: docker
-    buildCommand: ""
-    startCommand: ""
     autoDeploy: true
     envVars:
       - key: ENVIRONMENT
