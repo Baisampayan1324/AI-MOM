@@ -9,7 +9,6 @@ websockets
 torch
 numpy
 pydub
-pyaudioop
 ffmpeg-python
 psutil
 slowapi
