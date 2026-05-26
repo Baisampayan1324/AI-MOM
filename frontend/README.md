@@ -1879,7 +1879,7 @@ const WS_URL = 'wss://your-backend.example.com/ws/audio';  - Upload profile pict
 
 - **Backend Docs**: [../backend/README.md](../backend/README.md)
 
-- **Extension Docs**: [../extension/README.md](../extension/README.md)- Indigo 500: `#6366f1`
+- **Sidebar Docs**: [../extension/README.md](../extension/README.md)- Indigo 500: `#6366f1`
 
 
 

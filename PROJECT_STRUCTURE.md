@@ -51,9 +51,7 @@ AI_MOM@
 ├── extension/                    # Chrome extension (Manifest V3)
 │   ├── manifest.json
 │   ├── background.js             # Service worker
-│   ├── content/                  # Platform-specific content scripts
-│   ├── overlay/                  # In-meeting overlay
-│   ├── popup/                    # Extension popup UI
+│   ├── panel/                    # Side panel UI
 │   └── README.md
 │
 ├── docs/                         # Structured documentation

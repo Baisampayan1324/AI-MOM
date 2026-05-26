@@ -238,7 +238,7 @@ graph TB
   - WebSocket backend integration
   - Platform-specific keyboard shortcuts
 
-📖 **[Extension Documentation](extension/README.md)**
+📖 **[Extension Sidebar](extension/README.md)**
 
 ---
 
@@ -604,7 +604,7 @@ Open `frontend/index.html` directly in the browser, or serve the `frontend/` fol
 
 ### Extension
 
-Load the `extension/` folder as an unpacked extension in Chrome.
+Load the `extension/` folder as an unpacked Chrome extension. Click the extension icon to open the side panel.
 
 ### Environment Variables
 

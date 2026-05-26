@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI MOM Sidebar</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="brand-mark">AI</div>
+      <div>
+        <p class="eyebrow">AI MOM</p>
+        <h1>Sidebar</h1>
+        <p class="subhead">Fresh baseline for backend checks and future capture tools.</p>
+      </div>
+    </header>
+
+    <section class="card status-card">
+      <div class="status-row">
+        <span class="status-dot" id="status-dot"></span>
+        <div>
+          <p class="label">Backend status</p>
+          <h2 id="status-text">Unknown</h2>
+        </div>
+      </div>
+      <p class="muted" id="status-detail">Connect to the local backend to verify the setup.</p>
+    </section>
+
+    <section class="card">
+      <label for="backend-url">Backend URL</label>
+      <input id="backend-url" type="url" value="http://localhost:8000" placeholder="http://localhost:8000">
+      <div class="button-row">
+        <button id="save-btn" class="btn secondary">Save</button>
+        <button id="test-btn" class="btn primary">Test</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <label>What this does</label>
+      <ul class="bullets">
+        <li>Opens as a real side panel, not a floating popup.</li>
+        <li>Checks the backend health endpoint.</li>
+        <li>Acts as the new starting point for future extension features.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="panel.js"></script>
+</body>
+</html>
