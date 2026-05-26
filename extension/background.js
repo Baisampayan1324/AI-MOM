@@ -56,42 +56,69 @@ async function applyPanelBehavior() {
   }
 }
 
+async function syncAllTabsPanelState() {
+  await loadEnabledTabs();
+  let tabs = [];
+  try {
+    tabs = await chrome.tabs.query({});
+  } catch (error) {
+    console.warn('Failed to query tabs:', error);
+    return;
+  }
+  for (const tab of tabs) {
+    if (!tab.id) continue;
+    try {
+      if (enabledTabs.has(tab.id)) {
+        await chrome.sidePanel.setOptions({
+          tabId: tab.id,
+          enabled: true,
+          path: 'panel/panel.html'
+        });
+      } else {
+        await chrome.sidePanel.setOptions({ tabId: tab.id, enabled: false });
+      }
+    } catch (error) {
+      // chrome://, devtools, etc. — ignore.
+    }
+  }
+}
+
 chrome.runtime.onInstalled.addListener(async () => {
   await chrome.storage.sync.set({
     backendUrl: 'http://localhost:8000',
     autoOpenSidebar: true
   });
   await applyPanelBehavior();
+  await syncAllTabsPanelState();
 });
 
-chrome.runtime.onStartup.addListener(() => {
-  loadEnabledTabs();
-  applyPanelBehavior();
+chrome.runtime.onStartup.addListener(async () => {
+  await loadEnabledTabs();
+  await applyPanelBehavior();
+  await syncAllTabsPanelState();
 });
-loadEnabledTabs();
+loadEnabledTabs().then(() => syncAllTabsPanelState());
 applyPanelBehavior();
 
 chrome.action.onClicked.addListener((tab) => {
-  if (!tab?.id || tab.windowId == null) return;
+  if (!tab?.id) return;
   const tabId = tab.id;
-  const windowId = tab.windowId;
 
-  // Fire open() synchronously with windowId — does NOT require prior per-tab enable,
-  // so first click works without the 2x-click bug.
   try {
-    const opening = chrome.sidePanel.open({ windowId });
-    if (opening && typeof opening.catch === 'function') {
-      opening.catch((error) => console.error('Failed to open side panel:', error));
-    }
+    chrome.sidePanel.setOptions({ tabId, enabled: true, path: 'panel/panel.html' })
+      .catch((error) => console.warn('setOptions failed in click:', error));
+    chrome.sidePanel.open({ tabId })
+      .catch((error) => console.error('Failed to open side panel:', error));
   } catch (error) {
-    console.error('sidePanel.open threw:', error);
+    console.error('sidePanel call threw:', error);
   }
 
-  // Background work: register this tab as enabled with our path.
-  (async () => {
-    await loadEnabledTabs();
-    await enablePanelForTab(tabId);
-  })().catch((error) => console.error('Failed to configure side panel:', error));
+  enabledTabs.add(tabId);
+  loadEnabledTabs()
+    .then(() => persistEnabledTabs())
+    .catch((error) => console.error('Failed to persist enabled tabs:', error));
+
+  setFloatingButtonVisibility(false, tabId);
 });
 
 chrome.tabs.onCreated.addListener(async (tab) => {
@@ -129,6 +156,37 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
   }
 });
 
+async function broadcastFloatingButton(visible, tabId) {
+  try {
+    if (tabId != null) {
+      await chrome.tabs.sendMessage(tabId, {
+        action: 'setFloatingButtonVisible',
+        visible
+      }).catch(() => {});
+      return;
+    }
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (!tab.id) continue;
+      chrome.tabs.sendMessage(tab.id, {
+        action: 'setFloatingButtonVisible',
+        visible
+      }).catch(() => {});
+    }
+  } catch (error) {
+    // Ignore — content scripts may not be loaded everywhere.
+  }
+}
+
+async function setFloatingButtonVisibility(visible, tabId) {
+  try {
+    await chrome.storage.session.set({ floatingButtonVisible: visible });
+  } catch (error) {
+    // Ignore.
+  }
+  broadcastFloatingButton(visible, tabId);
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.action === 'openSidePanel') {
     const tabId = sender?.tab?.id;
@@ -143,6 +201,37 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message?.action === 'openSidePanelFromContent') {
+    const tabId = sender?.tab?.id;
+    const windowId = sender?.tab?.windowId;
+    if (!tabId) {
+      sendResponse({ success: false, error: 'No tab id from sender' });
+      return true;
+    }
+    // Fire open + setOptions synchronously within the user-gesture relay.
+    try {
+      chrome.sidePanel.setOptions({ tabId, enabled: true, path: 'panel/panel.html' })
+        .catch((error) => console.warn('setOptions failed (content):', error));
+      const opening = windowId != null
+        ? chrome.sidePanel.open({ tabId, windowId })
+        : chrome.sidePanel.open({ tabId });
+      opening
+        .then(() => {
+          enabledTabs.add(tabId);
+          persistEnabledTabs();
+          setFloatingButtonVisibility(false, tabId);
+          sendResponse({ success: true });
+        })
+        .catch((error) => {
+          console.error('open from content failed:', error);
+          sendResponse({ success: false, error: error.message });
+        });
+    } catch (error) {
+      sendResponse({ success: false, error: error.message });
+    }
+    return true;
+  }
+
   if (message?.action === 'closeSidePanel') {
     chrome.tabs.query({ active: true, lastFocusedWindow: true }, async (tabs) => {
       const tabId = tabs?.[0]?.id;
@@ -153,6 +242,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       try {
         await loadEnabledTabs();
         await disablePanelForTab(tabId);
+        await setFloatingButtonVisibility(true, tabId);
         sendResponse({ success: true });
       } catch (error) {
         sendResponse({ success: false, error: error.message });

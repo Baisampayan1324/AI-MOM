@@ -19,33 +19,30 @@ const stopShareBtn = document.getElementById('stop-share-btn');
 const uploadBtn = document.getElementById('upload-btn');
 const toggleBtn = document.getElementById('toggle-btn');
 const resetKeysBtn = document.getElementById('reset-keys-btn');
-const previewToggleBtn = document.getElementById('preview-toggle-btn');
 const clearTranscriptBtn = document.getElementById('clear-transcript-btn');
 const liveState = document.getElementById('live-state');
 const recordPill = document.getElementById('record-pill');
 const fileInput = document.getElementById('audio-file');
 const transcriptList = document.getElementById('transcript-list');
 const fileName = document.getElementById('file-name');
-const screenPreview = document.getElementById('screen-preview');
-const previewHelp = document.getElementById('preview-help');
 
 const TARGET_SAMPLE_RATE = 16000;
 const PCM_CHUNK_SAMPLES = 4096;
-const SPEAKER_TURN_GAP_MS = 2500; // gap longer than this rotates to next speaker
+const SPEAKER_TURN_GAP_MS = 2500;
 const MAX_SPEAKER = 5;
 
 let audioSocket = null;
-let screenStream = null;
+let captureStream = null;
 let audioContext = null;
 let audioWorkletSource = null;
 let audioWorkletNode = null;
 let silentGain = null;
-let previewVisible = true;
+let passthroughGain = null;
 let currentSpeakerId = 1;
 let lastUtteranceTs = 0;
 let lastEntryNode = null;
 let lastEntrySpeaker = null;
-let sessionTurns = []; // [{speaker, text, ts}]
+let sessionTurns = [];
 let sessionInProgress = false;
 
 function normalizeUrl(value) {
@@ -347,10 +344,6 @@ function updateToggleButton(isOpen) {
   toggleBtn.title = isOpen ? 'Close sidebar' : 'Reopen sidebar';
 }
 
-function updatePreviewButton(isVisible) {
-  previewToggleBtn.textContent = isVisible ? 'Hide preview' : 'Show preview';
-  previewToggleBtn.title = isVisible ? 'Hide the preview' : 'Show the preview';
-}
 
 async function loadStoredSettings() {
   const stored = await chrome.storage.sync.get({
@@ -551,11 +544,13 @@ function connectWebSocket() {
 function teardownAudioGraph() {
   try {
     if (audioWorkletNode) {
+      try { audioWorkletNode.port.onmessage = null; } catch (e) {}
+      try { audioWorkletNode.port.close(); } catch (e) {}
       audioWorkletNode.disconnect();
-      audioWorkletNode.onaudioprocess = null;
     }
     if (audioWorkletSource) audioWorkletSource.disconnect();
     if (silentGain) silentGain.disconnect();
+    if (passthroughGain) passthroughGain.disconnect();
     if (audioContext && audioContext.state !== 'closed') audioContext.close();
   } catch (error) {
     console.warn('Audio graph teardown error:', error);
@@ -563,76 +558,123 @@ function teardownAudioGraph() {
   audioWorkletNode = null;
   audioWorkletSource = null;
   silentGain = null;
+  passthroughGain = null;
   audioContext = null;
 }
 
-function buildPcmGraph(stream) {
+async function buildPcmGraph(stream) {
   audioContext = new (window.AudioContext || window.webkitAudioContext)({
     sampleRate: TARGET_SAMPLE_RATE,
     latencyHint: 'interactive'
   });
+
+  const workletUrl = chrome.runtime.getURL('panel/pcm-worklet.js');
+  await audioContext.audioWorklet.addModule(workletUrl);
+
   audioWorkletSource = audioContext.createMediaStreamSource(stream);
-  audioWorkletNode = audioContext.createScriptProcessor(PCM_CHUNK_SAMPLES, 1, 1);
-  audioWorkletNode.onaudioprocess = (event) => {
-    const input = event.inputBuffer.getChannelData(0);
-    const copy = new Float32Array(input.length);
-    copy.set(input);
-    sendPcmChunk(copy);
+  audioWorkletNode = new AudioWorkletNode(audioContext, 'pcm-processor', {
+    numberOfInputs: 1,
+    numberOfOutputs: 1,
+    outputChannelCount: [1],
+    processorOptions: { chunkSize: PCM_CHUNK_SAMPLES }
+  });
+  audioWorkletNode.port.onmessage = (event) => {
+    if (event.data instanceof Float32Array) {
+      sendPcmChunk(event.data);
+    }
   };
+
+  // Muted sink keeps the worklet scheduled.
   silentGain = audioContext.createGain();
   silentGain.gain.value = 0;
   audioWorkletSource.connect(audioWorkletNode);
   audioWorkletNode.connect(silentGain);
   silentGain.connect(audioContext.destination);
+
+  // Passthrough so user still hears tab audio (tabCapture mutes by default).
+  passthroughGain = audioContext.createGain();
+  passthroughGain.gain.value = 1.0;
+  audioWorkletSource.connect(passthroughGain);
+  passthroughGain.connect(audioContext.destination);
 }
 
-async function startScreenShare() {
-  if (screenStream) return;
+function getTabCaptureStreamId(targetTabId) {
+  return new Promise((resolve, reject) => {
+    if (!chrome.tabCapture || !chrome.tabCapture.getMediaStreamId) {
+      reject(new Error('tabCapture API unavailable'));
+      return;
+    }
+    try {
+      chrome.tabCapture.getMediaStreamId({ targetTabId }, (streamId) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        if (!streamId) {
+          reject(new Error('Empty streamId from tabCapture'));
+          return;
+        }
+        resolve(streamId);
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+async function startCapture() {
+  if (captureStream) return;
   try {
-    const stream = await navigator.mediaDevices.getDisplayMedia({
-      video: true,
-      audio: true
+    const [activeTab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (!activeTab?.id) throw new Error('No active tab found.');
+
+    const streamId = await getTabCaptureStreamId(activeTab.id);
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        mandatory: {
+          chromeMediaSource: 'tab',
+          chromeMediaSourceId: streamId
+        }
+      },
+      video: false
     });
 
-    screenStream = stream;
-    screenPreview.srcObject = stream;
+    captureStream = stream;
     connectWebSocket();
     shareBtn.disabled = true;
     stopShareBtn.disabled = false;
     sessionTurns = [];
     sessionInProgress = true;
     setRecordPill('live');
-    setStatus('ok', 'Recording', 'Captured audio is streaming to the backend.');
+    setStatus('ok', 'Recording', 'Tab audio streaming to backend.');
     setLiveState('Listening for live transcription...', 'listening');
 
     const audioTracks = stream.getAudioTracks();
     if (audioTracks.length === 0) {
-      setStatus('warn', 'No audio track', 'The selected capture source did not provide audio to transcribe.');
+      stopCapture();
+      setStatus('warn', 'No audio', 'Active tab has no audio.');
       setLiveState('No audio track available.', 'ready');
-      setRecordPill('idle');
-      shareBtn.disabled = false;
-      stopShareBtn.disabled = true;
       return;
     }
 
-    const audioOnlyStream = new MediaStream(audioTracks);
-    buildPcmGraph(audioOnlyStream);
-
-    const [videoTrack] = stream.getVideoTracks();
-    if (videoTrack) videoTrack.addEventListener('ended', stopScreenShare);
-    audioTracks[0].addEventListener('ended', stopScreenShare);
+    await buildPcmGraph(stream);
+    audioTracks[0].addEventListener('ended', stopCapture);
   } catch (error) {
-    setStatus('warn', 'Share failed', error.message || 'Could not start screen sharing.');
+    captureStream = null;
+    shareBtn.disabled = false;
+    stopShareBtn.disabled = true;
     setRecordPill('idle');
+    setStatus('warn', 'Capture failed', error.message || 'Could not capture tab audio.');
+    setLiveState('Idle', 'ready');
   }
 }
 
-function stopScreenShare() {
-  if (!screenStream) return;
+function stopCapture() {
+  if (!captureStream) return;
   teardownAudioGraph();
-  screenStream.getTracks().forEach((track) => track.stop());
-  screenStream = null;
-  screenPreview.srcObject = null;
+  captureStream.getTracks().forEach((track) => track.stop());
+  captureStream = null;
   shareBtn.disabled = false;
   stopShareBtn.disabled = true;
   setRecordPill('idle');
@@ -700,13 +742,6 @@ function toggleSidebar() {
   });
 }
 
-function togglePreview() {
-  previewVisible = !previewVisible;
-  screenPreview.hidden = !previewVisible;
-  previewHelp.hidden = !previewVisible;
-  updatePreviewButton(previewVisible);
-}
-
 /* ============ Event wiring ============ */
 saveBtn.addEventListener('click', () => {
   saveBackendSetting().catch((error) => {
@@ -738,11 +773,10 @@ testBtn.addEventListener('click', () => {
     });
 });
 
-shareBtn.addEventListener('click', startScreenShare);
-stopShareBtn.addEventListener('click', stopScreenShare);
+shareBtn.addEventListener('click', startCapture);
+stopShareBtn.addEventListener('click', stopCapture);
 uploadBtn.addEventListener('click', uploadAudioFile);
 toggleBtn.addEventListener('click', toggleSidebar);
-previewToggleBtn.addEventListener('click', togglePreview);
 clearTranscriptBtn.addEventListener('click', clearTranscript);
 
 resetKeysBtn.addEventListener('click', async () => {
@@ -781,9 +815,8 @@ backendUrlInput.addEventListener('keydown', (event) => {
 
 (async () => {
   updateToggleButton(true);
-  updatePreviewButton(true);
   setLiveState('Idle', 'ready');
   setRecordPill('idle');
-  setStatus('warn', 'Ready', 'Start recording, connect to the backend, or close the sidebar.');
+  setStatus('warn', 'Ready', 'Click Connect, then Start.');
   await decideSetupVisibility();
 })();

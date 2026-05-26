@@ -46,66 +46,55 @@
       <div class="brand-mark">AI</div>
       <div class="hero-text">
         <p class="eyebrow">AI MOM</p>
-        <h1>Live Meeting Sidebar</h1>
-        <p class="subhead">Capture a tab, see speaker turns live.</p>
+        <h1>Meeting Sidebar</h1>
       </div>
       <div class="hero-actions">
         <button id="reset-keys-btn" class="icon-btn" title="Change API keys">⚙</button>
-        <button id="toggle-btn" class="icon-btn" title="Close sidebar">−</button>
+        <button id="toggle-btn" class="icon-btn" title="Close sidebar">×</button>
       </div>
     </header>
 
-    <section class="card status-card">
+    <section class="card status-card compact">
       <div class="status-row">
         <span class="status-dot" id="status-dot"></span>
-        <div>
-          <p class="label">Backend status</p>
+        <div class="status-text-wrap">
+          <p class="label">Backend</p>
           <h2 id="status-text">Unknown</h2>
         </div>
+        <button id="test-btn" class="btn primary mini">Connect</button>
       </div>
-      <p class="muted" id="status-detail">Connect to the local backend to verify the setup.</p>
+      <p class="muted small" id="status-detail">Connect to the local backend to verify the setup.</p>
+      <details class="advanced-toggle">
+        <summary>Backend URL</summary>
+        <div class="advanced-body">
+          <input id="backend-url" type="url" value="http://localhost:8000" placeholder="http://localhost:8000">
+          <button id="save-btn" class="btn secondary mini">Save</button>
+        </div>
+      </details>
     </section>
 
-    <section class="card">
-      <label for="backend-url">Backend URL</label>
-      <input id="backend-url" type="url" value="http://localhost:8000" placeholder="http://localhost:8000">
-      <div class="button-row">
-        <button id="save-btn" class="btn secondary">Save</button>
-        <button id="test-btn" class="btn primary">Connect</button>
-      </div>
-    </section>
-
-    <section class="card">
+    <section class="card record-card">
       <div class="card-head">
-        <label>Recording</label>
+        <label>Live transcription</label>
         <span id="record-pill" class="pill idle">Idle</span>
       </div>
+      <p id="live-state" class="live-state ready">Idle</p>
       <div class="button-grid">
-        <button id="share-btn" class="btn primary">Start Live Transcription</button>
-        <button id="stop-share-btn" class="btn secondary" disabled>Stop</button>
-        <button id="upload-btn" class="btn ghost">Upload Audio File</button>
+        <button id="share-btn" class="btn primary big">▶ Start</button>
+        <button id="stop-share-btn" class="btn danger big" disabled>■ Stop</button>
       </div>
+      <button id="upload-btn" class="btn ghost wide">Upload audio file</button>
       <input id="audio-file" type="file" accept="audio/*" hidden>
-      <p id="file-name" class="muted file-name">No file selected.</p>
-    </section>
-
-    <section class="card">
-      <div class="preview-header">
-        <label>Capture Preview</label>
-        <button id="preview-toggle-btn" class="ghost-btn" type="button">Hide preview</button>
-      </div>
-      <video id="screen-preview" class="screen-preview" autoplay playsinline muted></video>
-      <p id="preview-help" class="muted">The captured tab is previewed here; its audio is sent for transcription.</p>
+      <p id="file-name" class="muted small file-name"></p>
     </section>
 
     <section class="card transcript-card">
       <div class="card-head">
-        <label>Live Transcript</label>
+        <label>Transcript</label>
         <button id="clear-transcript-btn" class="ghost-btn" type="button">Clear</button>
       </div>
-      <p id="live-state" class="live-state ready">Idle</p>
       <div id="transcript-list" class="transcript-list">
-        <div class="transcript-empty">No transcriptions yet. Start recording to see speaker turns.</div>
+        <div class="transcript-empty">No transcriptions yet. Click Start to see speaker turns.</div>
       </div>
     </section>
   </main>
