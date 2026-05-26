@@ -1,12 +1,15 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Form
 from fastapi.responses import JSONResponse
-from typing import Optional
+from typing import Optional, Dict
 import os
+import re
 import tempfile
 import shutil
 import logging
 import uuid
+from pathlib import Path
 from datetime import datetime
+from pydantic import BaseModel
 from app.services.multi_api_processor import MultiAPIProcessor
 from app.services.audio_processor import AudioProcessor
 from app.services.summarizer import Summarizer
@@ -221,29 +224,42 @@ async def create_or_update_user_profile(profile: UserProfile):
 @router.post("/generate-summary")
 async def generate_summary(request: dict):
     """
-    Generate AI summary from transcription text.
-    Used by real-time recording to create comprehensive summaries after recording stops.
+    Generate comprehensive AI summary from transcription text.
+    Used by real-time recording when the user stops the live session.
     """
     try:
         transcription = request.get("transcription", "")
-        
+        speaker_stats = request.get("speaker_stats") or []  # [{speaker, turns, words}]
+
         if not transcription or len(transcription.strip()) < 10:
             raise HTTPException(status_code=400, detail="Transcription text is required and must be at least 10 characters")
-        
+
         logger.info(f"Generating summary for transcription ({len(transcription)} chars)")
-        
-        # Generate comprehensive summary using the summarizer service
+
         comprehensive_summary = await summarizer.generate_comprehensive_summary(transcription)
-        
+
+        speaker_participation = comprehensive_summary.get('speaker_participation') or []
+        if speaker_stats and not speaker_participation:
+            speaker_participation = [
+                {
+                    "speaker": item.get("speaker", f"Speaker {idx + 1}"),
+                    "contribution": f"{item.get('turns', 0)} turn(s), {item.get('words', 0)} word(s)",
+                }
+                for idx, item in enumerate(speaker_stats)
+            ]
+
         logger.info("Summary generated successfully")
-        
+
         return {
             "full_summary": comprehensive_summary.get('full_summary'),
             "key_points": comprehensive_summary.get('key_points', []),
+            "key_decisions": comprehensive_summary.get('key_decisions', []),
             "action_items": comprehensive_summary.get('action_items', []),
-            "conclusion": comprehensive_summary.get('conclusion')
+            "speaker_participation": speaker_participation,
+            "speaker_count": len(speaker_stats) if speaker_stats else None,
+            "conclusion": comprehensive_summary.get('conclusion'),
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -272,3 +288,98 @@ async def get_system_info():
         "apis_status": await multi_processor.check_apis(),
         "version": "2.0.0"
     }
+
+
+class ApiKeysPayload(BaseModel):
+    groq_api_key: Optional[str] = None
+    openrouter_api_key: Optional[str] = None
+    huggingface_token: Optional[str] = None
+
+
+_ENV_PATH = Path(__file__).resolve().parent.parent.parent / ".env"
+
+
+def _update_env_file(updates: Dict[str, str]) -> None:
+    """Write or replace keys in backend/.env, preserving other lines."""
+    lines = []
+    if _ENV_PATH.exists():
+        lines = _ENV_PATH.read_text(encoding="utf-8").splitlines()
+
+    remaining = dict(updates)
+    for idx, raw in enumerate(lines):
+        stripped = raw.lstrip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        match = re.match(r"^([A-Z0-9_]+)\s*=", stripped)
+        if not match:
+            continue
+        key = match.group(1)
+        if key in remaining:
+            lines[idx] = f"{key}={remaining.pop(key)}"
+
+    if remaining:
+        if lines and lines[-1].strip() != "":
+            lines.append("")
+        for key, value in remaining.items():
+            lines.append(f"{key}={value}")
+
+    _ENV_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+@router.get("/keys/status")
+async def get_keys_status():
+    """Return whether real API keys are configured (no values leaked)."""
+    groq = os.getenv("GROQ_API_KEY", "")
+    openrouter = os.getenv("OPENROUTER_API_KEY", "")
+
+    def _configured(value: str) -> bool:
+        return bool(value) and not value.startswith("dummy_")
+
+    return {
+        "groq_configured": _configured(groq),
+        "openrouter_configured": _configured(openrouter),
+        "huggingface_configured": bool(os.getenv("HUGGINGFACE_TOKEN", "")),
+    }
+
+
+@router.post("/keys")
+async def set_api_keys(payload: ApiKeysPayload):
+    """Persist BYOK API keys into backend/.env and refresh in-process env vars."""
+    updates: Dict[str, str] = {}
+    if payload.groq_api_key:
+        updates["GROQ_API_KEY"] = payload.groq_api_key.strip()
+    if payload.openrouter_api_key:
+        updates["OPENROUTER_API_KEY"] = payload.openrouter_api_key.strip()
+    if payload.huggingface_token:
+        updates["HUGGINGFACE_TOKEN"] = payload.huggingface_token.strip()
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="At least one API key must be provided")
+
+    try:
+        _update_env_file(updates)
+    except Exception as exc:
+        logger.error(f"Failed to update .env: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to write .env: {exc}")
+
+    # Update in-process env + processor clients so live transcription works immediately.
+    for key, value in updates.items():
+        os.environ[key] = value
+
+    try:
+        from groq import Groq
+        import openai
+        if "GROQ_API_KEY" in updates:
+            multi_processor.default_groq_key = updates["GROQ_API_KEY"]
+            multi_processor.groq_client = Groq(api_key=updates["GROQ_API_KEY"])
+            multi_processor.groq_client_2 = Groq(api_key=updates["GROQ_API_KEY"])
+        if "OPENROUTER_API_KEY" in updates:
+            multi_processor.default_openrouter_key = updates["OPENROUTER_API_KEY"]
+            base_url = "https://openrouter.ai/api/v1"
+            multi_processor.openai_client = openai.OpenAI(api_key=updates["OPENROUTER_API_KEY"], base_url=base_url)
+            multi_processor.openai_client_2 = openai.OpenAI(api_key=updates["OPENROUTER_API_KEY"], base_url=base_url)
+            multi_processor.openai_client_3 = openai.OpenAI(api_key=updates["OPENROUTER_API_KEY"], base_url=base_url)
+    except Exception as exc:
+        logger.warning(f"Refreshed env but failed to rebuild API clients: {exc}")
+
+    return {"success": True, "updated": list(updates.keys())}

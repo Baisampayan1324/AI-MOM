@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
   "name": "AI MOM Sidebar",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A clean side panel for AI MOM meeting tools.",
   "permissions": [
     "storage",
+    "tabs",
     "sidePanel"
   ],
   "host_permissions": [

@@ -5,8 +5,10 @@ This is the fresh baseline extension for AI MOM.
 ## What it does
 
 - Opens as a Chrome side panel.
+- Starts/stops microphone recording and streams it to the backend WebSocket.
+- Uploads audio files to the backend `/api/process-audio` endpoint.
 - Stores a local backend URL.
-- Tests the backend `/health` endpoint.
+- Has a close button so you can dismiss the sidebar immediately.
 
 ## Load it in Chrome
 

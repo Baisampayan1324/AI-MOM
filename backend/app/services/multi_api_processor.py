@@ -73,10 +73,10 @@ class MultiAPIProcessor:
         self.rt_sample_rate: int = 16000
         
         # Tunable parameters via environment
-        self.rt_min_secs: float = float(os.getenv("REALTIME_MIN_SECONDS", "1.0"))  # minimum buffered audio before first decode
-        self.rt_max_secs: float = float(os.getenv("REALTIME_MAX_SECONDS", "3.5"))  # force flush upper bound
+        self.rt_min_secs: float = float(os.getenv("REALTIME_MIN_SECONDS", "0.6"))  # minimum buffered audio before first decode
+        self.rt_max_secs: float = float(os.getenv("REALTIME_MAX_SECONDS", "2.0"))  # force flush upper bound
         self.rt_silence_threshold: float = float(os.getenv("REALTIME_SILENCE_THRESHOLD", "4e-5"))  # energy threshold for silence
-        self.rt_silence_tail_secs: float = float(os.getenv("REALTIME_SILENCE_TAIL", "0.3"))  # tail length to test for silence
+        self.rt_silence_tail_secs: float = float(os.getenv("REALTIME_SILENCE_TAIL", "0.2"))  # tail length to test for silence
         
         logger.info(f"Realtime params: min={self.rt_min_secs}s max={self.rt_max_secs}s silence_thr={self.rt_silence_threshold} tail={self.rt_silence_tail_secs}s")
         logger.info("ℹ️ Single-speaker mode active (Speaker 1 for all speech)")

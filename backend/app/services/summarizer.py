@@ -181,27 +181,31 @@ class Summarizer:
             return {
                 "full_summary": "Text too short for comprehensive analysis",
                 "key_points": [],
+                "key_decisions": [],
                 "action_items": [],
+                "speaker_participation": [],
                 "conclusion": "Insufficient content for analysis"
             }
 
         try:
             prompt = f"""
-            Analyze this meeting transcription and return a JSON object with exactly these fields:
+            Analyze this meeting transcription (lines may be prefixed with "Speaker N:" labels) and return a JSON object with exactly these fields:
 
             full_summary: A detailed summary of the meeting (200-300 words)
             key_points: Array of 3-5 main topics discussed
-            action_items: Array of specific action items mentioned
+            key_decisions: Array of concrete decisions reached during the meeting (empty array if none)
+            action_items: Array of specific action items mentioned, prefer "Owner: task" format when known
+            speaker_participation: Array of objects {{"speaker": "Speaker N", "contribution": "one-line summary of their role/contribution"}}
             conclusion: Overall conclusion and next steps (100-150 words)
-
-            Make sure to include a proper conclusion that summarizes the meeting outcomes, decisions made, and future directions.
 
             Return ONLY valid JSON like this example:
             {{
                 "full_summary": "The meeting covered...",
                 "key_points": ["Topic 1", "Topic 2"],
-                "action_items": ["Action 1", "Action 2"],
-                "conclusion": "In conclusion, the meeting successfully addressed the main topics. Key decisions were made regarding... Next steps include..."
+                "key_decisions": ["Approved Q3 budget", "Adopted weekly standups"],
+                "action_items": ["Alice: draft proposal by Friday", "Bob: review pull request"],
+                "speaker_participation": [{{"speaker": "Speaker 1", "contribution": "Led discussion and shared status updates."}}, {{"speaker": "Speaker 2", "contribution": "Raised concerns about timeline."}}],
+                "conclusion": "In conclusion, the meeting successfully addressed..."
             }}
 
             TRANSCRIPTION:
@@ -257,7 +261,9 @@ class Summarizer:
             result = {
                 "full_summary": "",
                 "key_points": [],
+                "key_decisions": [],
                 "action_items": [],
+                "speaker_participation": [],
                 "conclusion": ""
             }
 
@@ -338,12 +344,14 @@ class Summarizer:
             "full_summary": f"Meeting transcription captured with approximately {word_count} words. The discussion covered: {summary_text}",
             "key_points": [
                 "Main discussion topics were addressed",
-                "Participants shared their perspectives", 
+                "Participants shared their perspectives",
                 "Various points were covered during the meeting"
             ],
+            "key_decisions": [],
             "action_items": [
                 "Review meeting outcomes and decisions",
                 "Follow up on discussed items and responsibilities"
             ],
-            "conclusion": f"The meeting successfully covered the intended topics with active participation. With {word_count} words transcribed, the session provided valuable insights and discussion. Next steps should focus on implementing the discussed points and following up on identified action items."
+            "speaker_participation": [],
+            "conclusion": f"The meeting successfully covered the intended topics with active participation. With {word_count} words transcribed, the session provided valuable insights. Next steps should focus on implementing discussed points and following up on action items."
         }
