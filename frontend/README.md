@@ -1,7 +1,5 @@
 # 🎨 AI MOM Frontend - Intelligent Meeting Management Interface# AI MOM Frontend - Intelligent Meeting Management System
 
-
-
 <div align="center">> **AI-Powered Meeting Minutes & Transcription Platform**
 
 > Transform your meetings into actionable insights with real-time transcription, speaker identification, and AI-generated summaries.
@@ -18,19 +16,11 @@
 
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)---
 
-
-
 **Modern, professional web application for AI-powered meeting transcription, real-time audio processing, and intelligent analysis**## 🎯 Overview
-
-
 
 [✨ Features](#-features) • [🚀 Quick Start](#-quick-start) • [📖 Pages](#-application-pages) • [🎨 UI Components](#-ui-components) • [🔌 Integration](#-backend-integration)**AI MOM (AI Minutes of Meeting)** is a modern, professional web application that revolutionizes meeting management through intelligent audio processing, real-time transcription, and AI-powered analysis. Built with vanilla JavaScript, HTML5, and CSS3, it offers a seamless, responsive experience across all devices.
 
-
-
 </div>### What Makes AI MOM Special?
-
-
 
 ---- 🎙️ **Real-Time Capture**: Live audio transcription with speaker diarization
 
@@ -68,8 +58,6 @@
 
 - [Troubleshooting](#-troubleshooting)### Core Functionality
 
-
-
 ---#### 🎤 Real-Time Meeting Capture (`real.html`)
 
 - **Live Audio Streaming**: Real-time microphone input processing
@@ -86,19 +74,19 @@
 
 - **Meeting Controls**:
 
-- 🎨 **Beautiful Design**: Modern, clean UI with smooth animations and responsive layouts  - Connect/Disconnect to meeting
+- 🎨 **Beautiful Design**: Modern, clean UI with smooth animations and responsive layouts - Connect/Disconnect to meeting
 
-- 📱 **Mobile-Friendly**: Fully responsive design works on all devices  - Start/Stop recording
+- 📱 **Mobile-Friendly**: Fully responsive design works on all devices - Start/Stop recording
 
-- ⚡ **Real-Time**: WebSocket integration for instant transcription updates  - Clear transcript
+- ⚡ **Real-Time**: WebSocket integration for instant transcription updates - Clear transcript
 
-- 🎙️ **Audio Capture**: Browser-based microphone recording with live processing  - Save session locally
+- 🎙️ **Audio Capture**: Browser-based microphone recording with live processing - Save session locally
 
 - 📁 **File Upload**: Drag-and-drop interface with progress visualization- **Export Options**:
 
-- 👥 **Speaker Recognition**: Visual color coding for multiple participants  - Download transcript as `.txt`
+- 👥 **Speaker Recognition**: Visual color coding for multiple participants - Download transcript as `.txt`
 
-- 🔐 **Secure Auth**: Complete authentication system with social login  - Download AI summary as `.txt`
+- 🔐 **Secure Auth**: Complete authentication system with social login - Download AI summary as `.txt`
 
 - 💾 **Smart Storage**: LocalStorage-based session management
 
@@ -112,34 +100,32 @@
 
 - **File Validation**:
 
-## ✨ Features  - Type checking (audio files only)
+## ✨ Features - Type checking (audio files only)
 
-  - Size limit enforcement (100MB max)
+- Size limit enforcement (100MB max)
 
-### 🎯 Core Capabilities  - Extension verification
+### 🎯 Core Capabilities - Extension verification
 
 - **Processing Pipeline**:
 
-#### 1. Real-Time Meeting Capture (`real.html`)  - Progress visualization
+#### 1. Real-Time Meeting Capture (`real.html`) - Progress visualization
 
-**Live audio transcription with instant AI analysis**  - Real-time status updates
+**Live audio transcription with instant AI analysis** - Real-time status updates
 
-  - Error handling and recovery
+- Error handling and recovery
 
 - **🎙️ Microphone Recording**- **AI-Powered Analysis**:
+  - Browser-based audio capture - Meeting overview generation
 
-  - Browser-based audio capture  - Meeting overview generation
+  - Real-time streaming to backend - Key points extraction
 
-  - Real-time streaming to backend  - Key points extraction
+  - Visual audio level indicator - Action items identification
 
-  - Visual audio level indicator  - Action items identification
-
-  - Automatic sample rate conversion (16kHz)  - Conclusions summary
+  - Automatic sample rate conversion (16kHz) - Conclusions summary
 
   - Participant tracking
 
 - **👥 Speaker Diarization**
-
   - Automatic speaker detection#### 🤖 AI Summary Generation
 
   - Visual color coding (8 distinct colors)Automatically generates structured summaries with:
@@ -151,7 +137,6 @@
 - **✅ Action Items**: Tasks and responsibilities assigned
 
 - **🔔 Smart Notifications**- **🎯 Conclusions**: Final outcomes and next steps
-
   - Personalized alerts when your name is mentioned- **👥 Participants**: List of meeting attendees
 
   - Custom keyword monitoring
@@ -163,7 +148,6 @@
 **Sign In Page (`signin.html`)**:
 
 - **💾 Session Management**- Email/password authentication
-
   - Save meeting sessions locally- Social login integration (Google, GitHub, Microsoft)
 
   - Restore previous sessions- Toggle between sign-in and sign-up modes
@@ -175,7 +159,6 @@
 - Responsive design
 
 - **⚙️ Meeting Controls**
-
   - Connect/Disconnect to backend**Session Management**:
 
   - Start/Stop recording- Secure localStorage-based authentication
@@ -193,12 +176,11 @@
 #### 👤 User Management
 
 - **📁 Enhanced Upload Interface**
-
   - Drag-and-drop zone with visual feedback**Profile Page (`profile.html`)**:
 
   - Click-to-browse traditional upload- Personal information management
 
-  - File type validation (audio/* only)- Avatar upload and preview
+  - File type validation (audio/\* only)- Avatar upload and preview
 
   - Size limit enforcement (100MB max)- Email and name updates
 
@@ -207,7 +189,6 @@
 - Session history
 
 - **🎵 Supported Formats**
-
   - MP3 (MPEG Audio)**Settings Page (`setting.html`)**:
 
   - WAV (Waveform Audio)- Theme customization (Dark/Light)
@@ -223,7 +204,6 @@
 - Account management
 
 - **📊 Processing Visualization**
-
   - Real-time progress bar#### � UI/UX Excellence
 
   - Status messages (Uploading → Processing → Complete)
@@ -235,7 +215,6 @@
 - Smooth animations and transitions
 
 - **🤖 AI Analysis Display**- Glass-morphism effects
-
   - Meeting overview section- Responsive navigation
 
   - Key points extraction- User avatar system
@@ -248,8 +227,6 @@
 
   - Full transcript with speaker labels- Error displays
 
-
-
 #### 3. AI-Powered Summaries**Navigation System**:
 
 **Intelligent meeting analysis with structured output**- Sticky top navigation bar
@@ -257,17 +234,13 @@
 - Logo with circular icon design
 
 - **📋 Meeting Overview**- Page links (Home, Live, File Upload)
-
   - High-level summary of discussion topics- User menu dropdown
 
   - Meeting context and purpose- Authentication status indicator
 
   - Overall tone and sentiment- Mobile-responsive hamburger menu
 
-
-
 - **🔑 Key Points**- Email/password authentication
-
   - Important topics discussed
 
   - Critical decisions made#### 🔐 Authentication System- Social login buttons (Google, GitHub, Microsoft)
@@ -276,10 +249,7 @@
 
   - Numbered list format- Sign-up and sign-in form switching
 
-
-
-- **✅ Action Items****Sign In Page (`signin.html`)**:- Modern UI with gradient backgrounds
-
+- **✅ Action Items\*\***Sign In Page (`signin.html`)\*\*:- Modern UI with gradient backgrounds
   - Tasks identified during meeting
 
   - Responsibilities assigned- Email/password authentication- Form validation and error handling
@@ -288,10 +258,7 @@
 
   - Interactive checklist format- Social login integration (Google, GitHub, Microsoft)
 
-
-
 - **🎯 Conclusions**- Toggle between sign-in and sign-up modes### 📁 File Upload (`file.html`)
-
   - Final outcomes and agreements
 
   - Next steps and follow-ups- Form validation and error handling**Purpose**: Audio file processing with enhanced drag-and-drop
@@ -301,14 +268,11 @@
 - Password visibility toggle
 
 - **👥 Participants**
-
   - Detected speakers from audio- Responsive design**Features**:
 
   - Speaker contribution analysis
 
   - Name identification (when available)- **Improved Drag-and-Drop**: Complete rewrite with better event handling
-
-
 
 #### 4. User Profile Management (`profile.html`)**Session Management**:- **File Validation**: Supports MP3, WAV, M4A, AAC, OGG, FLAC formats
 
@@ -317,7 +281,6 @@
 - Secure localStorage-based authentication- **Visual Feedback**: Drag states with color changes and animations
 
 - **👤 Personal Information**
-
   - Full name- Persistent user sessions- **Progress Tracking**: Upload progress with real-time updates
 
   - Email address
@@ -328,12 +291,8 @@
 
   - Department- Logout confirmation modal- **Download Options**: Export transcripts as TXT files
 
-
-
 - **🎯 Professional Context**- Session timeout handling
-
   - **Role Selection**:
-
     - Developer / Engineer### 🎙️ Real-time Capture (`real.html`)
 
     - Project Manager
@@ -352,10 +311,7 @@
 
     - Other- Personal information management- Simulated real-time audio capture
 
-
-
 - **📊 Project Tracking**- Avatar upload and preview- Live transcript streaming with speaker colors
-
   - Current projects list
 
   - Add/remove projects dynamically- Email and name updates- Session management and controls
@@ -365,17 +321,13 @@
 - Account settings- Real-time summary generation
 
 - **🔑 Keyword Monitoring**
-
   - Custom keywords to track- Session history- Export capabilities for meeting data
 
   - Personalized alerts
 
   - Important terms for your role- Professional recording interface
 
-
-
-- **⚙️ Preferences****Settings Page (`setting.html`)**:
-
+- **⚙️ Preferences\*\***Settings Page (`setting.html`)\*\*:
   - Language preference (auto-detect or specific)
 
   - Notification settings- Theme customization (Dark/Light)### ⚙️ Settings (`setting.html`)
@@ -384,8 +336,6 @@
 
   - Export formats- Accent color selection**Purpose**: Comprehensive application customization
 
-
-
 #### 5. Authentication System- Language preferences
 
 **Secure user management with multiple login options**
@@ -393,7 +343,6 @@
 - Notification settings**Features**:
 
 - **🔐 Sign In / Sign Up (`signin.html`)**
-
   - Email and password authentication- Privacy controls- **Advanced Theme System**: Dark/light modes with multiple accent colors
 
   - Toggle between sign-in and sign-up modes
@@ -404,10 +353,7 @@
 
   - Remember me functionality- **Language Selection**: Multiple language options for transcription
 
-
-
 - **🌐 Social Login Integration**#### 🎨 UI/UX Excellence- **Audio Settings**: Chunk duration and processing preferences
-
   - Google OAuth
 
   - GitHub OAuth- **Notification Settings**: Email alerts and speaker notifications
@@ -416,10 +362,7 @@
 
   - One-click social authentication**Design Features**:- **Data Management**: Clear all user data option
 
-
-
 - **💾 Session Management**- Modern gradient backgrounds
-
   - LocalStorage-based user sessions
 
   - Persistent login state- Smooth animations and transitions### 👤 Profile (`profile.html`)
@@ -428,8 +371,6 @@
 
   - Secure logout with confirmation- Glass-morphism effects**Purpose**: User account and profile management
 
-
-
 #### 6. Landing Page (`index.html`)- Responsive navigation
 
 **Professional introduction to AI MOM**
@@ -437,7 +378,6 @@
 - User avatar system**Features**:
 
 - **🎨 Modern Hero Section**
-
   - Animated gradient background- Dropdown menus- Personal information editing (name, email, role, team)
 
   - Feature highlights
@@ -449,7 +389,6 @@
 - Loading states- Account settings and preferences
 
 - **📱 Feature Showcase**
-
   - Real-time transcription demo- Error displays- User ID and account details display
 
   - File processing capabilities
@@ -461,7 +400,6 @@
 **Navigation System**:
 
 - **📊 Statistics & Benefits**
-
   - Time saved metrics- Sticky top navigation bar## ⚙️ Technical Implementation
 
   - Accuracy statistics
@@ -473,7 +411,6 @@
 - Page links (Home, Live, File Upload)### File Architecture
 
 - **🚀 Quick Start Guide**
-
   - Step-by-step instructions- User menu dropdown
 
   - Visual walkthrough
@@ -486,76 +423,71 @@
 
 ---
 
-├── index.html              # Main homepage with navigation
+├── index.html # Main homepage with navigation
 
 ## 📖 Application Pages
 
----├── signin.html             # Authentication page with social login
+---├── signin.html # Authentication page with social login
 
 ### 1. **index.html** - Landing Page
 
-**Professional introduction and feature showcase**├── file.html               # Enhanced file upload processing
-
-
+**Professional introduction and feature showcase**├── file.html # Enhanced file upload processing
 
 - **Purpose**: Main entry point, marketing, and onboarding## 📁 Project Structure
 
 - **Sections**:
-
   - Hero with animated background```
 
   - Feature highlightsfrontend/
 
-  - How it works├── index.html              # Main landing page and dashboard
+  - How it works├── index.html # Main landing page and dashboard
 
-  - Pricing (if applicable)├── signin.html             # Authentication page (login/signup)
+  - Pricing (if applicable)├── signin.html # Authentication page (login/signup)
 
-  - FAQ├── real.html               # Real-time audio capture interface
+  - FAQ├── real.html # Real-time audio capture interface
 
-  - Footer with links├── file.html               # Audio file upload and processing
+  - Footer with links├── file.html # Audio file upload and processing
 
-- **Actions**: Navigate to Real-time, File Upload, or Sign In├── profile.html            # User profile management
+- **Actions**: Navigate to Real-time, File Upload, or Sign In├── profile.html # User profile management
 
-├── setting.html            # Application settings and preferences
+├── setting.html # Application settings and preferences
 
-### 2. **real.html** - Real-Time Meeting Capture├── privacy.html            # Privacy policy page
+### 2. **real.html** - Real-Time Meeting Capture├── privacy.html # Privacy policy page
 
-**Live audio transcription and analysis**├── terms.html              # Terms of service page
+**Live audio transcription and analysis**├── terms.html # Terms of service page
 
-├── README.md               # This file
+├── README.md # This file
 
 - **Purpose**: Capture ongoing meetings with microphone input│
 
 - **Features**:├── assets/
-
-  - Microphone access and recording│   └── favicon.svg         # Application favicon
+  - Microphone access and recording│ └── favicon.svg # Application favicon
 
   - WebSocket connection to backend│
 
   - Live transcription display├── css/
 
-  - Speaker identification with colors│   ├── landing.css         # Landing page specific styles
+  - Speaker identification with colors│ ├── landing.css # Landing page specific styles
 
-  - Personalized notifications│   └── styles.css          # Global styles and common components
+  - Personalized notifications│ └── styles.css # Global styles and common components
 
   - Session save/restore│
 
   - Export capabilities└── js/
 
-- **Use Case**: Record meetings, interviews, presentations in real-time    ├── auth.js             # Authentication logic and session management
+- **Use Case**: Record meetings, interviews, presentations in real-time ├── auth.js # Authentication logic and session management
 
-    ├── avatar-manager.js   # User avatar handling and display
+  ├── avatar-manager.js # User avatar handling and display
 
-### 3. **file.html** - Audio File Processing    ├── common.js           # Shared utilities and helper functions
+### 3. **file.html** - Audio File Processing ├── common.js # Shared utilities and helper functions
 
-**Upload and process pre-recorded audio**    ├── file-processing.js  # Audio file upload and processing logic
+**Upload and process pre-recorded audio** ├── file-processing.js # Audio file upload and processing logic
 
     ├── landing-animations.js # Homepage animations and interactions
 
-- **Purpose**: Analyze audio files after meetings    ├── realtime.js         # Real-time capture functionality
+- **Purpose**: Analyze audio files after meetings ├── realtime.js # Real-time capture functionality
 
-- **Features**:    └── settings.js         # Settings page logic
-
+- **Features**: └── settings.js # Settings page logic
   - Drag-and-drop file upload```
 
   - Multi-format support
@@ -581,7 +513,6 @@
 - **Purpose**: Customize AI analysis and notifications| `setting.html` | App settings & preferences | ✅ Active |
 
 - **Features**:| `privacy.html` | Privacy policy | ✅ Active |
-
   - Personal info editing| `terms.html` | Terms of service | ✅ Active |
 
   - Role selection| `css/` | Stylesheets directory | ✅ Active |
@@ -594,13 +525,11 @@
 
 - **Use Case**: Get personalized meeting insights**Note**: All backup files (e.g., `file-backup.html`) have been removed. Only production-ready files remain.
 
-
-
-### 5. **signin.html** - Authentication    └── settings.js         # Settings page logic**Type**: Complete authentication flow with social login options
+### 5. **signin.html** - Authentication └── settings.js # Settings page logic**Type**: Complete authentication flow with social login options
 
 **User login and registration**
 
-```**Storage**: Secure localStorage with session management
+```````**Storage**: Secure localStorage with session management
 
 - **Purpose**: Secure user authentication
 
@@ -774,12 +703,11 @@ start_frontend.bat  # Windows
 
    # Wait for: "Uvicorn running on http://localhost:8000"```bash- **Beautiful Modal**: Glass-morphism design with blur effects
 
-   ```
+```````
 
 # Navigate to the frontend folder- **Smooth Animations**: Fade-in/out with scale transitions
 
 2. **Open Frontend**:
-
    - Navigate to `frontend/index.html`cd p:/frontback/frontend- **User-Friendly**: Prevents accidental logouts
 
    - Or visit `http://localhost:8080` if using web server
@@ -787,17 +715,13 @@ start_frontend.bat  # Windows
 - **Consistent Implementation**: Applied across all pages
 
 3. **Test Connection**:
-
    - Go to `real.html` or `file.html`# Start server on port 8080
 
    - Click "Test Connection" button
 
    - Should show "Connected ✅"python -m http.server 8080#### 🎭 Social Login
 
-
-
 4. **Configure Settings** (Optional):- **Multiple Providers**: Google, GitHub, Microsoft integration
-
    - Go to `settings.html`
 
    - Set backend URL: `http://localhost:8000`# Open browser to http://localhost:8080- **Modern UI**: Beautiful button designs with brand colors
@@ -806,10 +730,7 @@ start_frontend.bat  # Windows
 
    - Save settings```- **SVG Icons**: High-quality social media icons
 
-
-
 5. **Create Profile** (Optional):- **Responsive**: Adapts to different screen sizes
-
    - Go to `profile.html`
 
    - Fill in your information**Option 3: Node.js HTTP Server**
@@ -818,17 +739,11 @@ start_frontend.bat  # Windows
 
    - Save profile```bash### Performance Optimizations
 
-
-
 ---# Install http-server globally (one time)
-
-
 
 ## 📁 File Structurenpm install -g http-server- **Efficient Event Handling**: Proper event delegation and cleanup
 
-
-
-```- **Optimized Animations**: GPU-accelerated CSS transforms
+````- **Optimized Animations**: GPU-accelerated CSS transforms
 
 frontend/
 
@@ -910,13 +825,13 @@ frontend/
 
 - isAuthenticated()2. **Sign In/Sign Up**: 5. **Settings**: Comprehensive customization options
 
-```
+````
 
-   - Use any email/password for demo mode6. **Profile**: Personal account management
+- Use any email/password for demo mode6. **Profile**: Personal account management
 
 #### **common.js** - Shared Utilities
 
-```javascript   - Or create a new account via the sign-up form
+````javascript - Or create a new account via the sign-up form
 
 // Functions:
 
@@ -958,7 +873,7 @@ frontend/
 
 - restoreSession()- **Logical Grouping**: Related features grouped together
 
-```
+````
 
 ### 🏠 Homepage (`index.html`)- **Visual Feedback**: Hover states and loading indicators
 
@@ -1060,7 +975,7 @@ frontend/
 
 #### Typography
 
-```css1. **Email/Password Login**| 📁 File Upload | ✅ Enhanced | Improved drag-and-drop with validation |
+````css1. **Email/Password Login**| 📁 File Upload | ✅ Enhanced | Improved drag-and-drop with validation |
 
 /* Font Family */
 
@@ -1106,7 +1021,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;   - Email validati
 
 --space-2xl: 48px;**Features**:### For Users
 
-```
+````
 
 - Toggle between sign-in and sign-up modes1. Open the application in a modern web browser
 
@@ -1116,7 +1031,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;   - Email validati
 
 #### Buttons
 
-```html- Secure password handling3. Explore the navigation menu for different features
+````html- Secure password handling3. Explore the navigation menu for different features
 
 <!-- Primary Button -->
 
@@ -1174,25 +1089,25 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;   - Email validati
 
 </div>### 🎙️ Real-Time Capture (`real.html`)
 
-```
+````
 
 **AI MOM Frontend** - A comprehensive meeting assistant with modern UI/UX and professional features. Built with vanilla web technologies for maximum compatibility and performance.
 
 #### Input Fields
 
-```html**Purpose**: Live audio transcription and meeting management```
+`html**Purpose**: Live audio transcription and meeting management`
 
 <div class="form-group">
 
-  <label for="input-id">Label</label>
+<label for="input-id">Label</label>
 
   <input type="text" id="input-id" class="form-control" placeholder="Enter text">
 
-  <span class="form-help">Helper text</span>**Interface Components**:### 2. Test with Demo Account
+<span class="form-help">Helper text</span>**Interface Components**:### 2. Test with Demo Account
 
 </div>
 
-```
+````
 
 
 
@@ -1218,25 +1133,25 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;   - Email validati
 
 </div>```
 
-```
+````
 
 2. **Recording Controls**
 
 ---
 
-   - Start/Stop recording buttonThis account is automatically created when you first load any page.
+- Start/Stop recording buttonThis account is automatically created when you first load any page.
 
 ## 🔌 Backend Integration
 
-   - Microphone level visualization
+- Microphone level visualization
 
 ### WebSocket Connection (Real-Time)
 
-   - Recording status display### 3. Explore Features
+- Recording status display### 3. Explore Features
 
 #### Connecting
 
-```javascript   - Timer display
+```javascript - Timer display
 
 // In realtime.js
 
@@ -1284,11 +1199,11 @@ ws.onclose = () => {
 
 ```
 
-   - Download transcript## 📱 Application Pages
+- Download transcript## 📱 Application Pages
 
 #### Sending Audio
 
-```javascript   - Download AI summary
+```javascript - Download AI summary
 
 // Convert Float32Array to Int16Array
 
@@ -1318,7 +1233,7 @@ function sendAudioChunk(audioBuffer) {- Session persistence- Hero section with g
 
   const base64Data = btoa(String.fromCharCode(...new Uint8Array(int16Data.buffer)));- 2 large feature cards that slide in from left/right on scroll
 
-  
+
 
   ws.send(JSON.stringify({**Export Formats**:- 6 grid feature cards with alternating slide animations
 
@@ -1340,7 +1255,7 @@ function sendAudioChunk(audioBuffer) {- Session persistence- Hero section with g
 
 #### Receiving Transcription
 
-```javascript**Animations**:
+````javascript**Animations**:
 
 function handleMessage(data) {
 
@@ -1394,7 +1309,7 @@ async function uploadFile(file) {- Quick overview of features
 
   formData.append('file', file);2. **Click-to-Upload**- Direct access to main functions
 
-  
+
 
   try {   - Traditional file browser- Minimal design
 
@@ -1406,7 +1321,7 @@ async function uploadFile(file) {- Quick overview of features
 
     });   - Multiple format support
 
-    
+
 
     if (!response.ok) {### 3. Real-time Capture (`realtime.html`) 🔒
 
@@ -1414,7 +1329,7 @@ async function uploadFile(file) {- Quick overview of features
 
     }**Supported Formats**:
 
-    
+
 
     const data = await response.json();- MP3 (MPEG Audio)**Purpose**: Live meeting transcription with real-time speaker alerts
 
@@ -1446,7 +1361,7 @@ function processResponse(data) {- Download transcript as TXT/JSON
 
   displayTranscript(data.transcript, data.speakers);**Processing Pipeline**:- Session data persistence
 
-  
+
 
   // Display AI summary- **Protected Route**: Requires authentication
 
@@ -1506,11 +1421,11 @@ async function handleSignIn(email, password) {2. **Upload Simulation****Key Feat
 
     });   - Error handling- Speaker-formatted transcript output
 
-    
+
 
     const data = await response.json();- Download results as TXT/JSON
 
-    
+
 
     if (data.success) {3. **Transcription Display**- **Protected Route**: Requires authentication
 
@@ -1610,13 +1525,13 @@ function logout() {
 
 }    { "speaker": "Speaker 1", "text": "...", "timestamp": "00:00:12" }- Language selection (English, Spanish, French, German, etc.)
 
-```
+````
 
-  ],- Chunk duration for transcription
+],- Chunk duration for transcription
 
 ---
 
-  "summary": {- Speaker alerts ON/OFF
+"summary": {- Speaker alerts ON/OFF
 
 ## 📱 Browser Support
 
@@ -1628,19 +1543,19 @@ function logout() {
 
 | Browser | Version | Notes |
 
-|---------|---------|-------|    "actionItems": ["Action 1", "Action 2"],- **Clear All User Data** button
+|---------|---------|-------| "actionItems": ["Action 1", "Action 2"],- **Clear All User Data** button
 
 | **Chrome** | 90+ | ✅ Full support, recommended |
 
-| **Edge** | 90+ | ✅ Full support (Chromium-based) |    "conclusions": ["Conclusion 1"],- All settings persist in localStorage
+| **Edge** | 90+ | ✅ Full support (Chromium-based) | "conclusions": ["Conclusion 1"],- All settings persist in localStorage
 
 | **Firefox** | 88+ | ✅ Full support |
 
-| **Safari** | 14+ | ✅ Full support with WebRTC |    "participants": ["Name 1", "Name 2"]
+| **Safari** | 14+ | ✅ Full support with WebRTC | "participants": ["Name 1", "Name 2"]
 
 | **Opera** | 76+ | ✅ Full support |
 
-  }## ⚙️ Technical Details
+}## ⚙️ Technical Details
 
 ### Required Browser Features
 
@@ -1664,35 +1579,35 @@ frontend/
 
 ### Mobile Support
 
-### 👤 Profile Page (`profile.html`)├── index.html              # Simple home page
+### 👤 Profile Page (`profile.html`)├── index.html # Simple home page
 
 - **iOS Safari 14+**: Partial support (WebRTC limitations)
 
-- **Chrome Android 90+**: Full support├── landing.html            # Enhanced home page with animations ⭐
+- **Chrome Android 90+**: Full support├── landing.html # Enhanced home page with animations ⭐
 
 - **Firefox Android 88+**: Full support
 
-**Purpose**: Manage user information and settings├── realtime.html           # Real-time capture (protected)
+**Purpose**: Manage user information and settings├── realtime.html # Real-time capture (protected)
 
 **Note**: Real-time recording requires microphone permissions on mobile devices.
 
-├── file-processing.html    # File upload (protected)
+├── file-processing.html # File upload (protected)
 
 ---
 
-**Features**:├── settings.html           # User preferences
+**Features**:├── settings.html # User preferences
 
 ## 🔧 Customization
 
-- **Personal Information**├── profile.html            # User profile management
+- **Personal Information**├── profile.html # User profile management
 
 ### Changing Backend URL
 
-  - Full name editing├── css/
+- Full name editing├── css/
 
 **In JavaScript files (common.js, realtime.js, file-processing.js):**
 
-```javascript  - Email address display/edit│   ├── styles.css          # Main design system
+```javascript - Email address display/edit│   ├── styles.css          # Main design system
 
 // Find and replace
 
@@ -1716,15 +1631,15 @@ const WS_URL = 'wss://your-backend.example.com/ws/audio';  - Upload profile pict
 
 ```
 
-  - Avatar preview│   ├── file-processing.js  # Upload demo logic
+- Avatar preview│ ├── file-processing.js # Upload demo logic
 
 ### Customizing Colors
 
-  - Default initial-based avatar│   └── settings.js         # Settings persistence
+- Default initial-based avatar│ └── settings.js # Settings persistence
 
 **In styles.css:**
 
-```css  - Delete avatar option└── assets/
+````css - Delete avatar option└── assets/
 
 :root {
 
@@ -1868,7 +1783,7 @@ const WS_URL = 'wss://your-backend.example.com/ws/audio';  - Upload profile pict
 
 2. Verify audio file has audible speech
 
-3. Try with different audio file   - Speaker diarization settings- **Fixed Issues**: 
+3. Try with different audio file   - Speaker diarization settings- **Fixed Issues**:
 
 4. Check network tab in browser DevTools
 
@@ -2102,12 +2017,12 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     const mediaRecorder = new MediaRecorder(stream);
     const audioContext = new AudioContext();
     const analyser = audioContext.createAnalyser();
-    
+
     // Real-time audio analysis
     analyser.fftSize = 256;
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
-    
+
     // Continuous audio level monitoring
     function updateAudioLevels() {
       analyser.getByteFrequencyData(dataArray);
@@ -2116,25 +2031,28 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     }
     updateAudioLevels();
   });
-```
+````
 
 **WebSocket Communication**:
+
 ```javascript
 // Real-time transcription via WebSocket
 const ws = new WebSocket(`${config.WS_URL}/meeting/${meetingId}`);
 
 ws.onopen = () => {
-  console.log('Connected to transcription service');
-  ws.send(JSON.stringify({ 
-    type: 'start', 
-    meetingId: meetingId,
-    language: 'en' 
-  }));
+  console.log("Connected to transcription service");
+  ws.send(
+    JSON.stringify({
+      type: "start",
+      meetingId: meetingId,
+      language: "en",
+    }),
+  );
 };
 
 ws.onmessage = (event) => {
   const data = JSON.parse(event.data);
-  if (data.type === 'transcript') {
+  if (data.type === "transcript") {
     addTranscriptLine(data.speaker, data.text, data.timestamp);
     checkForAlerts(data.text); // Trigger speaker alerts
   }
@@ -2144,27 +2062,32 @@ ws.onmessage = (event) => {
 ### Speaker Alerts System
 
 **Alert Types**:
+
 - **Personal Alerts** 🚨: When your name is mentioned
 - **Keyword Alerts** ⚠️: Custom keywords from profile
 - **Question Alerts** ❓: When questions are asked
 - **Action Alerts** ✅: When action items are mentioned
 
 **Implementation**:
+
 ```javascript
 // Speaker alert detection
 function checkForAlerts(transcriptText) {
   const userProfile = getUserProfile();
   const alertTriggers = [
-    ...userProfile.name.split(' '), // Name parts
-    ...userProfile.keywords,        // Custom keywords
-    'question', 'please', 'can you', 'thoughts'
+    ...userProfile.name.split(" "), // Name parts
+    ...userProfile.keywords, // Custom keywords
+    "question",
+    "please",
+    "can you",
+    "thoughts",
   ];
-  
+
   const lowerText = transcriptText.toLowerCase();
-  const triggeredAlerts = alertTriggers.filter(trigger => 
-    lowerText.includes(trigger.toLowerCase())
+  const triggeredAlerts = alertTriggers.filter((trigger) =>
+    lowerText.includes(trigger.toLowerCase()),
   );
-  
+
   if (triggeredAlerts.length > 0) {
     showAlertNotification(triggeredAlerts[0], transcriptText);
   }
@@ -2172,8 +2095,8 @@ function checkForAlerts(transcriptText) {
 
 // Visual alert display
 function showAlertNotification(trigger, context) {
-  const alertDiv = document.createElement('div');
-  alertDiv.className = 'speaker-alert';
+  const alertDiv = document.createElement("div");
+  alertDiv.className = "speaker-alert";
   alertDiv.innerHTML = `
     <div class="alert-icon">🚨</div>
     <div class="alert-content">
@@ -2181,7 +2104,7 @@ function showAlertNotification(trigger, context) {
       <div class="alert-context">${context}</div>
     </div>
   `;
-  
+
   // Auto-dismiss after 5 seconds
   setTimeout(() => alertDiv.remove(), 5000);
   document.body.appendChild(alertDiv);
@@ -2191,6 +2114,7 @@ function showAlertNotification(trigger, context) {
 ### Advanced UI Animations
 
 **Theme Transitions**:
+
 ```css
 /* Smooth theme switching */
 :root {
@@ -2214,6 +2138,7 @@ function showAlertNotification(trigger, context) {
 ```
 
 **Micro-Interactions**:
+
 ```css
 /* Button hover effects */
 .btn-primary:hover {
@@ -2223,8 +2148,13 @@ function showAlertNotification(trigger, context) {
 
 /* Loading animations */
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .loading {
@@ -2239,6 +2169,7 @@ function showAlertNotification(trigger, context) {
 ```
 
 **Glass-Morphism Effects**:
+
 ```css
 /* Logout confirmation modal */
 .modal-glass {
@@ -2253,6 +2184,7 @@ function showAlertNotification(trigger, context) {
 ### Performance Optimizations
 
 **Efficient Event Handling**:
+
 ```javascript
 // Debounced scroll handler
 function debounce(func, wait) {
@@ -2268,32 +2200,36 @@ function debounce(func, wait) {
 }
 
 // Optimized scroll listener
-window.addEventListener('scroll', debounce(() => {
-  // Handle scroll animations
-  updateScrollAnimations();
-}, 16)); // ~60fps
+window.addEventListener(
+  "scroll",
+  debounce(() => {
+    // Handle scroll animations
+    updateScrollAnimations();
+  }, 16),
+); // ~60fps
 ```
 
 **Memory Management**:
+
 ```javascript
 // Clean up event listeners
 function cleanup() {
-  if (mediaRecorder && mediaRecorder.state === 'recording') {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
     mediaRecorder.stop();
   }
-  
+
   if (audioContext) {
     audioContext.close();
   }
-  
+
   // Remove all event listeners
-  elements.forEach(el => {
+  elements.forEach((el) => {
     el.replaceWith(el.cloneNode(true)); // Removes all listeners
   });
 }
 
 // Cleanup on page unload
-window.addEventListener('beforeunload', cleanup);
+window.addEventListener("beforeunload", cleanup);
 ```
 
 ---
@@ -2326,15 +2262,11 @@ window.addEventListener('beforeunload', cleanup);
 
 | `terms.html` | Terms of service | Usage terms, agreements |- Default: User initials in circle
 
-
-
 ### CSS Files## 🧪 Demo Mode
-
-
 
 **`css/styles.css`** (Global Styles)Since this is a frontend-only demo, all backend features are simulated:
 
-```css
+```````css
 
 /* Contains: */### Real-time Transcription Demo
 
@@ -2510,7 +2442,7 @@ socket.onmessage = function(event) {
 
 // Intersection observers```
 
-```
+```````
 
 ### Speaker Alert System
 
@@ -2530,7 +2462,7 @@ The application uses localStorage for client-side data persistence:```javascript
 
 // Personal triggers
 
-```javascriptconst personalTriggers = [userName, userRole, userTeam];
+````javascriptconst personalTriggers = [userName, userRole, userTeam];
 
 // Authentication
 
@@ -2650,7 +2582,7 @@ const config = {   - Team: "Engineering"
 
 };Problem: Scroll animations not triggering
 
-``````
+````
 
 **Solutions**:
 
@@ -2664,11 +2596,9 @@ const config = {   - Team: "Engineering"
 
 The frontend is designed to easily integrate with your backend API. Here are the integration points:- Ensure JavaScript is enabled
 
-
-
 ### Authentication Endpoints#### 2. Dark Mode White Line
 
-```
+````
 
 ```javascriptProblem: White line visible at footer in dark mode
 
@@ -2690,13 +2620,13 @@ async function login(email, password) {**Solutions**:
 
 }Problem: Dark mode resets to light after signing in
 
-```
+````
 
 // POST /api/auth/signup**Solutions**:
 
 async function signup(userData) {- ✅ FIXED in latest version
 
-  const response = await fetch(`${config.API_BASE_URL}/api/auth/signup`, {- Theme now persists after login/signup
+const response = await fetch(`${config.API_BASE_URL}/api/auth/signup`, {- Theme now persists after login/signup
 
     method: 'POST',- 100ms delay added before reload to sync localStorage
 
@@ -2704,13 +2634,13 @@ async function signup(userData) {- ✅ FIXED in latest version
 
     body: JSON.stringify(userData)#### 4. Auth Modal Not Appearing
 
-  });```
+});```
 
-  return response.json();Problem: Protected routes don't show login modal
+return response.json();Problem: Protected routes don't show login modal
 
 }```
 
-```**Solutions**:
+````**Solutions**:
 
 - Clear localStorage: `localStorage.clear()`
 
@@ -2995,17 +2925,19 @@ localStorage.setItem('debugMode', 'true');
 
 // Check console for detailed logs
 console.log('Debug mode enabled');
-```
+````
 
 ### Performance Issues
 
 #### For Better Real-time Performance:
+
 - Close unnecessary browser tabs
 - Use Chrome or Edge for best WebRTC support
 - Ensure stable internet connection
 - Use wired microphone for better audio quality
 
 #### For File Processing:
+
 - Convert large files to compressed formats
 - Process files in smaller chunks
 - Use modern browser with good JavaScript performance
@@ -3013,38 +2945,33 @@ console.log('Debug mode enabled');
 ### HTTPS Requirements
 
 For production deployment:
+
 - HTTPS required for microphone access
 - Secure WebSocket connections (WSS)
 - Certificate validation
 - CORS configuration
 
-
-
 #### Microphone Not Working (Real-Time Capture)### Styling
 
-
-
 **Problem**: No audio input detectedModify the CSS variables in each file:
-
-
 
 **Solutions**:```css
 
 1. Grant microphone permissions when prompted:root {
 
-2. Check browser microphone settings  --primary-color: #667eea;
+2. Check browser microphone settings --primary-color: #667eea;
 
-3. Verify microphone is not used by another application  --secondary-color: #764ba2;
+3. Verify microphone is not used by another application --secondary-color: #764ba2;
 
-4. Test microphone in browser settings  --success-color: #2ecc71;
+4. Test microphone in browser settings --success-color: #2ecc71;
 
-5. Use HTTPS (required for mic access on some browsers)  --warning-color: #f39c12;
+5. Use HTTPS (required for mic access on some browsers) --warning-color: #f39c12;
 
-  --error-color: #e74c3c;
+   --error-color: #e74c3c;
 
 #### AI Summary Not Generating}
 
-```
+````
 
 **Problem**: Processing completes but no summary appears
 
@@ -3312,7 +3239,7 @@ function processAudioFile(file) {### Getting Help
 
 - Netlify- ✅ Responsive images
 
-- Vercel- ✅ Performance optimization
+- Static hosting- ✅ Performance optimization
 
 - GitHub Pages- ✅ Accessibility features
 
@@ -3396,15 +3323,15 @@ Password: admin123
 
 ## 📜 License### Key Directories
 
-```
+````
 
-This project is licensed under the MIT License - see the LICENSE file for details.css/       - Stylesheets (styles.css, landing.css)
+This project is licensed under the MIT License - see the LICENSE file for details.css/ - Stylesheets (styles.css, landing.css)
 
-js/        - JavaScript (common.js, landing-animations.js, etc.)
+js/ - JavaScript (common.js, landing-animations.js, etc.)
 
----assets/    - Images and icons (favicon.svg)
+---assets/ - Images and icons (favicon.svg)
 
-```
+````
 
 ## � Roadmap & Future Features
 
@@ -3615,3 +3542,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 *Transforming meetings into actionable insights, one conversation at a time.*
 
 </div>
+````

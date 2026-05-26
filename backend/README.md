@@ -108,15 +108,15 @@ graph TB
 
 ### Core Components
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Audio Processor** | Whisper + PyTorch | GPU-accelerated audio transcription |
-| **Multi-API Processor** | Groq + OpenRouter | 5-model concurrent processing |
-| **AI Summarizer** | Groq API | Intelligent meeting analysis |
-| **Speaker Diarization** | PyAnnote/Speaker Diarization | Speaker identification |
-| **User Profile Service** | Custom Logic | Personalized insights |
-| **WebSocket Handler** | FastAPI WebSockets | Real-time communication |
-| **Cost Monitor** | Custom Analytics | API usage tracking |
+| Component                | Technology                   | Purpose                             |
+| ------------------------ | ---------------------------- | ----------------------------------- |
+| **Audio Processor**      | Whisper + PyTorch            | GPU-accelerated audio transcription |
+| **Multi-API Processor**  | Groq + OpenRouter            | 5-model concurrent processing       |
+| **AI Summarizer**        | Groq API                     | Intelligent meeting analysis        |
+| **Speaker Diarization**  | PyAnnote/Speaker Diarization | Speaker identification              |
+| **User Profile Service** | Custom Logic                 | Personalized insights               |
+| **WebSocket Handler**    | FastAPI WebSockets           | Real-time communication             |
+| **Cost Monitor**         | Custom Analytics             | API usage tracking                  |
 
 ---
 
@@ -131,26 +131,28 @@ graph TB
 ### Detailed Cost Breakdown
 
 #### **Groq API (Primary - 2 Models)**
-| Model | Free Tier | Cost After Free | Status |
-|-------|-----------|-----------------|--------|
+
+| Model             | Free Tier             | Cost After Free | Status    |
+| ----------------- | --------------------- | --------------- | --------- |
 | **Llama 3.3 70B** | ✅ **Unlimited FREE** | ~$0.00002/token | 🟢 Active |
 | **Llama 3.1 70B** | ✅ **Unlimited FREE** | ~$0.00002/token | 🟢 Active |
 
 #### **OpenRouter API (Secondary - 3 Models)**
-| Model | Free Credits | Cost After Free | Status |
-|-------|--------------|-----------------|--------|
-| **GPT-4o Mini** | ✅ **$5 free** | $0.00015/input, $0.0006/output | 🟢 Active |
-| **Claude Haiku** | ✅ **$5 free** | $0.00025/input, $0.001/output | 🟢 Active |
+
+| Model            | Free Credits   | Cost After Free                 | Status    |
+| ---------------- | -------------- | ------------------------------- | --------- |
+| **GPT-4o Mini**  | ✅ **$5 free** | $0.00015/input, $0.0006/output  | 🟢 Active |
+| **Claude Haiku** | ✅ **$5 free** | $0.00025/input, $0.001/output   | 🟢 Active |
 | **Gemini Flash** | ✅ **$5 free** | $0.000075/input, $0.0003/output | 🟢 Active |
 
 ### 💡 Cost Reality for AI MOM Usage
 
-| Feature | Monthly Usage | Cost |
-|---------|---------------|------|
-| **Real-time transcription** (8h meetings) | ~500 requests | **$0.00** |
-| **Audio file processing** (50 files) | ~50 uploads | **$0.00** |
-| **AI summarization** (50 meetings) | ~150 API calls | **$0.00** |
-| **5-model processing** | All features | **$0.00** |
+| Feature                                   | Monthly Usage  | Cost      |
+| ----------------------------------------- | -------------- | --------- |
+| **Real-time transcription** (8h meetings) | ~500 requests  | **$0.00** |
+| **Audio file processing** (50 files)      | ~50 uploads    | **$0.00** |
+| **AI summarization** (50 meetings)        | ~150 API calls | **$0.00** |
+| **5-model processing**                    | All features   | **$0.00** |
 
 **💡 Pro Tip**: You'll only start paying after exhausting ~$5 in OpenRouter credits, and Groq remains forever free!
 
@@ -215,6 +217,7 @@ nano .env  # or use your preferred editor
 ```
 
 **Required `.env` configuration:**
+
 ```env
 # API Keys (Required)
 GROQ_API_KEY=your_groq_api_key_here
@@ -254,6 +257,7 @@ python demo.py
 ## 🔧 API Reference
 
 ### Base URL
+
 ```
 http://localhost:8000/api
 ```
@@ -263,11 +267,13 @@ http://localhost:8000/api
 #### 🎵 Audio Processing
 
 ##### Process Audio File
+
 ```http
 POST /api/process-audio
 ```
 
 **Request (File Path):**
+
 ```json
 {
   "file_path": "path/to/audio/file.mp3"
@@ -275,25 +281,20 @@ POST /api/process-audio
 ```
 
 **Request (File Upload):**
+
 ```
 Content-Type: multipart/form-data
 file: [audio file]
 ```
 
 **Response:**
+
 ```json
 {
   "transcription": "Full meeting transcription text...",
   "full_summary": "Comprehensive meeting summary...",
-  "key_points": [
-    "Key point 1",
-    "Key point 2",
-    "Key point 3"
-  ],
-  "action_items": [
-    "Action item 1",
-    "Action item 2"
-  ],
+  "key_points": ["Key point 1", "Key point 2", "Key point 3"],
+  "action_items": ["Action item 1", "Action item 2"],
   "conclusion": "Meeting conclusion and next steps...",
   "processing_time": 25.3,
   "api_used": "fast_multi_api",
@@ -310,11 +311,13 @@ file: [audio file]
 ```
 
 ##### Process Real-Time Audio Chunk
+
 ```http
 POST /api/process-realtime-chunk
 ```
 
 **Request:**
+
 ```json
 {
   "audio_data": "base64_encoded_audio_bytes",
@@ -324,6 +327,7 @@ POST /api/process-realtime-chunk
 ```
 
 **Response:**
+
 ```json
 {
   "transcription": "Real-time transcription text...",
@@ -335,11 +339,13 @@ POST /api/process-realtime-chunk
 #### 👤 User Profile Management
 
 ##### Create/Update User Profile
+
 ```http
 POST /api/user-profile
 ```
 
 **Request:**
+
 ```json
 {
   "name": "John Doe",
@@ -352,14 +358,16 @@ POST /api/user-profile
 #### 💰 Cost Monitoring
 
 ##### Get Cost Analytics
+
 ```http
 GET /api/costs
 ```
 
 **Response:**
+
 ```json
 {
-  "total_cost": 0.00,
+  "total_cost": 0.0,
   "monthly_usage": {
     "groq": 1250,
     "openrouter": 450
@@ -372,11 +380,13 @@ GET /api/costs
 ```
 
 ##### System Information
+
 ```http
 GET /api/system-info
 ```
 
 **Response:**
+
 ```json
 {
   "gpu_available": true,
@@ -394,11 +404,13 @@ GET /api/system-info
 ### WebSocket Endpoints
 
 #### Real-Time Meeting Updates
+
 ```websocket
 /ws/meeting/{meeting_id}
 ```
 
 **Message Format:**
+
 ```json
 {
   "type": "transcription_update",
@@ -417,36 +429,42 @@ GET /api/system-info
 ### Test Categories
 
 #### 1. API Cost Testing
+
 ```bash
 # Check API connectivity and costs
 python test/test_api_costs.py
 ```
 
 #### 2. Component Testing
+
 ```bash
 # Test individual components
 python test/test_components.py
 ```
 
 #### 3. 5-Model System Testing
+
 ```bash
 # Test the complete 5-model pipeline
 python test/test_5_model_system.py
 ```
 
 #### 4. Performance Testing
+
 ```bash
 # Performance benchmarks
 python test/performance_test.py
 ```
 
 #### 5. WebSocket Testing
+
 ```bash
 # Test real-time features
 python test/websocket_test.py
 ```
 
 #### 6. Profile Testing
+
 ```bash
 # Test user profile features
 python test/profile_test.py
@@ -472,12 +490,12 @@ python test/api_cost_monitor.py
 
 ### Processing Times
 
-| Audio Duration | Processing Time | Method |
-|----------------|-----------------|--------|
-| 30 seconds | ~6-8 seconds | Ultra-fast (single model) |
-| 1 minute | ~12-15 seconds | 2-model parallel |
-| 5 minutes | ~25-30 seconds | 5-model comprehensive |
-| 10 minutes | ~45-60 seconds | Full analysis |
+| Audio Duration | Processing Time | Method                    |
+| -------------- | --------------- | ------------------------- |
+| 30 seconds     | ~6-8 seconds    | Ultra-fast (single model) |
+| 1 minute       | ~12-15 seconds  | 2-model parallel          |
+| 5 minutes      | ~25-30 seconds  | 5-model comprehensive     |
+| 10 minutes     | ~45-60 seconds  | Full analysis             |
 
 ### Accuracy Benchmarks
 
@@ -498,30 +516,34 @@ python test/api_cost_monitor.py
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GROQ_API_KEY` | Required | Groq API key |
-| `OPENROUTER_API_KEY` | Required | OpenRouter API key |
-| `GROQ_MODEL` | `llama-3.3-70b-versatile` | Primary Groq model |
-| `GROQ_MODEL_2` | `llama-3.1-70b-versatile` | Secondary Groq model |
-| `OPENROUTER_MODEL` | `openai/gpt-4o-mini` | Primary OpenRouter model |
+| Variable             | Default                    | Description                |
+| -------------------- | -------------------------- | -------------------------- |
+| `GROQ_API_KEY`       | Required                   | Groq API key               |
+| `OPENROUTER_API_KEY` | Required                   | OpenRouter API key         |
+| `GROQ_MODEL`         | `llama-3.3-70b-versatile`  | Primary Groq model         |
+| `GROQ_MODEL_2`       | `llama-3.1-70b-versatile`  | Secondary Groq model       |
+| `OPENROUTER_MODEL`   | `openai/gpt-4o-mini`       | Primary OpenRouter model   |
 | `OPENROUTER_MODEL_2` | `anthropic/claude-3-haiku` | Secondary OpenRouter model |
-| `OPENROUTER_MODEL_3` | `google/gemini-flash-1.5` | Tertiary OpenRouter model |
-| `HOST` | `localhost` | Server host |
-| `PORT` | `8000` | Server port |
-| `LOG_LEVEL` | `INFO` | Logging level |
+| `OPENROUTER_MODEL_3` | `google/gemini-flash-1.5`  | Tertiary OpenRouter model  |
+| `HOST`               | `localhost`                | Server host                |
+| `PORT`               | `8000`                     | Server port                |
+| `LOG_LEVEL`          | `INFO`                     | Logging level              |
 
 ### Advanced Configuration
 
 #### GPU Optimization
+
 The system automatically detects and utilizes CUDA-compatible GPUs for faster processing. No additional configuration required.
 
 #### Rate Limiting
+
 Built-in rate limiting protects against API overuse:
+
 - **Groq**: 30 requests/minute
 - **OpenRouter**: Based on account tier
 
 #### Audio Format Support
+
 Supported formats: MP3, WAV, M4A, FLAC, OGG, AAC
 
 ---
@@ -575,6 +597,7 @@ The system leverages **5 different AI models simultaneously** for maximum accura
 5. **OpenRouter Gemini Flash** - Great for technical and specialized content
 
 **Processing Flow:**
+
 1. **Parallel Execution**: All 5 APIs process the same audio concurrently
 2. **Consensus Building**: Results are combined using AI-powered reconciliation
 3. **Quality Enhancement**: Multi-model consensus reduces errors by ~60%
@@ -625,6 +648,7 @@ python main.py
 ### Production Deployment
 
 #### Using Docker
+
 ```dockerfile
 FROM python:3.9-slim
 
@@ -639,8 +663,9 @@ CMD ["python", "main.py"]
 ```
 
 #### Using Docker Compose
+
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   ai-mom-backend:
     build: .
@@ -653,38 +678,16 @@ services:
       - ./logs:/app/logs
 ```
 
-### Cloud Deployment
+### Local Development
 
-#### Render + Vercel
-
-Recommended production layout for this project:
-
-- Frontend: Vercel static deployment for the contents of the `frontend/` folder.
-- Backend: Render web service running `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
-
-Render environment variables:
-
-```env
-GROQ_API_KEY=your_production_key
-OPENROUTER_API_KEY=your_production_key
-FRONTEND_ORIGINS=https://ai-mom-five.vercel.app
-PORT=10000
-```
-
-Frontend configuration:
-
-- Update [frontend/js/runtime-config.js](../frontend/js/runtime-config.js) with the Render backend URL.
-- Redeploy the Vercel project after the backend URL is set.
-- The frontend now builds API and WebSocket URLs from shared runtime config instead of hardcoded localhost values.
-
-#### AWS/GCP/Azure
-- **Container Registry**: Push Docker image
-- **Cloud Run/Functions**: Serverless deployment
-- **Load Balancer**: For high availability
-- **Cloud Storage**: For audio file storage
+- Backend: run `uvicorn app.main:app --host 0.0.0.0 --port 8000` from the `backend/` folder.
+- Frontend: open the `frontend/` folder locally or serve it with a static file server.
+- The frontend runtime config defaults to `http://localhost:8000`.
 
 #### Environment Variables
+
 Set production environment variables in your cloud platform:
+
 ```
 GROQ_API_KEY=your_production_key
 OPENROUTER_API_KEY=your_production_key
@@ -699,23 +702,27 @@ PORT=8080
 ### Common Issues
 
 #### API Connection Errors
+
 ```bash
 # Test API connectivity
 python test/test_api_costs.py
 ```
 
 #### GPU Not Detected
+
 ```python
 import torch
 print(torch.cuda.is_available())  # Should return True
 ```
 
 #### Audio Processing Errors
+
 - Ensure FFmpeg is installed
 - Check audio file format compatibility
 - Verify file permissions
 
 #### Memory Issues
+
 - Reduce batch size for large files
 - Use CPU-only mode if GPU memory is insufficient
 - Process audio in smaller chunks
@@ -723,11 +730,13 @@ print(torch.cuda.is_available())  # Should return True
 ### Performance Optimization
 
 #### For Speed
+
 - Use ultra-fast processing mode
 - Enable GPU acceleration
 - Reduce audio quality if acceptable
 
 #### For Accuracy
+
 - Use 5-model processing
 - Enable comprehensive analysis
 - Use high-quality audio input
@@ -768,6 +777,7 @@ We welcome contributions to AI MOM Backend!
 ## 📈 Roadmap
 
 ### Phase 1 (Current): Core Functionality ✅
+
 - [x] 5-model multi-API processing
 - [x] Real-time audio transcription
 - [x] AI-powered summarization
@@ -775,6 +785,7 @@ We welcome contributions to AI MOM Backend!
 - [x] Cost monitoring
 
 ### Phase 2: Enhanced Features 🚧
+
 - [ ] Meeting recording integration
 - [ ] Advanced speaker recognition
 - [ ] Sentiment analysis
@@ -782,6 +793,7 @@ We welcome contributions to AI MOM Backend!
 - [ ] Meeting templates
 
 ### Phase 3: Enterprise Features 📋
+
 - [ ] Multi-language support
 - [ ] Team collaboration features
 - [ ] Integration APIs (Zoom, Teams, etc.)
@@ -789,6 +801,7 @@ We welcome contributions to AI MOM Backend!
 - [ ] Custom model training
 
 ### Phase 4: AI Enhancement 🤖
+
 - [ ] Custom fine-tuned models
 - [ ] Industry-specific optimizations
 - [ ] Real-time translation
@@ -839,6 +852,7 @@ included in all copies or substantial portions of the Software.
 ## 🙏 Acknowledgments
 
 ### Core Technologies
+
 - **FastAPI**: High-performance async web framework
 - **Whisper**: OpenAI's state-of-the-art speech recognition
 - **Groq**: Ultra-fast LLM inference platform
@@ -846,12 +860,14 @@ included in all copies or substantial portions of the Software.
 - **PyTorch**: Deep learning framework for audio processing
 
 ### AI Models
+
 - **Llama 3.3/3.1**: Meta's advanced language models
 - **GPT-4o Mini**: OpenAI's efficient model
 - **Claude Haiku**: Anthropic's fast and capable model
 - **Gemini Flash**: Google's lightning-fast model
 
 ### Contributors
+
 - **Development Team**: For building this amazing system
 - **Open Source Community**: For the incredible tools we use
 - **Beta Testers**: For valuable feedback and bug reports

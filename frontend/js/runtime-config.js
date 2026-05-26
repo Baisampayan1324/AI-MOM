@@ -30,7 +30,7 @@
             return 'http://localhost:8000';
         }
 
-        return normalizeUrl('https://YOUR-RENDER-SERVICE.onrender.com');
+        return 'http://localhost:8000';
     }
 
     const backendBaseUrl = getConfiguredBackendBaseUrl();

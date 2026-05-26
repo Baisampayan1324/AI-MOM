@@ -589,55 +589,24 @@ pytest test/ -v --cov=app
 
 ---
 
-## 🚢 Deployment
+## 🧪 Local Development
 
-### Production Deployment
-
-#### Backend Deployment
-
-This repo now includes a Render blueprint at [render.yaml](render.yaml).
-
-**Using Uvicorn (recommended for production):**
+### Backend
 
 ```bash
 cd backend
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
 ```
 
-**Using Docker:**
+### Frontend
 
-```bash
-# Build image
-docker build -t ai-mom-backend ./backend
+Open `frontend/index.html` directly in the browser, or serve the `frontend/` folder with any static file server.
 
-# Run container
-docker run -d \
-  -p 8000:8000 \
-  -e GROQ_API_KEY=your_key \
-  -e OPENROUTER_API_KEY=your_key \
-  --name ai-mom \
-  ai-mom-backend
-```
+### Extension
 
-#### Frontend Deployment
+Load the `extension/` folder as an unpacked extension in Chrome.
 
-1. **Static Hosting**: Upload `frontend/` to Vercel or another static host.
-2. **Set the backend URL once**: Update [frontend/js/deployment-config.js](frontend/js/deployment-config.js) with your Render backend URL.
-3. **CORS Configuration**: Ensure the backend allows your Vercel domain.
-
-#### Extension Distribution
-
-1. **Chrome Web Store**:
-   - Create developer account
-   - Package extension as ZIP
-   - Submit for review
-   - Follow [Chrome Web Store guidelines](https://developer.chrome.com/docs/webstore/)
-
-2. **Internal Distribution**:
-   - Share `extension/` folder
-   - Users load as unpacked extension
-
-### Environment Variables for Production
+### Environment Variables
 
 ```env
 # API Keys
