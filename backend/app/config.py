@@ -42,6 +42,15 @@ PORT = int(os.getenv("PORT", "8000"))
 # Default transcription language used by real-time processing (e.g. 'en')
 TRANSCRIPTION_LANGUAGE = os.getenv("TRANSCRIPTION_LANGUAGE", "en")
 
+# ========== Model safety and tuning ===========
+# Lower temperatures reduce creative output and hallucinations. Values 0.0-0.5 recommended.
+MODEL_TEMPERATURE = float(os.getenv("MODEL_TEMPERATURE", "0.2"))
+# Minimum similarity ratio (0.0-1.0) between original Whisper text and LLM-improved text
+# below which the LLM result is rejected and Whisper is used instead. Default 0.75
+MIN_IMPROVEMENT_SIMILARITY = float(os.getenv("MIN_IMPROVEMENT_SIMILARITY", "0.75"))
+# Confidence threshold from multiple-model agreement below which we avoid aggressive rewriting
+MIN_AGREEMENT_CONFIDENCE = float(os.getenv("MIN_AGREEMENT_CONFIDENCE", "0.65"))
+
 
 def _parse_csv_env(key: str, default: str) -> list[str]:
     raw_value = os.getenv(key, default)

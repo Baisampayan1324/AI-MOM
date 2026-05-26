@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 from typing import Dict, Any, List, Optional, Callable, Awaitable
+import difflib
 import aiohttp
 from groq import Groq
 import openai
@@ -16,6 +17,7 @@ from app.config import (
     GROQ_MODEL_2, OPENROUTER_MODEL_2, OPENROUTER_MODEL_3
 )
 from app.config import TRANSCRIPTION_LANGUAGE
+from app.config import MODEL_TEMPERATURE, MIN_IMPROVEMENT_SIMILARITY, MIN_AGREEMENT_CONFIDENCE
 from app.services.audio_processor import AudioProcessor
 
 logger = logging.getLogger(__name__)
@@ -78,6 +80,29 @@ class MultiAPIProcessor:
         
         logger.info(f"Realtime params: min={self.rt_min_secs}s max={self.rt_max_secs}s silence_thr={self.rt_silence_threshold} tail={self.rt_silence_tail_secs}s")
         logger.info("ℹ️ Single-speaker mode active (Speaker 1 for all speech)")
+
+    # --- Utility: similarity and validation helpers ---
+    def _similarity_ratio(self, a: str, b: str) -> float:
+        if not a and not b:
+            return 1.0
+        try:
+            return difflib.SequenceMatcher(None, a, b).ratio()
+        except Exception:
+            return 0.0
+
+    def _validate_improvement(self, base: str, improved: str) -> bool:
+        """Return True if the improved text is acceptably similar to base text.
+
+        This prevents LLMs from inventing content that deviates significantly
+        from the original transcription.
+        """
+        if not improved:
+            return False
+        ratio = self._similarity_ratio(base, improved)
+        if ratio < MIN_IMPROVEMENT_SIMILARITY:
+            logger.warning(f"Rejecting LLM improvement due to low similarity ({ratio:.2f})")
+            return False
+        return True
 
     def _get_groq_client(self, api_key: Optional[str] = None):
         """Get a Groq client, using provided key or default."""
@@ -176,25 +201,36 @@ class MultiAPIProcessor:
         if progress_callback:
             await progress_callback(80, "AI enhancement complete", 2)
 
-        # Extract successful results
+        # Extract successful and non-rejected results
         successful_results = []
         for i, result in enumerate(improvement_results):
             if isinstance(result, dict) and result.get("text"):
+                # If the model explicitly rejected (too divergent), skip
+                if result.get("rejected"):
+                    logger.warning(f"⚠️ Model {i+1} result rejected due to low similarity")
+                    continue
                 successful_results.append(result)
                 logger.info(f"✅ Model {i+1} successful: {len(result['text'])} chars")
             else:
                 logger.warning(f"❌ Model {i+1} failed: {str(result) if not isinstance(result, Exception) else str(result)}")
 
-        # Step 3: Combine results
+        # Step 3: Combine results conservatively
         if progress_callback:
             await progress_callback(90, "Finalizing transcription", 3)
         if successful_results:
             if len(successful_results) == 1:
-                # Only one successful result
+                # Only one trustworthy model result
                 final_transcription = successful_results[0]["text"]
             else:
-                # Combine multiple results using simple selection (fastest approach)
-                final_transcription = successful_results[0]["text"]  # Use first successful result
+                # Compute pairwise agreement confidence; if low, fallback to Whisper
+                confidence = self._calculate_multi_confidence(successful_results)
+                logger.info(f"Models agreement confidence: {confidence:.2f}")
+                if confidence < MIN_AGREEMENT_CONFIDENCE:
+                    logger.warning("Model agreement low — falling back to Whisper transcription to avoid hallucination")
+                    final_transcription = whisper_text
+                else:
+                    # Use Groq combination for conservative merging
+                    final_transcription = await self._combine_multiple_transcriptions(successful_results)
         else:
             # Fallback to Whisper only
             logger.warning("⚠️ All LLM improvements failed, using Whisper only")
@@ -331,9 +367,13 @@ class MultiAPIProcessor:
                     {"role": "user", "content": text}
                 ],
                 max_tokens=400,
-                temperature=0.2
+                temperature=float(os.getenv('MODEL_TEMPERATURE', MODEL_TEMPERATURE))
             )
-            return (response.choices[0].message.content or text).strip()
+            improved = (response.choices[0].message.content or text).strip()
+            # Validate similarity; if poor, return original text
+            if not self._validate_improvement(text, improved):
+                return text
+            return improved
         except Exception as e:
             logger.warning(f"Quality improvement failed: {str(e)}")
             return text
@@ -349,9 +389,12 @@ class MultiAPIProcessor:
                     {"role": "user", "content": text}
                 ],
                 max_tokens=400,
-                temperature=0.2
+                temperature=float(os.getenv('MODEL_TEMPERATURE', MODEL_TEMPERATURE))
             )
-            return (response.choices[0].message.content or text).strip()
+            improved = (response.choices[0].message.content or text).strip()
+            if not self._validate_improvement(text, improved):
+                return text
+            return improved
         except Exception as e:
             logger.warning(f"Grammar improvement failed: {str(e)}")
             return text
@@ -363,20 +406,26 @@ class MultiAPIProcessor:
             response = client.chat.completions.create(
                 model=GROQ_MODEL,
                 messages=[
-                    {"role": "system", "content": "Improve this transcription for clarity and accuracy. Fix any errors and make it more natural."},
+                    {"role": "system", "content": "Improve this transcription for clarity and accuracy. Fix any errors and make it more natural. Do NOT invent new facts."},
                     {"role": "user", "content": text}
                 ],
-                max_tokens=600,  # Reduced for speed
-                temperature=0.1  # Lower temperature for speed
+                max_tokens=600,
+                temperature=float(os.getenv('MODEL_TEMPERATURE', MODEL_TEMPERATURE))
             )
 
             improved_text = response.choices[0].message.content or text
+            improved_text = improved_text.strip()
+            # Validate similarity to avoid hallucinations
+            if not self._validate_improvement(text, improved_text):
+                logger.warning("Groq improvement rejected due to low similarity")
+                return {"text": text, "model": "groq_llama33_70b", "provider": "Groq", "rejected": True}
+
             return {
-                "text": improved_text.strip(),
+                "text": improved_text,
                 "model": "groq_llama33_70b",
                 "provider": "Groq",
                 "original_length": len(text),
-                "improved_length": len(improved_text.strip())
+                "improved_length": len(improved_text)
             }
         except Exception as e:
             logger.error(f"Groq Llama33 improvement failed: {str(e)}")
@@ -389,20 +438,24 @@ class MultiAPIProcessor:
             response = client.chat.completions.create(
                 model=OPENROUTER_MODEL,
                 messages=[
-                    {"role": "system", "content": "Improve this transcription for clarity and accuracy. Fix any errors and make it more natural."},
+                    {"role": "system", "content": "Improve this transcription for clarity and accuracy. Fix any errors and make it more natural. Do NOT add content or summarize."},
                     {"role": "user", "content": text}
                 ],
                 max_tokens=1000,
-                temperature=0.3
+                temperature=float(os.getenv('MODEL_TEMPERATURE', MODEL_TEMPERATURE))
             )
 
-            improved_text = response.choices[0].message.content or text
+            improved_text = (response.choices[0].message.content or text).strip()
+            if not self._validate_improvement(text, improved_text):
+                logger.warning("OpenRouter GPT-4o improvement rejected due to low similarity")
+                return {"text": text, "model": "openrouter_gpt4o_mini", "provider": "OpenRouter", "rejected": True}
+
             return {
-                "text": improved_text.strip(),
+                "text": improved_text,
                 "model": "openrouter_gpt4o_mini",
                 "provider": "OpenRouter",
                 "original_length": len(text),
-                "improved_length": len(improved_text.strip())
+                "improved_length": len(improved_text)
             }
         except Exception as e:
             logger.error(f"OpenRouter GPT-4o improvement failed: {str(e)}")
@@ -465,19 +518,17 @@ class MultiAPIProcessor:
                     {"role": "system", "content": "You are a transcription corrector. Fix ONLY grammar, punctuation, and obvious typos. Do NOT rewrite, summarize, or change the meaning. Return ONLY the corrected transcription with no extra commentary."},
                     {"role": "user", "content": f"Fix grammar and punctuation only:\n\n{transcription}"}
                 ],
-                max_tokens=2000,  # Increased to handle longer transcripts
-                temperature=0.1  # Lower temperature for consistency and speed
+                max_tokens=2000,
+                temperature=float(os.getenv('MODEL_TEMPERATURE', MODEL_TEMPERATURE))
             )
 
-            improved = response.choices[0].message.content
-            
-            # If Groq added commentary, try to extract just the transcription
-            if improved and not improved.startswith("Here"):
-                return improved.strip()
-            else:
-                # Groq added commentary, return original
-                logger.warning("Groq added commentary instead of correcting, returning original")
+            improved = (response.choices[0].message.content or "").strip()
+            # Validate improvement - if it deviates too much, keep original
+            if not self._validate_improvement(transcription, improved):
+                logger.warning("Ultra-fast improvement rejected due to low similarity; returning original")
                 return transcription
+
+            return improved
 
         except Exception as e:
             logger.warning(f"Ultra-fast improvement failed: {str(e)}")
