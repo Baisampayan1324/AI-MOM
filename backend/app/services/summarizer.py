@@ -10,9 +10,17 @@ logger = logging.getLogger(__name__)
 
 class Summarizer:
     def __init__(self):
-        self.client = Groq(api_key=GROQ_API_KEY)
+        self.default_api_key = GROQ_API_KEY
+        self.client = Groq(api_key=self.default_api_key) if self.default_api_key else None
 
-    async def generate_summary(self, text: str, max_length: int = 300) -> Optional[str]:
+    def _get_client(self, api_key: Optional[str] = None):
+        """Get a Groq client, using provided key or default."""
+        key = api_key or self.default_api_key
+        if not key:
+            raise ValueError("Groq API key is required for summarization but not provided")
+        return Groq(api_key=key)
+
+    async def generate_summary(self, text: str, max_length: int = 300, api_key: Optional[str] = None) -> Optional[str]:
         """
         Generate AI-powered summary of the transcription.
         """
@@ -29,7 +37,8 @@ class Summarizer:
             {text}
             """
 
-            response = self.client.chat.completions.create(
+            client = self._get_client(api_key)
+            response = client.chat.completions.create(
                 model=GROQ_MODEL,
                 messages=[
                     {"role": "system", "content": "You are an expert meeting summarizer. Create clear, actionable summaries."},
@@ -68,7 +77,7 @@ class Summarizer:
             logger.error(f"Ultra-fast summarization failed: {str(e)}")
             return f"Summary unavailable. Original text: {text[:100]}..."
 
-    async def generate_multi_api_summary(self, groq_text: str, openrouter_text: str) -> str:
+    async def generate_multi_api_summary(self, groq_text: str, openrouter_text: str, api_key: Optional[str] = None) -> str:
         """
         Generate summary using insights from both API transcriptions.
         """
@@ -81,7 +90,8 @@ class Summarizer:
             Transcription 2 (OpenRouter): {openrouter_text}
             """
 
-            response = self.client.chat.completions.create(
+            client = self._get_client(api_key)
+            response = client.chat.completions.create(
                 model=GROQ_MODEL,
                 messages=[
                     {"role": "system", "content": "You are an expert at reconciling multiple transcriptions into accurate summaries."},
@@ -98,7 +108,7 @@ class Summarizer:
             # Fallback to single API summary
             return await self.generate_summary(groq_text or openrouter_text) or "Summary unavailable"
 
-    async def generate_multi_model_summary(self, transcriptions: List[Dict[str, Any]], max_length: int = 400) -> Optional[str]:
+    async def generate_multi_model_summary(self, transcriptions: List[Dict[str, Any]], max_length: int = 400, api_key: Optional[str] = None) -> Optional[str]:
         """
         Generate summary using insights from multiple model transcriptions for maximum accuracy.
         """
@@ -134,7 +144,8 @@ class Summarizer:
             {combined_transcriptions}
             """
 
-            response = self.client.chat.completions.create(
+            client = self._get_client(api_key)
+            response = client.chat.completions.create(
                 model=GROQ_MODEL,
                 messages=[
                     {"role": "system", "content": "You are an expert at analyzing multiple transcriptions and creating accurate, actionable meeting summaries."},
@@ -158,7 +169,7 @@ class Summarizer:
             longest_text = max(valid_texts, key=len)
             return await self.generate_summary(longest_text, max_length) or f"Summary unavailable. Original text: {longest_text[:200]}..."
 
-    async def generate_comprehensive_summary(self, text: str) -> Dict[str, Any]:
+    async def generate_comprehensive_summary(self, text: str, api_key: Optional[str] = None) -> Dict[str, Any]:
         """
         Generate comprehensive meeting analysis including:
         - Full summary
@@ -197,7 +208,8 @@ class Summarizer:
             {text}
             """
 
-            response = self.client.chat.completions.create(
+            client = self._get_client(api_key)
+            response = client.chat.completions.create(
                 model=GROQ_MODEL,
                 messages=[
                     {"role": "system", "content": "You are an expert meeting analyst. Provide structured, actionable insights from meeting transcriptions in valid JSON format."},

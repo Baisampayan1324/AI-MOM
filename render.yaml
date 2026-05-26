@@ -3,6 +3,12 @@ services:
     name: ai-mom-backend
     runtime: docker
     autoDeploy: true
+    plan: free
     envVars:
       - key: ENVIRONMENT
         value: production
+      # IMPORTANT: Set these secrets in Render dashboard (do NOT commit real keys)
+      - key: GROQ_API_KEY
+        value: ""
+      - key: OPENROUTER_API_KEY
+        value: ""

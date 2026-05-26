@@ -3,14 +3,26 @@
         return String(value || '').trim().replace(/\/+$/, '');
     }
 
+    function isPlaceholderBackendUrl(value) {
+        const normalized = normalizeUrl(value);
+        return !normalized || /YOUR-RENDER-SERVICE\.onrender\.com/i.test(normalized);
+    }
+
     function getConfiguredBackendBaseUrl() {
         const deploymentConfig = window.AI_MOM_RUNTIME_CONFIG || window.AI_MOM_DEPLOYMENT_CONFIG || {};
         const explicitConfig = window.AI_MOM_RUNTIME_CONFIG && window.AI_MOM_RUNTIME_CONFIG.backendBaseUrl;
         const storedConfig = window.localStorage ? window.localStorage.getItem('AI_MOM_BACKEND_BASE_URL') : '';
-        const override = window.__AI_MOM_BACKEND_BASE_URL__ || deploymentConfig.backendBaseUrl || explicitConfig || storedConfig;
+        const configuredCandidates = [
+            window.__AI_MOM_BACKEND_BASE_URL__,
+            deploymentConfig.backendBaseUrl,
+            explicitConfig,
+            storedConfig,
+        ];
 
-        if (override) {
-            return normalizeUrl(override);
+        for (const candidate of configuredCandidates) {
+            if (!isPlaceholderBackendUrl(candidate)) {
+                return normalizeUrl(candidate);
+            }
         }
 
         // Check if running on localhost or via file:// protocol (local development)

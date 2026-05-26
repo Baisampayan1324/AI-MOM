@@ -47,6 +47,8 @@ async def websocket_audio(websocket: WebSocket):
     # Track session state
     session_paused = False
     meeting_id = None
+    groq_api_key = None
+    openrouter_api_key = None
 
     try:
         while True:
@@ -82,6 +84,10 @@ async def websocket_audio(websocket: WebSocket):
                     
                 elif action == "stop":
                     logger.info(f"Session stopped for meeting: {meeting_id}")
+                    # Update keys from stop message if provided
+                    groq_api_key = data.get("groq_api_key", groq_api_key)
+                    openrouter_api_key = data.get("openrouter_api_key", openrouter_api_key)
+                    
                     await websocket.send_json({
                         "type": "control_ack",
                         "action": "stop",
@@ -107,6 +113,10 @@ async def websocket_audio(websocket: WebSocket):
                 sample_rate = data.get("sample_rate", 16000)  # Default to 16kHz if not provided
                 strategy = data.get("strategy", "unknown")
                 language = data.get("language") or TRANSCRIPTION_LANGUAGE
+                
+                # Update keys from chunk if provided
+                groq_api_key = data.get("groq_api_key", groq_api_key)
+                openrouter_api_key = data.get("openrouter_api_key", openrouter_api_key)
                 
                 # Convert list of int16 values back to bytes
                 if isinstance(audio_data_list, list):
@@ -156,6 +166,10 @@ async def websocket_audio(websocket: WebSocket):
                 strategy = data.get("strategy", "direct")
                 
                 language = data.get("language") or TRANSCRIPTION_LANGUAGE
+                
+                # Update keys from chunk if provided
+                groq_api_key = data.get("groq_api_key", groq_api_key)
+                openrouter_api_key = data.get("openrouter_api_key", openrouter_api_key)
                 if raw_data:
                     try:
                         # Convert list of uint8 values back to bytes
@@ -207,6 +221,10 @@ async def websocket_audio(websocket: WebSocket):
                 sample_rate = data.get("sample_rate", 16000)
                 
                 language = data.get("language") or TRANSCRIPTION_LANGUAGE
+                
+                # Update keys from chunk if provided
+                groq_api_key = data.get("groq_api_key", groq_api_key)
+                openrouter_api_key = data.get("openrouter_api_key", openrouter_api_key)
                 if base64_data:
                     try:
                         import base64

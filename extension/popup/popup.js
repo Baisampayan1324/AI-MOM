@@ -49,33 +49,38 @@ class UnifiedPopupController {
         try {
             const result = await chrome.storage.sync.get({
                 backendUrl: 'http://localhost:8000',
+                groqApiKey: '',
+                openRouterApiKey: '',
                 language: 'auto',
                 showOverlay: true,
                 autoSummary: true,
                 speakerAlerts: true,
-                recordingMode: 'screen-capture' // Default to screen-capture mode
+                recordingMode: 'screen-capture'
             });
 
             this.backendUrl = result.backendUrl;
-            this.recordingMode = result.recordingMode; // Load saved recording mode
+            this.groqApiKey = result.groqApiKey;
+            this.openRouterApiKey = result.openRouterApiKey;
+            this.recordingMode = result.recordingMode;
 
             // Update UI with loaded settings
             document.getElementById('backend-url').value = result.backendUrl;
+            document.getElementById('groq-api-key').value = result.groqApiKey || '';
+            document.getElementById('openrouter-api-key').value = result.openRouterApiKey || '';
+            
+            // Also update setup fields
+            document.getElementById('setup-groq-key').value = result.groqApiKey || '';
+            document.getElementById('setup-openrouter-key').value = result.openRouterApiKey || '';
+
             document.getElementById('language-select').value = result.language;
             document.getElementById('show-overlay').checked = result.showOverlay;
             document.getElementById('auto-summary').checked = result.autoSummary;
             document.getElementById('speaker-alerts').checked = result.speakerAlerts;
 
-            // Update mode selector to reflect loaded mode
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                if (btn.dataset.mode === this.recordingMode) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
+            // Check if we need to show setup
+            this.checkSetup();
 
-            console.log('💾 Settings loaded:', result);
+            console.log('💾 Settings loaded:', { ...result, groqApiKey: '***', openRouterApiKey: '***' });
 
         } catch (error) {
             console.error('❌ Failed to load settings:', error);
@@ -86,21 +91,43 @@ class UnifiedPopupController {
         try {
             const settings = {
                 backendUrl: document.getElementById('backend-url').value,
+                groqApiKey: document.getElementById('groq-api-key').value,
+                openRouterApiKey: document.getElementById('openrouter-api-key').value,
                 language: document.getElementById('language-select').value,
                 showOverlay: document.getElementById('show-overlay').checked,
                 autoSummary: document.getElementById('auto-summary').checked,
                 speakerAlerts: document.getElementById('speaker-alerts').checked,
-                recordingMode: this.recordingMode // Save current recording mode
+                recordingMode: this.recordingMode
             };
 
             await chrome.storage.sync.set(settings);
             this.backendUrl = settings.backendUrl;
+            this.groqApiKey = settings.groqApiKey;
+            this.openRouterApiKey = settings.openRouterApiKey;
 
-            console.log('💾 Settings saved:', settings);
+            console.log('💾 Settings saved');
             this.updatePerformanceInfo('Settings saved');
+
+            // Sync setup fields if open
+            const setupGroq = document.getElementById('setup-groq-key');
+            const setupOR = document.getElementById('setup-openrouter-key');
+            if (setupGroq) setupGroq.value = settings.groqApiKey;
+            if (setupOR) setupOR.value = settings.openRouterApiKey;
 
         } catch (error) {
             console.error('❌ Failed to save settings:', error);
+        }
+    }
+
+    checkSetup() {
+        const groq = document.getElementById('groq-api-key').value;
+        const or = document.getElementById('openrouter-api-key').value;
+        
+        if (!groq || !or) {
+            console.log('🏁 Showing setup wizard (missing API keys)');
+            document.getElementById('setup-overlay').style.display = 'flex';
+        } else {
+            document.getElementById('setup-overlay').style.display = 'none';
         }
     }
 
@@ -162,8 +189,28 @@ class UnifiedPopupController {
             this.saveSettings();
         });
 
+        document.getElementById('groq-api-key')?.addEventListener('change', () => {
+            this.saveSettings();
+        });
+
+        document.getElementById('openrouter-api-key')?.addEventListener('change', () => {
+            this.saveSettings();
+        });
+
         document.getElementById('language-select')?.addEventListener('change', () => {
             this.saveSettings();
+        });
+
+        // Setup overlay events
+        document.getElementById('save-setup')?.addEventListener('click', () => {
+            const groq = document.getElementById('setup-groq-key').value;
+            const openrouter = document.getElementById('setup-openrouter-key').value;
+            
+            document.getElementById('groq-api-key').value = groq;
+            document.getElementById('openrouter-api-key').value = openrouter;
+            
+            this.saveSettings();
+            document.getElementById('setup-overlay').style.display = 'none';
         });
 
         document.getElementById('show-overlay')?.addEventListener('change', () => {
@@ -379,15 +426,21 @@ class UnifiedPopupController {
             // Send message to content script to start screen capture (it will handle permission request)
             let response;
             try {
+                // Get API keys from storage
+                const storageKeys = await chrome.storage.sync.get(['groq_api_key', 'openrouter_api_key']);
+                
                 response = await chrome.tabs.sendMessage(tab.id, {
                     action: 'START_SCREEN_CAPTURE',
                     settings: {
                         backendUrl: document.getElementById('backend-url').value,
                         language: document.getElementById('language-select').value,
                         showOverlay: document.getElementById('show-overlay').checked,
-                        autoSummary: document.getElementById('auto-summary').checked
+                        autoSummary: document.getElementById('auto-summary').checked,
+                        groq_api_key: storageKeys.groq_api_key || null,
+                        openrouter_api_key: storageKeys.openrouter_api_key || null
                     }
                 });
+
             } catch (messageError) {
                 console.error('❌ Content script communication failed:', messageError);
 
@@ -498,6 +551,8 @@ class UnifiedPopupController {
                 action: 'startCapture',
                 mode: 'tab-audio',
                 config: {
+                    groqApiKey: this.groqApiKey,
+                    openRouterApiKey: this.openRouterApiKey,
                     language: document.getElementById('language-select').value,
                     showOverlay: document.getElementById('show-overlay').checked
                 }
@@ -629,6 +684,8 @@ class UnifiedPopupController {
                 action: 'startCapture',
                 mode: 'microphone',
                 config: {
+                    groqApiKey: this.groqApiKey,
+                    openRouterApiKey: this.openRouterApiKey,
                     language: document.getElementById('language-select').value,
                     showOverlay: document.getElementById('show-overlay').checked
                 }
@@ -1656,7 +1713,16 @@ class UnifiedPopupController {
 
             // Create FormData for file upload
             const formData = new FormData();
-            formData.append('file', this.selectedFile); // Changed from 'audio_file' to 'file'
+            formData.append('file', this.selectedFile);
+
+            // Add API keys if available
+            const storageData = await chrome.storage.sync.get(['groq_api_key', 'openrouter_api_key']);
+            if (storageData.groq_api_key) {
+                formData.append('groq_api_key', storageData.groq_api_key);
+            }
+            if (storageData.openrouter_api_key) {
+                formData.append('openrouter_api_key', storageData.openrouter_api_key);
+            }
 
             // Send to backend using the correct endpoint
             const response = await fetch(`${this.backendUrl}/api/process-audio`, {

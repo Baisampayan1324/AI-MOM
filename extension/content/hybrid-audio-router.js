@@ -8,6 +8,8 @@ class HybridAudioRouter {
         this.isPaused = false;
         this.websocket = null;
         this.backendUrl = 'http://localhost:8000';
+        this.groq_api_key = null;
+        this.openrouter_api_key = null;
         this.supportedMimeTypes = this.detectSupportedMimeTypes();
     }
 
@@ -442,7 +444,9 @@ class HybridAudioRouter {
                     byteLength: arrayBuffer.byteLength,
                     source: this.activeSource?.name || 'unknown',
                     quality: this.activeSource?.quality || 'medium',
-                    router: 'hybrid'
+                    router: 'hybrid',
+                    groq_api_key: this.groq_api_key,
+                    openrouter_api_key: this.openrouter_api_key
                 }));
 
                 // Send the raw binary audio data
@@ -492,7 +496,9 @@ class HybridAudioRouter {
                 timestamp: Date.now(),
                 source: this.activeSource?.name || 'unknown',
                 fallback: true,
-                router: 'hybrid'
+                router: 'hybrid',
+                groq_api_key: this.groq_api_key,
+                openrouter_api_key: this.openrouter_api_key
             }));
 
             console.log(`📨 Hybrid router sent base64 fallback: ${base64Audio.length} chars`);
@@ -570,7 +576,9 @@ class HybridAudioRouter {
             timestamp: Date.now(),
             source: this.activeSource?.name || 'unknown',
             quality: this.activeSource?.quality || 'medium',
-            router: 'hybrid'
+            router: 'hybrid',
+            groq_api_key: this.groq_api_key,
+            openrouter_api_key: this.openrouter_api_key
         }));
 
         console.log('📨 Hybrid router sent audio chunk:', processedData.length, 'samples');

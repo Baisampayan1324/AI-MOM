@@ -25,23 +25,27 @@ logger = logging.getLogger(__name__)
 
 class MultiAPIProcessor:
     def __init__(self):
-        # Initialize Groq clients with different models
-        self.groq_client = Groq(api_key=GROQ_API_KEY)
-        self.groq_client_2 = Groq(api_key=GROQ_API_KEY)  # Same key, different model
+        self.audio_processor = AudioProcessor()
+        # Initialize default keys
+        self.default_groq_key = GROQ_API_KEY
+        self.default_openrouter_key = OPENROUTER_API_KEY
+        
+        # Initialize default clients
+        self.groq_client = Groq(api_key=self.default_groq_key) if self.default_groq_key else None
+        self.groq_client_2 = Groq(api_key=self.default_groq_key) if self.default_groq_key else None
 
-        # Initialize OpenRouter clients with different models
         self.openai_client = openai.OpenAI(
-            api_key=OPENROUTER_API_KEY,
+            api_key=self.default_openrouter_key,
             base_url="https://openrouter.ai/api/v1"
-        )
+        ) if self.default_openrouter_key else None
         self.openai_client_2 = openai.OpenAI(
-            api_key=OPENROUTER_API_KEY,
+            api_key=self.default_openrouter_key,
             base_url="https://openrouter.ai/api/v1"
-        )
+        ) if self.default_openrouter_key else None
         self.openai_client_3 = openai.OpenAI(
-            api_key=OPENROUTER_API_KEY,
+            api_key=self.default_openrouter_key,
             base_url="https://openrouter.ai/api/v1"
-        )
+        ) if self.default_openrouter_key else None
 
         self.audio_processor = AudioProcessor()
         # Initialize Whisper model for offline/file accuracy tasks (configurable)
@@ -74,6 +78,23 @@ class MultiAPIProcessor:
         
         logger.info(f"Realtime params: min={self.rt_min_secs}s max={self.rt_max_secs}s silence_thr={self.rt_silence_threshold} tail={self.rt_silence_tail_secs}s")
         logger.info("ℹ️ Single-speaker mode active (Speaker 1 for all speech)")
+
+    def _get_groq_client(self, api_key: Optional[str] = None):
+        """Get a Groq client, using provided key or default."""
+        key = api_key or self.default_groq_key
+        if not key:
+            raise ValueError("Groq API key is required but not provided")
+        return Groq(api_key=key)
+
+    def _get_openrouter_client(self, api_key: Optional[str] = None):
+        """Get an OpenRouter client, using provided key or default."""
+        key = api_key or self.default_openrouter_key
+        if not key:
+            raise ValueError("OpenRouter API key is required but not provided")
+        return openai.OpenAI(
+            api_key=key,
+            base_url="https://openrouter.ai/api/v1"
+        )
 
     async def check_apis(self) -> Dict[str, bool]:
         """Check if all APIs and models are accessible."""
@@ -122,6 +143,8 @@ class MultiAPIProcessor:
         self,
         audio_data: np.ndarray,
         progress_callback: Optional[Callable[[int, str, int], Awaitable[None]]] = None,
+        groq_api_key: Optional[str] = None,
+        openrouter_api_key: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         2-model parallel processing: Run Groq Llama 3.3 and OpenRouter GPT-4o Mini in parallel.
@@ -145,8 +168,8 @@ class MultiAPIProcessor:
             await progress_callback(50, "Enhancing transcription with AI models", 2)
 
         improvement_tasks = [
-            self._improve_with_groq_llama33(whisper_text),
-            self._improve_with_openrouter_gpt4o(whisper_text),
+            self._improve_with_groq_llama33(whisper_text, api_key=groq_api_key),
+            self._improve_with_openrouter_gpt4o(whisper_text, api_key=openrouter_api_key),
         ]
 
         improvement_results = await asyncio.gather(*improvement_tasks, return_exceptions=True)
@@ -191,7 +214,12 @@ class MultiAPIProcessor:
             "transcription_length": len(final_transcription)
         }
 
-    async def process_transcription_ultra_fast(self, audio_data: np.ndarray, progress_callback=None) -> Dict[str, Any]:
+    async def process_transcription_ultra_fast(
+        self,
+        audio_data: np.ndarray,
+        progress_callback=None,
+        groq_api_key: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Ultra-fast processing: Audio chunking + parallel Whisper + parallel LLMs.
         Target: 5 seconds or less for most audio files.
@@ -242,7 +270,7 @@ class MultiAPIProcessor:
         if progress_callback:
             await progress_callback(80, "Enhancing with AI", 4)
             
-        improved_transcription = await self._ultra_fast_improve_transcription(full_transcription)
+        improved_transcription = await self._ultra_fast_improve_transcription(full_transcription, api_key=groq_api_key)
 
         if progress_callback:
             await progress_callback(95, "Finalizing transcription", 4)
@@ -292,10 +320,11 @@ class MultiAPIProcessor:
             "transcription_length": len(full_transcription)
         }
 
-    async def _improve_text_quality(self, text: str) -> str:
+    async def _improve_text_quality(self, text: str, api_key: Optional[str] = None) -> str:
         """Fast quality improvement."""
         try:
-            response = self.groq_client.chat.completions.create(
+            client = self._get_groq_client(api_key)
+            response = client.chat.completions.create(
                 model=GROQ_MODEL,
                 messages=[
                     {"role": "system", "content": "Improve this transcription for clarity and accuracy. Keep it natural."},
@@ -309,10 +338,11 @@ class MultiAPIProcessor:
             logger.warning(f"Quality improvement failed: {str(e)}")
             return text
 
-    async def _improve_text_grammar(self, text: str) -> str:
+    async def _improve_text_grammar(self, text: str, api_key: Optional[str] = None) -> str:
         """Fast grammar improvement."""
         try:
-            response = self.openai_client.chat.completions.create(
+            client = self._get_openrouter_client(api_key)
+            response = client.chat.completions.create(
                 model=OPENROUTER_MODEL,
                 messages=[
                     {"role": "system", "content": "Fix grammar and punctuation in this transcription. Keep it natural."},
@@ -326,10 +356,11 @@ class MultiAPIProcessor:
             logger.warning(f"Grammar improvement failed: {str(e)}")
             return text
 
-    async def _improve_with_groq_llama33(self, text: str) -> Dict[str, Any]:
+    async def _old_improve_with_groq_llama33(self, text: str, api_key: Optional[str] = None) -> Dict[str, Any]:
         """Improve transcription using Groq Llama 3.3 70B."""
         try:
-            response = self.groq_client.chat.completions.create(
+            client = self._get_groq_client(api_key)
+            response = client.chat.completions.create(
                 model=GROQ_MODEL,
                 messages=[
                     {"role": "system", "content": "Improve this transcription for clarity and accuracy. Fix any errors and make it more natural."},
@@ -351,10 +382,11 @@ class MultiAPIProcessor:
             logger.error(f"Groq Llama33 improvement failed: {str(e)}")
             return {"text": text, "error": str(e), "model": "groq_llama33_70b"}
 
-    async def _improve_with_openrouter_gpt4o(self, text: str) -> Dict[str, Any]:
+    async def _old_improve_with_openrouter_gpt4o(self, text: str, api_key: Optional[str] = None) -> Dict[str, Any]:
         """Improve transcription using OpenRouter GPT-4o Mini."""
         try:
-            response = self.openai_client.chat.completions.create(
+            client = self._get_openrouter_client(api_key)
+            response = client.chat.completions.create(
                 model=OPENROUTER_MODEL,
                 messages=[
                     {"role": "system", "content": "Improve this transcription for clarity and accuracy. Fix any errors and make it more natural."},
@@ -418,7 +450,7 @@ class MultiAPIProcessor:
 
         return combined
 
-    async def _ultra_fast_improve_transcription(self, transcription: str) -> str:
+    async def _ultra_fast_improve_transcription(self, transcription: str, api_key: Optional[str] = None) -> str:
         """Ultra-fast single LLM improvement for the entire transcription."""
         if len(transcription.strip()) < 10:
             return transcription
@@ -426,7 +458,8 @@ class MultiAPIProcessor:
         try:
             # Use the fastest available model (Groq Llama 3.3)
             # IMPORTANT: Only fix grammar/punctuation, don't rewrite content!
-            response = self.groq_client.chat.completions.create(
+            client = self._get_groq_client(api_key)
+            response = client.chat.completions.create(
                 model=GROQ_MODEL,
                 messages=[
                     {"role": "system", "content": "You are a transcription corrector. Fix ONLY grammar, punctuation, and obvious typos. Do NOT rewrite, summarize, or change the meaning. Return ONLY the corrected transcription with no extra commentary."},
@@ -467,10 +500,11 @@ class MultiAPIProcessor:
 
         return chunks if chunks else [text]
 
-    async def _improve_chunk_with_groq_llama33(self, chunk: str) -> Dict[str, Any]:
+    async def _improve_chunk_with_groq_llama33(self, chunk: str, api_key: Optional[str] = None) -> Dict[str, Any]:
         """Quick improvement using Groq Llama 3.3."""
         try:
-            response = self.groq_client.chat.completions.create(
+            client = self._get_groq_client(api_key)
+            response = client.chat.completions.create(
                 model=GROQ_MODEL,
                 messages=[
                     {"role": "system", "content": "Quickly improve this text for clarity and grammar. Keep it concise."},
@@ -488,10 +522,11 @@ class MultiAPIProcessor:
             logger.warning(f"Groq improvement failed: {str(e)}")
             return {"text": chunk, "error": str(e)}
 
-    async def _improve_chunk_with_openrouter_gpt4o(self, chunk: str) -> Dict[str, Any]:
+    async def _improve_chunk_with_openrouter_gpt4o(self, chunk: str, api_key: Optional[str] = None) -> Dict[str, Any]:
         """Quick improvement using OpenRouter GPT-4o Mini."""
         try:
-            response = self.openai_client.chat.completions.create(
+            client = self._get_openrouter_client(api_key)
+            response = client.chat.completions.create(
                 model=OPENROUTER_MODEL,
                 messages=[
                     {"role": "system", "content": "Quickly improve this text for clarity and grammar. Keep it concise."},
@@ -509,10 +544,11 @@ class MultiAPIProcessor:
             logger.warning(f"OpenRouter GPT-4o improvement failed: {str(e)}")
             return {"text": chunk, "error": str(e)}
 
-    async def _improve_chunk_with_openrouter_claude(self, chunk: str) -> Dict[str, Any]:
+    async def _improve_chunk_with_openrouter_claude(self, chunk: str, api_key: Optional[str] = None) -> Dict[str, Any]:
         """Quick improvement using OpenRouter Claude Haiku."""
         try:
-            response = self.openai_client_2.chat.completions.create(
+            client = self._get_openrouter_client(api_key)
+            response = client.chat.completions.create(
                 model=OPENROUTER_MODEL_2,
                 messages=[
                     {"role": "system", "content": "Quickly improve this text for clarity and grammar. Keep it concise."},
@@ -540,13 +576,11 @@ class MultiAPIProcessor:
         best_improvement = max(improvements, key=lambda x: len(x.get("text", "")))
         return best_improvement.get("text", fallback_text)
 
-    async def _transcribe_with_groq_llama33(self, audio_data: np.ndarray) -> Dict[str, Any]:
-        """Transcribe using Whisper + Groq Llama 3.3 70B."""
+    async def _improve_with_groq_llama33(self, whisper_text: str, api_key: Optional[str] = None) -> Dict[str, Any]:
+        """Improve transcription using Groq Llama 3.3 70B."""
         try:
-            result = self.whisper_model.transcribe(audio_data, fp16=False)
-            whisper_text = result["text"]
-
-            response = self.groq_client.chat.completions.create(
+            client = self._get_groq_client(api_key)
+            response = client.chat.completions.create(
                 model=GROQ_MODEL,
                 messages=[
                     {"role": "system", "content": "Improve this transcription for clarity and accuracy. Fix any errors."},
@@ -554,7 +588,6 @@ class MultiAPIProcessor:
                 ],
                 max_tokens=1000
             )
-
             return {
                 "text": response.choices[0].message.content or whisper_text,
                 "model": "groq_llama33_70b",
@@ -565,13 +598,11 @@ class MultiAPIProcessor:
             logger.error(f"Groq Llama33 transcription failed: {str(e)}")
             return {"text": "", "error": str(e), "model": "groq_llama33_70b"}
 
-    async def _transcribe_with_groq_llama31(self, audio_data: np.ndarray) -> Dict[str, Any]:
-        """Transcribe using Whisper + Groq Llama 3.1 70B."""
+    async def _improve_with_groq_llama31(self, whisper_text: str, api_key: Optional[str] = None) -> Dict[str, Any]:
+        """Improve transcription using Groq Llama 3.1 70B."""
         try:
-            result = self.whisper_model.transcribe(audio_data, fp16=False)
-            whisper_text = result["text"]
-
-            response = self.groq_client_2.chat.completions.create(
+            client = self._get_groq_client(api_key)
+            response = client.chat.completions.create(
                 model=GROQ_MODEL_2,
                 messages=[
                     {"role": "system", "content": "Improve this transcription for clarity and accuracy. Fix any errors."},
@@ -579,7 +610,6 @@ class MultiAPIProcessor:
                 ],
                 max_tokens=1000
             )
-
             return {
                 "text": response.choices[0].message.content or whisper_text,
                 "model": "groq_llama31_70b",
@@ -590,13 +620,11 @@ class MultiAPIProcessor:
             logger.error(f"Groq Llama31 transcription failed: {str(e)}")
             return {"text": "", "error": str(e), "model": "groq_llama31_70b"}
 
-    async def _transcribe_with_openrouter_gpt4o(self, audio_data: np.ndarray) -> Dict[str, Any]:
-        """Transcribe using Whisper + OpenRouter GPT-4o Mini."""
+    async def _improve_with_openrouter_gpt4o(self, whisper_text: str, api_key: Optional[str] = None) -> Dict[str, Any]:
+        """Improve transcription using OpenRouter GPT-4o Mini."""
         try:
-            result = self.whisper_model.transcribe(audio_data, fp16=False)
-            whisper_text = result["text"]
-
-            response = self.openai_client.chat.completions.create(
+            client = self._get_openrouter_client(api_key)
+            response = client.chat.completions.create(
                 model=OPENROUTER_MODEL,
                 messages=[
                     {"role": "system", "content": "Improve this transcription for clarity and accuracy. Fix any errors."},
@@ -604,7 +632,6 @@ class MultiAPIProcessor:
                 ],
                 max_tokens=1000
             )
-
             return {
                 "text": response.choices[0].message.content or whisper_text,
                 "model": "openrouter_gpt4o_mini",
@@ -615,13 +642,11 @@ class MultiAPIProcessor:
             logger.error(f"OpenRouter GPT-4o transcription failed: {str(e)}")
             return {"text": "", "error": str(e), "model": "openrouter_gpt4o_mini"}
 
-    async def _transcribe_with_openrouter_claude(self, audio_data: np.ndarray) -> Dict[str, Any]:
-        """Transcribe using Whisper + OpenRouter Claude Haiku."""
+    async def _improve_with_openrouter_claude(self, whisper_text: str, api_key: Optional[str] = None) -> Dict[str, Any]:
+        """Improve transcription using OpenRouter Claude Haiku."""
         try:
-            result = self.whisper_model.transcribe(audio_data, fp16=False)
-            whisper_text = result["text"]
-
-            response = self.openai_client_2.chat.completions.create(
+            client = self._get_openrouter_client(api_key)
+            response = client.chat.completions.create(
                 model=OPENROUTER_MODEL_2,
                 messages=[
                     {"role": "system", "content": "Improve this transcription for clarity and accuracy. Fix any errors."},
@@ -629,7 +654,6 @@ class MultiAPIProcessor:
                 ],
                 max_tokens=1000
             )
-
             return {
                 "text": response.choices[0].message.content or whisper_text,
                 "model": "openrouter_claude_haiku",

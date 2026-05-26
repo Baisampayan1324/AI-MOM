@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks
+from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Form
 from fastapi.responses import JSONResponse
 from typing import Optional
 import os
@@ -31,7 +31,9 @@ async def process_audio_file(
     background_tasks: BackgroundTasks,
     file_path: Optional[str] = None,
     file: Optional[UploadFile] = File(None),
-    session_id: Optional[str] = None
+    session_id: Optional[str] = None,
+    groq_api_key: Optional[str] = Form(None),
+    openrouter_api_key: Optional[str] = Form(None)
 ):
     """
     Process audio file using multi-API approach.
@@ -59,10 +61,17 @@ async def process_audio_file(
             diarization_result = audio_processor.perform_speaker_diarization_fast(audio_data, sample_rate)
 
             # Get transcription using 2-model parallel approach (~20 seconds)
-            transcription_result = await multi_processor.process_transcription_2_model(audio_data)
+            transcription_result = await multi_processor.process_transcription_2_model(
+                audio_data, 
+                groq_api_key=groq_api_key, 
+                openrouter_api_key=openrouter_api_key
+            )
 
             # Generate comprehensive summary with key points, action items, and conclusion
-            comprehensive_summary = await summarizer.generate_comprehensive_summary(transcription_result['transcription'])
+            comprehensive_summary = await summarizer.generate_comprehensive_summary(
+                transcription_result['transcription'],
+                api_key=groq_api_key
+            )
 
             response = ProcessResponse(
                 transcription=transcription_result['transcription'],
@@ -113,10 +122,17 @@ async def process_audio_file(
                 # Perform fast speaker diarization
                 diarization_result = audio_processor.perform_speaker_diarization_fast(audio_data, sample_rate)
 
-                transcription_result = await multi_processor.process_transcription_ultra_fast(audio_data, progress_callback)
+                transcription_result = await multi_processor.process_transcription_ultra_fast(
+                    audio_data, 
+                    progress_callback,
+                    groq_api_key=groq_api_key
+                )
                 
                 # Generate comprehensive summary
-                comprehensive_summary = await summarizer.generate_comprehensive_summary(transcription_result['transcription'])
+                comprehensive_summary = await summarizer.generate_comprehensive_summary(
+                    transcription_result['transcription'],
+                    api_key=groq_api_key
+                )
 
                 # Cleanup immediately after processing (don't wait for background task)
                 try:

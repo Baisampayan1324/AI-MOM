@@ -6,6 +6,7 @@ groq
 openai
 python-multipart
 websockets
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch
 numpy
 pydub
@@ -13,13 +14,10 @@ ffmpeg-python
 psutil
 slowapi
 aiohttp
-asyncio
 scipy
 scikit-learn
 pytest
 pytest-cov
 pytest-asyncio
-pyannote.audio
-torchaudio
 soundfile
 pymongo

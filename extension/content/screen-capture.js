@@ -20,6 +20,8 @@ class UnifiedScreenCapture {
         this.overlayElement = null;
         this.floatingIcon = null;
         this.websocket = null;
+        this.groq_api_key = null;
+        this.openrouter_api_key = null;
         this.transcriptionText = '';
         this.wordCount = 0;
         this.startTime = null;
@@ -214,6 +216,8 @@ class UnifiedScreenCapture {
                     // Always start audio processing for transcription
                     if (settings && settings.backendUrl) {
                         this.backendUrl = settings.backendUrl;
+                        this.groq_api_key = settings.groq_api_key;
+                        this.openrouter_api_key = settings.openrouter_api_key;
                     }
                     
                     // Start audio processing
@@ -288,7 +292,9 @@ class UnifiedScreenCapture {
                     type: 'control',
                     action: 'stop',
                     timestamp: Date.now(),
-                    meetingId: this.meetingId
+                    meetingId: this.meetingId,
+                    groq_api_key: this.groq_api_key,
+                    openrouter_api_key: this.openrouter_api_key
                 }));
                 // Give time for message to send before closing
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -642,6 +648,8 @@ class UnifiedScreenCapture {
             this.hybridRouter = new HybridAudioRouter();
             this.hybridRouter.backendUrl = this.backendUrl;
             this.hybridRouter.websocket = this.websocket;
+            this.hybridRouter.groq_api_key = this.groq_api_key;
+            this.hybridRouter.openrouter_api_key = this.openrouter_api_key;
             
             // Initialize with existing stream if available
             if (this.stream) {

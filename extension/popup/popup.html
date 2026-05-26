@@ -201,6 +201,14 @@
                         <input type="text" id="backend-url" value="http://localhost:8000" placeholder="http://localhost:8000">
                     </div>
                     <div class="setting-item">
+                        <label for="groq-api-key">Groq API Key</label>
+                        <input type="password" id="groq-api-key" placeholder="gsk_...">
+                    </div>
+                    <div class="setting-item">
+                        <label for="openrouter-api-key">OpenRouter API Key</label>
+                        <input type="password" id="openrouter-api-key" placeholder="sk-or-v1-...">
+                    </div>
+                    <div class="setting-item">
                         <label for="language-select">Language</label>
                         <select id="language-select">
                             <option value="auto">Auto-detect</option>
@@ -251,6 +259,33 @@
         </div>
         <div class="recording-tip" id="recording-tip">
             💡 <span>Check <b>"Share system audio"</b> when the screen picker appears</span>
+        </div>
+
+        <!-- Setup Overlay / Get Started -->
+        <div class="setup-overlay" id="setup-overlay" style="display: none;">
+            <div class="setup-card fade-in">
+                <div class="setup-header">
+                    <span class="setup-icon">🚀</span>
+                    <h2>Get Started</h2>
+                    <p>Enter your API keys to enable high-quality meeting intelligence.</p>
+                </div>
+                <div class="setup-form">
+                    <div class="setup-input-group">
+                        <label for="setup-groq-key">Groq API Key</label>
+                        <input type="password" id="setup-groq-key" placeholder="gsk_...">
+                        <small>For fast transcription & low-latency LLM</small>
+                    </div>
+                    <div class="setup-input-group">
+                        <label for="setup-openrouter-key">OpenRouter API Key</label>
+                        <input type="password" id="setup-openrouter-key" placeholder="sk-or-v1-...">
+                        <small>For advanced reasoning & summaries</small>
+                    </div>
+                    <button id="save-setup" class="btn btn-primary btn-full">
+                        <span>Save and Continue</span>
+                    </button>
+                    <p class="setup-footer-text">Keys are stored locally in your browser.</p>
+                </div>
+            </div>
         </div>
     </div>
     <script src="popup.js"></script>

@@ -9,6 +9,8 @@ class AudioProcessRequest(BaseModel):
     # Optional language hint for transcription (e.g. 'en')
     language: Optional[str] = None
     timestamp: Optional[datetime] = None
+    groq_api_key: Optional[str] = None
+    openrouter_api_key: Optional[str] = None
 
 class ProcessResponse(BaseModel):
     transcription: str
