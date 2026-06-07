@@ -811,11 +811,11 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ### What This Means
 
-✅ Commercial use allowed
-✅ Modification allowed
-✅ Distribution allowed
-✅ Private use allowed
-⚠️ License and copyright notice required
+- ✅ Commercial use allowed
+- ✅ Modification allowed
+- ✅ Distribution allowed
+- ✅ Private use allowed
+- ⚠️ License and copyright notice required
 
 ---
 
