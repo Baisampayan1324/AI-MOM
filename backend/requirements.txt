@@ -20,4 +20,5 @@ pytest
 pytest-cov
 pytest-asyncio
 soundfile
-pymongopyannote.audio==3.1.1
+pymongo
+pyannote.audio==3.1.1
