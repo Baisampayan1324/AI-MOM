@@ -43,6 +43,19 @@ class AudioProcessor:
                 except ImportError:
                     pass
 
+                import huggingface_hub
+                if hasattr(huggingface_hub, 'hf_hub_download'):
+                    _orig_download = huggingface_hub.hf_hub_download
+                    def _patched_download(*args, **kwargs):
+                        if 'use_auth_token' in kwargs:
+                            kwargs['token'] = kwargs.pop('use_auth_token')
+                        return _orig_download(*args, **kwargs)
+                    huggingface_hub.hf_hub_download = _patched_download
+                    
+                import transformers
+                if hasattr(transformers.utils.hub, 'hf_hub_download'):
+                    transformers.utils.hub.hf_hub_download = _patched_download
+
                 from pyannote.audio import Pipeline
                 from huggingface_hub import login
                 login(token=hf_token)
