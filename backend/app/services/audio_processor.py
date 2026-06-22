@@ -28,6 +28,15 @@ class AudioProcessor:
             import os
             hf_token = os.getenv("HF_TOKEN")
             if hf_token:
+                try:
+                    import torchaudio # type: ignore
+                    if not hasattr(torchaudio, 'set_audio_backend'):
+                        torchaudio.set_audio_backend = lambda x: None
+                    if not hasattr(torchaudio, 'get_audio_backend'):
+                        torchaudio.get_audio_backend = lambda: 'soundfile'
+                except ImportError:
+                    pass
+
                 from pyannote.audio import Pipeline
                 from huggingface_hub import login
                 login(token=hf_token)
