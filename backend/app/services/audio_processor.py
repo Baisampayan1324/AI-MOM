@@ -22,6 +22,26 @@ class AudioProcessor:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         logger.info(f"Using device: {self.device}")
 
+        # Initialize Pyannote pipeline if token is available
+        self.pyannote_pipeline = None
+        try:
+            import os
+            hf_token = os.getenv("HF_TOKEN")
+            if hf_token:
+                from pyannote.audio import Pipeline
+                # Load the pipeline
+                self.pyannote_pipeline = Pipeline.from_pretrained(
+                    "pyannote/speaker-diarization-3.1",
+                    use_auth_token=hf_token
+                )
+                if self.pyannote_pipeline is not None:
+                    self.pyannote_pipeline.to(torch.device(self.device))
+                logger.info("Successfully loaded Pyannote diarization pipeline")
+            else:
+                logger.warning("HF_TOKEN not found, Pyannote diarization disabled")
+        except Exception as e:
+            logger.error(f"Failed to load Pyannote pipeline: {e}")
+
     @staticmethod
     def _build_speaker_segments(speaker_count: int) -> List[Dict[str, object]]:
         speaker_count = max(0, min(5, int(speaker_count)))
@@ -336,3 +356,51 @@ class AudioProcessor:
         except Exception as e:
             logger.error(f"Fast speaker diarization failed: {str(e)}")
             return {"speaker_count": 1, "segments": self._build_speaker_segments(1), "method": "fallback"}
+
+    def perform_pyannote_diarization(self, audio: np.ndarray, sample_rate: int) -> Dict:
+        """
+        Accurate speaker diarization using Pyannote.audio.
+        Returns detailed speaker segments with start/end times.
+        """
+        if not self.pyannote_pipeline:
+            logger.warning("Pyannote not available, falling back to fast diarization")
+            return self.perform_speaker_diarization_fast(audio, sample_rate)
+            
+        try:
+            logger.info("Starting accurate Pyannote diarization...")
+            # Pyannote expects a PyTorch tensor with shape (channels, samples)
+            tensor = torch.from_numpy(audio).unsqueeze(0).to(self.device)
+            
+            # Run the pipeline
+            diarization = self.pyannote_pipeline({"waveform": tensor, "sample_rate": sample_rate})
+            
+            # Process results into segments
+            segments = []
+            speakers_found = set()
+            
+            for turn, _, speaker in diarization.itertracks(yield_label=True):
+                try:
+                    # Extract the number from "SPEAKER_00", "SPEAKER_01" -> 1, 2
+                    speaker_id = int(speaker.split('_')[-1]) + 1
+                except:
+                    # Fallback if label format is different
+                    speaker_id = (hash(speaker) % 10) + 1
+                    
+                speakers_found.add(speaker_id)
+                
+                segments.append({
+                    "start": turn.start,
+                    "end": turn.end,
+                    "speaker_id": speaker_id,
+                    "speaker_label": f"Speaker {speaker_id}"
+                })
+                
+            return {
+                "speaker_count": len(speakers_found),
+                "segments": segments,
+                "method": "pyannote"
+            }
+            
+        except Exception as e:
+            logger.error(f"Pyannote diarization failed: {e}")
+            return self.perform_speaker_diarization_fast(audio, sample_rate)

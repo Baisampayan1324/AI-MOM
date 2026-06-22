@@ -60,8 +60,8 @@ async def process_audio_file(
             # Extract audio features
             audio_data, sample_rate = audio_processor.load_audio(file_path)
 
-            # Perform fast speaker diarization
-            diarization_result = audio_processor.perform_speaker_diarization_fast(audio_data, sample_rate)
+            # Perform accurate Pyannote speaker diarization
+            diarization_result = audio_processor.perform_pyannote_diarization(audio_data, sample_rate)
 
             # Get transcription using 2-model parallel approach (~20 seconds)
             transcription_result = await multi_processor.process_transcription_2_model(
@@ -122,8 +122,8 @@ async def process_audio_file(
                 # Process
                 audio_data, sample_rate = audio_processor.load_audio(temp_path)
 
-                # Perform fast speaker diarization
-                diarization_result = audio_processor.perform_speaker_diarization_fast(audio_data, sample_rate)
+                # Perform accurate Pyannote speaker diarization
+                diarization_result = audio_processor.perform_pyannote_diarization(audio_data, sample_rate)
 
                 transcription_result = await multi_processor.process_transcription_ultra_fast(
                     audio_data, 

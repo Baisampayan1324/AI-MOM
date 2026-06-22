@@ -55,7 +55,7 @@ class MultiAPIProcessor:
 
         # Load a smaller/faster model for real-time low-latency transcription.
         # Configurable via env var `REALTIME_WHISPER_MODEL`. Default to tiny English-only model.
-        realtime_model_name = os.getenv("REALTIME_WHISPER_MODEL", "large-v3")  # Prefer base.en for accuracy + reasonable speed
+        realtime_model_name = os.getenv("REALTIME_WHISPER_MODEL", "base.en")  # Prefer base.en for accuracy + reasonable speed
         try:
             self.realtime_whisper_model = whisper.load_model(realtime_model_name)
             logger.info(f"Loaded realtime Whisper model: {realtime_model_name}")
