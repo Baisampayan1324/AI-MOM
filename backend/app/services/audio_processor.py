@@ -29,9 +29,12 @@ class AudioProcessor:
             hf_token = os.getenv("HF_TOKEN")
             if hf_token:
                 # Monkey patch for torchaudio >= 2.1 compatibility with Pyannote 3.1
-                import torchaudio
-                if not hasattr(torchaudio, 'set_audio_backend'):
-                    torchaudio.set_audio_backend = lambda x: None
+                try:
+                    import torchaudio # type: ignore
+                    if not hasattr(torchaudio, 'set_audio_backend'):
+                        torchaudio.set_audio_backend = lambda x: None
+                except ImportError:
+                    pass
                     
                 from pyannote.audio import Pipeline
                 from huggingface_hub import login
