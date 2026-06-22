@@ -85,7 +85,7 @@ async function syncAllTabsPanelState() {
 
 chrome.runtime.onInstalled.addListener(async () => {
   await chrome.storage.sync.set({
-    backendUrl: 'http://localhost:8000',
+    backendUrl: 'https://baisampayandey-ai-mom-ai-minutes-of-meeting.hf.space' || 'http://localhost:8000',
     autoOpenSidebar: true
   });
   await applyPanelBehavior();
