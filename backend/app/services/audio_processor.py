@@ -29,10 +29,11 @@ class AudioProcessor:
             hf_token = os.getenv("HF_TOKEN")
             if hf_token:
                 from pyannote.audio import Pipeline
+                from huggingface_hub import login
+                login(token=hf_token)
                 # Load the pipeline
                 self.pyannote_pipeline = Pipeline.from_pretrained(
-                    "pyannote/speaker-diarization-3.1",
-                    use_auth_token=hf_token
+                    "pyannote/speaker-diarization-3.1"
                 )
                 if self.pyannote_pipeline is not None:
                     self.pyannote_pipeline.to(torch.device(self.device))
