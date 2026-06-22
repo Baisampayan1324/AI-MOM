@@ -36,6 +36,11 @@ class AudioProcessor:
                 except ImportError:
                     pass
                     
+                # Monkey patch for numpy >= 2.0 compatibility with Pyannote
+                import numpy as np
+                if not hasattr(np, 'NaN'):
+                    np.NaN = np.nan
+                    
                 from pyannote.audio import Pipeline
                 from huggingface_hub import login
                 login(token=hf_token)
