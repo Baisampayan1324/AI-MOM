@@ -34,6 +34,10 @@ class AudioProcessor:
                         torchaudio.set_audio_backend = lambda x: None
                     if not hasattr(torchaudio, 'get_audio_backend'):
                         torchaudio.get_audio_backend = lambda: 'soundfile'
+                    if not hasattr(torchaudio, 'AudioMetaData'):
+                        class _MockAudioMetaData:
+                            pass
+                        torchaudio.AudioMetaData = _MockAudioMetaData
                 except ImportError:
                     pass
 
