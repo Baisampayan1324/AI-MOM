@@ -52,9 +52,12 @@ class AudioProcessor:
                         return _orig_download(*args, **kwargs)
                     huggingface_hub.hf_hub_download = _patched_download
                     
-                import transformers
-                if hasattr(transformers.utils.hub, 'hf_hub_download'):
-                    transformers.utils.hub.hf_hub_download = _patched_download
+                try:
+                    import transformers
+                    if hasattr(transformers.utils.hub, 'hf_hub_download'):
+                        transformers.utils.hub.hf_hub_download = _patched_download
+                except ImportError:
+                    pass
 
                 from pyannote.audio import Pipeline
                 from huggingface_hub import login
