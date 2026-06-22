@@ -112,11 +112,11 @@ app.include_router(api_router, prefix="/api", tags=["api"])
 app.include_router(websocket_router, tags=["websocket"])
 
 # Serve frontend files
-# frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "frontend")
-# if os.path.exists(frontend_path):
-#     app.mount("/", StaticFiles(directory=frontend_path), name="frontend")
-# else:
-#     logger.warning(f"Frontend directory not found at {frontend_path}, serving API only")
+frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "frontend")
+if os.path.exists(frontend_path):
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+else:
+    logger.warning(f"Frontend directory not found at {frontend_path}, serving API only")
 
 @app.get("/")
 async def root():
