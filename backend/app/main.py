@@ -82,8 +82,7 @@ if limiter:
 # Add CORS middleware with WebSocket support
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=FRONTEND_ORIGINS,
-    allow_origin_regex=FRONTEND_ORIGIN_REGEX,
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],

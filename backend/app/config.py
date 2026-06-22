@@ -61,11 +61,8 @@ def _parse_bool_env(key: str, default: str = "false") -> bool:
     return os.getenv(key, default).strip().lower() in {"1", "true", "yes", "on"}
 
 
-FRONTEND_ORIGINS = _parse_csv_env(
-    "FRONTEND_ORIGINS",
-    "null,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5500",
-)
-FRONTEND_ORIGIN_REGEX = os.getenv("FRONTEND_ORIGIN_REGEX", r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$")
+FRONTEND_ORIGINS = ["*"]
+FRONTEND_ORIGIN_REGEX = None
 
 # ===================================
 # MongoDB Speaker Diarization Storage
