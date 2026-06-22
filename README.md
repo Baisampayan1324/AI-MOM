@@ -1,11 +1,3 @@
----
-title: AI MOM (AI Minutes of Meeting)
-emoji: 🚀
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-pinned: false
----
 
 # AI MOM - AI-Powered Meeting Minutes & Intelligence System
 
