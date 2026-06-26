@@ -1774,7 +1774,38 @@
                 min-height: 300px;
             }
         }
-    </style>
+    
+        /* Responsive Overrides Mobile/Tablet */
+        @media (max-width: 1024px) {
+            .realtime-grid-new, .minutes-grid, .features-grid, .stats-grid { grid-template-columns: 1fr !important; }
+            .earth-stars { width: 500px; height: 500px; }
+            .hero::after { width: 400px; height: 400px; }
+            .main-content { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            nav { flex-direction: column; padding: 1rem; gap: 1rem; }
+            .nav-right { width: 100%; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+            .nav-links { gap: 1rem; flex-wrap: wrap; justify-content: center; }
+            .hero { padding: 0 1rem; }
+            .hero h1 { font-size: 2.5rem; }
+            .earth-stars { width: 400px; height: 400px; }
+            .hero::after { width: 300px; height: 300px; }
+            .feature-tag { font-size: 0.75rem; padding: 0.4rem 0.8rem; }
+            .minutes-grid, .realtime-grid-new { grid-template-columns: 1fr; gap: 2rem; }
+            .minutes-visual img { width: 100%; }
+        }
+        @media (max-width: 480px) {
+            nav { padding: 1rem 0.5rem; }
+            .nav-links { width: 100%; justify-content: center; }
+            .nav-right { flex-direction: column; align-items: center; }
+            .hero h1 { font-size: 2rem; }
+            .earth-stars { display: none; }
+            .hero::after { width: 250px; height: 250px; }
+            .feature-tag { display: none; }
+            .stat-number { font-size: 2rem; }
+            .cta-section h2 { font-size: 1.8rem; }
+        }
+</style>
 </head>
 
 <body>

@@ -2082,7 +2082,31 @@
         }
 
         
-    </style>
+    
+        /* Responsive Overrides Mobile/Tablet */
+        @media (max-width: 1024px) {
+            .main-content { grid-template-columns: 1fr; }
+            .how-to-sidebar { padding: 0; }
+            .main-layout { grid-template-columns: 1fr; }
+            .controls-panel { width: 100%; }
+        }
+        @media (max-width: 768px) {
+            nav { flex-direction: column; padding: 1rem; gap: 1rem; }
+            .nav-right { width: 100%; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+            .nav-links { gap: 1rem; flex-wrap: wrap; justify-content: center; }
+            .container { padding: 1.5rem 1rem; }
+            .header h1 { font-size: 2rem; }
+            .visual-area { height: 300px; }
+            .central-orb { width: 150px; height: 150px; }
+            .settings-grid { grid-template-columns: 1fr; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .visual-area { height: 250px; }
+            .central-orb { width: 120px; height: 120px; }
+            .btn-start, .btn-stop { padding: 0.8rem; font-size: 0.9rem; }
+        }
+</style>
 </head>
 
 <body>

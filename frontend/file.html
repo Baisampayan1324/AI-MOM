@@ -1508,7 +1508,29 @@
                 padding: 0.8rem 1rem;
             }
         }
-    </style>
+    
+        /* Responsive Overrides Mobile/Tablet */
+        @media (max-width: 1024px) {
+            .main-content { grid-template-columns: 1fr; }
+            .how-to-sidebar { padding: 0; }
+            .security-badges { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 768px) {
+            nav { flex-direction: column; padding: 1rem; gap: 1rem; }
+            .nav-right { width: 100%; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+            .nav-links { gap: 1rem; flex-wrap: wrap; justify-content: center; }
+            .container { padding: 1.5rem 1rem; }
+            .header h1 { font-size: 2rem; }
+            .security-badges { grid-template-columns: 1fr; }
+            .orb-1, .orb-2 { display: none; } /* Save space/battery on mobile */
+            .result-grid, .dashboard-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .upload-area { padding: 2rem 1rem; }
+            .upload-icon { font-size: 3rem; }
+            .file-details { flex-direction: column; text-align: center; }
+        }
+</style>
 </head>
 
 <body>
