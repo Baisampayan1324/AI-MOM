@@ -1,4 +1,5 @@
 
+
 ---
 title: AI MOM (AI Minutes of Meeting)
 emoji: 🚀
@@ -362,6 +363,9 @@ python main.py
    - Visit [Google Meet](https://meet.google.com/new)
    - Click the AI MOM extension icon
    - Click "Test Connection" - should show "Connected ✅"
+
+4. **Explore API Docs**:
+   - Navigate to `http://localhost:8000/docs` in your browser to view the interactive Swagger UI and test endpoints directly.
 
 ---
 
